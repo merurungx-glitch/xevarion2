@@ -1,0 +1,170 @@
+/* XEVARION II — 共通の部品（すべて x- で始める） */
+@layer components {
+  /* アイコン */
+  svg.x-i { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  svg.x-i .f { fill: currentColor; stroke: none; }
+  svg.x-i.grad { stroke: url(#x2gA); }
+  svg.x-i.grad .f { fill: url(#x2gA); }
+
+  /* ボタン */
+  .x-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    height: 46px; padding: 0 20px; border-radius: var(--r-m);
+    font-weight: 800; font-size: 15px; letter-spacing: .02em; white-space: nowrap;
+    transition: transform var(--dur) var(--ease), opacity var(--dur);
+    user-select: none; -webkit-user-select: none;
+  }
+  .x-btn:active { transform: scale(.97); }
+  .x-btn:disabled { opacity: .42; pointer-events: none; }
+  .x-btn.primary { background: var(--grad-btn); color: #fff; box-shadow: 0 6px 16px rgba(154, 61, 255, .32); }
+  .x-btn.secondary { background: var(--surface); color: var(--text); border: 1px solid var(--line); }
+  .x-btn.ghost { color: var(--text-2); }
+  .x-btn.night { background: rgba(255, 255, 255, .08); color: var(--on-night); border: 1px solid var(--night-line); }
+  .x-btn.white { background: #fff; color: #151a33; }
+  .x-btn.danger { background: linear-gradient(90deg, #ff4f7b, #ff7a59); box-shadow: 0 6px 16px rgba(255, 79, 123, .3); }
+  .x-btn.small { height: 34px; padding: 0 14px; font-size: 13px; border-radius: var(--r-s); }
+  .x-btn.block { display: flex; width: 100%; }
+  .x-btn svg.x-i { width: 18px; height: 18px; }
+
+  /* お金のしるし（XEVA・ジェムは初代の絵＝2026-11-20 ご許可／ガチャチケットは 11-20 にいただいた絵） */
+  .x-cur { display: inline-block; flex: none; width: 18px; height: 18px; background: center / contain no-repeat; }
+  .x-cur.xeva { background-image: url("../assets/ui/xeva-64.webp"); }
+  .x-cur.gem { background-image: url("../assets/ui/gem-64.webp"); }
+  .x-cur.ticket { width: 25px; height: 17px; background-image: url("../assets/ui/ticket-128.webp"); }
+
+  /* アプリのアイコン（初代の絵） */
+  .x-appic { display: block; width: 56px; height: 56px; border-radius: 16px; object-fit: cover; background: var(--surface-2); box-shadow: 0 3px 10px rgba(20, 26, 51, .16); }
+
+  /* お金の札（夜の枠の上） */
+  .x-pill {
+    display: inline-flex; align-items: center; gap: 4px; height: 26px; padding: 0 9px 0 5px;
+    border-radius: 99px; background: rgba(10, 12, 30, .62); border: 1px solid rgba(255, 255, 255, .16);
+    color: #fff; font-weight: 800; font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+
+  /* アプリのアイコン */
+  .x-tile {
+    width: 52px; height: 52px; border-radius: 15px; display: grid; place-items: center;
+    background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow);
+  }
+  .x-tile svg.x-i { width: 28px; height: 28px; stroke: url(#x2gA); }
+  .x-tile svg.x-i .f { fill: url(#x2gA); }
+
+  /* カード */
+  .x-card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; }
+
+  /* 小さな札・属性 */
+  .x-chip { display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 9px; border-radius: 99px; font-size: 11.5px; font-weight: 800; background: var(--surface-2); color: var(--text-2); white-space: nowrap; }
+  .x-el { --c: var(--accent); background: color-mix(in srgb, var(--c) 16%, transparent); color: var(--c); font-family: var(--font-en); letter-spacing: .12em; }
+  .x-el.flare { --c: var(--flare); } .x-el.tide { --c: var(--tide); } .x-el.terra { --c: var(--terra); } .x-el.nova { --c: var(--nova); } .x-el.void { --c: var(--void); }
+  .x-el svg.x-i { width: 13px; height: 13px; stroke-width: 2; }
+
+  /* 凸のしるし（4つ） */
+  .x-pips { display: inline-flex; gap: 4px; align-items: center; }
+  .x-pips i { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid currentColor; opacity: .5; }
+  .x-pips i.on { background: var(--grad); border-color: transparent; opacity: 1; }
+
+  /* 入力 */
+  .x-field { display: block; margin-bottom: 14px; }
+  .x-field > span { display: block; font-size: 13px; font-weight: 800; margin-bottom: 6px; }
+  .x-field input {
+    width: 100%; height: 48px; padding: 0 14px; border-radius: var(--r-m);
+    border: 1.5px solid var(--line); background: var(--surface); color: var(--text); font-size: 16px; outline: none;
+    transition: border-color var(--dur);
+  }
+  .x-field input:focus { border-color: var(--g2); }
+  .x-field small { display: block; margin-top: 5px; font-size: 12px; color: var(--text-3); }
+  .x-field.err input { border-color: #ff4f7b; }
+  .x-field.err small { color: #ff4f7b; }
+
+  /* 切りかえ（いくつかから1つ） */
+  .x-seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; padding: 4px; border-radius: 13px; background: var(--surface-2); }
+  .x-seg button { height: 38px; border-radius: 10px; font-size: 13px; font-weight: 800; color: var(--text-2); line-height: 1.15; }
+  .x-seg button small { display: block; font-size: 9.5px; font-weight: 600; opacity: .8; }
+  .x-seg button.on { background: var(--surface); color: var(--text); box-shadow: 0 1px 4px rgba(20, 26, 51, .14); }
+
+  /* スイッチ */
+  .x-switch { position: relative; width: 46px; height: 28px; border-radius: 99px; background: var(--line); flex: none; transition: background var(--dur); }
+  .x-switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .25); transition: transform var(--dur) var(--ease); }
+  .x-switch.on { background: var(--grad-btn); }
+  .x-switch.on::after { transform: translateX(18px); }
+
+  /* 設定などの行 */
+  .x-row { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 8px 2px; border-bottom: 1px solid var(--line); }
+  .x-row:last-child { border-bottom: 0; }
+  .x-row > div { flex: 1; min-width: 0; }
+  .x-row b { display: block; font-size: 14.5px; }
+  .x-row small { display: block; font-size: 12px; color: var(--text-3); line-height: 1.45; }
+
+  /* 夜の見出し（各画面の上） */
+  .x-head {
+    flex: none; display: flex; align-items: center; gap: 10px;
+    padding: calc(var(--st) + 10px) 14px 12px; background: var(--night-1); color: var(--on-night);
+  }
+  .x-head h1 { margin: 0; flex: 1; font: 800 15px/1 var(--font-en); letter-spacing: .28em; }
+
+  /* 下のタブ */
+  .x-tabbar {
+    flex: none; display: grid; grid-template-columns: repeat(5, 1fr);
+    height: calc(var(--tab-h) + var(--sb)); padding: 6px 4px var(--sb);
+    background: var(--night-1); border-top: 1px solid var(--night-line); position: relative; z-index: 50;
+  }
+  .x-tab { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 2px; color: var(--on-night-3); font-size: 10px; font-weight: 800; padding-top: 2px; }
+  .x-tab svg.x-i { width: 24px; height: 24px; }
+  .x-tab.on { color: #fff; }
+  .x-tab.on svg.x-i { stroke: url(#x2gC); }
+  .x-tab.on svg.x-i .f { fill: url(#x2gC); }
+  .x-tab::after { content: ""; width: 18px; height: 2.5px; border-radius: 2px; margin-top: 1px; background: transparent; }
+  .x-tab.on::after { background: var(--grad); }
+  .x-tab .x-dot { position: absolute; }
+
+  /* 赤い点 */
+  .x-dot { width: 9px; height: 9px; border-radius: 50%; background: #ff4f7b; border: 1.5px solid var(--night-1); }
+
+  /* 下から出る板 */
+  .x-backdrop { position: fixed; inset: 0; z-index: 900; background: rgba(5, 6, 26, .55); opacity: 0; transition: opacity var(--dur); }
+  .x-backdrop.show { opacity: 1; }
+  .x-sheet {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 901; max-height: calc(100% - var(--st) - 24px);
+    display: flex; flex-direction: column; background: var(--bg); color: var(--text);
+    border-radius: 24px 24px 0 0; box-shadow: 0 -10px 30px rgba(5, 6, 26, .25);
+    transform: translateY(105%); transition: transform var(--dur) var(--ease);
+    max-width: 640px; margin: 0 auto;
+  }
+  .x-sheet.show { transform: none; }
+  .x-sheet.night { background: var(--night-2); color: var(--on-night); }
+  .x-sheet-h { display: flex; align-items: center; gap: 10px; padding: 16px 16px 8px; }
+  .x-sheet-h h2 { margin: 0; flex: 1; font-size: 17px; font-weight: 900; }
+  .x-sheet-h button { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-2); color: var(--text-2); }
+  .x-sheet.night .x-sheet-h button { background: rgba(255, 255, 255, .08); color: var(--on-night-2); }
+  .x-sheet-b { padding: 4px 16px 12px; min-height: 0; }
+  .x-sheet-f { display: flex; gap: 10px; padding: 8px 16px calc(14px + var(--sb)); }
+  .x-sheet-f .x-btn { flex: 1; }
+
+  /* 知らせ */
+  .x-toast {
+    position: fixed; left: 50%; top: calc(var(--st) + 14px); z-index: 1000; max-width: min(90vw, 420px);
+    transform: translate(-50%, -16px); opacity: 0; transition: transform var(--dur) var(--ease), opacity var(--dur);
+    padding: 10px 16px; border-radius: 14px; background: rgba(11, 14, 31, .94); color: #fff;
+    font-size: 13.5px; font-weight: 700; box-shadow: 0 8px 24px rgba(5, 6, 26, .35); pointer-events: none;
+    border: 1px solid rgba(255, 255, 255, .1);
+  }
+  .x-toast.show { transform: translate(-50%, 0); opacity: 1; }
+
+  /* 読み込み中（軌道の輪） */
+  .x-spin { width: 34px; height: 34px; position: relative; }
+  .x-spin::before, .x-spin::after {
+    content: ""; position: absolute; inset: 9px -2px; border-radius: 50%;
+    border: 2px solid transparent; border-top-color: var(--g1); border-bottom-color: var(--g3);
+    animation: x-spin 1.1s linear infinite;
+  }
+  .x-spin::after { transform: rotate(60deg); animation-duration: 1.6s; border-top-color: var(--g4); border-bottom-color: var(--g2); }
+  @keyframes x-spin { to { rotate: 360deg; } }
+
+  /* 手元の試験モードの札（右のふちに縦書きで小さく） */
+  .x-devbar {
+    position: fixed; right: 0; top: 50%; transform: translateY(-50%); z-index: 990; writing-mode: vertical-rl;
+    font-size: 9.5px; font-weight: 800; letter-spacing: .1em; color: #1b1300; background: #ffd27a;
+    padding: 8px 2px; border-radius: 8px 0 0 8px; pointer-events: none; opacity: .85; white-space: nowrap;
+  }
+}

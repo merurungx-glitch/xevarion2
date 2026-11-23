@@ -1,0 +1,106 @@
+/* XEVARION II — 演出（第3回の相談で決定：起動ロゴ A・タイトル B・ロード C・ガチャ A・入手 A＋C）
+   クラスは fx-（共通）・tt-（タイトル）・gx-（ガチャ）で始める。ぼかしは使わない（電池のため） */
+@layer portal {
+  /* 共通 */
+  .fx-shine { position: relative; display: inline-block; }
+  .fx-shine img { display: block; width: 100%; }
+  .fx-shine i {
+    position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen;
+    -webkit-mask: var(--m) center / contain no-repeat; mask: var(--m) center / contain no-repeat;
+    background: linear-gradient(110deg, transparent 38%, rgba(255, 255, 255, .95) 50%, transparent 62%);
+    background-size: 260% 100%; background-position: 160% 0;
+  }
+  .fx-orbit { overflow: visible; display: block; width: 100%; height: auto; }
+  .fx-orbit .r1, .fx-orbit .r2 { transform-origin: 200px 150px; }
+  .fx-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+
+  /* ===== 起動ロゴ（A：NGX → ISHIDA Production → 軌道が描かれてロゴ） ===== */
+  .fx-intro { position: fixed; inset: 0; z-index: 950; background: #000; cursor: pointer; overflow: hidden; }
+  .fx-intro .co { position: absolute; left: 50%; top: 48%; translate: -50% -50%; width: min(64vw, 270px); }
+  .fx-intro .glow { position: absolute; left: 50%; top: 44%; width: min(100vw, 440px); aspect-ratio: 1; translate: -50% -50%; border-radius: 50%; background: radial-gradient(circle, rgba(58, 107, 255, .42), rgba(154, 61, 255, .18) 40%, transparent 66%); opacity: 0; }
+  .fx-intro .orb { position: absolute; left: 50%; top: 44%; translate: -50% -50%; width: min(78vw, 330px); }
+  .fx-intro .mark { position: absolute; left: 50%; top: 44%; translate: -50% -50%; width: min(72vw, 300px); opacity: 0; }
+  .fx-intro .word { position: absolute; left: 50%; top: calc(44% + min(36vw, 150px)); translate: -50% 0; width: min(66vw, 280px); opacity: 0; }
+
+  /* ===== タイトル（B：1人ずつ主役） ===== */
+  .tt { background: var(--twilight); color: var(--on-night); cursor: pointer; user-select: none; -webkit-user-select: none; }
+  .tt-stars { position: absolute; inset: 0; background: var(--stars); animation: tt-tw 5s ease-in-out infinite alternate; }
+  @keyframes tt-tw { from { opacity: .55; } to { opacity: 1; } }
+  .tt-glow { position: absolute; left: 50%; top: 58%; width: min(150vw, 820px); aspect-ratio: 1; translate: -50% -50%; border-radius: 50%; opacity: .6; background: radial-gradient(circle, color-mix(in srgb, var(--c, #3a6bff) 60%, transparent), transparent 62%); transition: opacity .6s; }
+  .tt-orbit { position: absolute; left: 50%; top: 46%; translate: -50% -50%; width: min(150vw, 780px); opacity: .7; pointer-events: none; }
+  .tt-orbit .r1 { animation: tt-rot 60s linear infinite; }
+  .tt-orbit .r2 { animation: tt-rot 90s linear infinite reverse; }
+  @keyframes tt-rot { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .tt-stage { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+  .tt-stage img { position: absolute; left: 50%; bottom: -6%; translate: -50% 0; height: min(86vh, 860px); width: auto; max-width: none; }
+  .tt-fade { position: absolute; left: 0; right: 0; bottom: 0; height: 30%; background: linear-gradient(transparent, rgba(42, 28, 85, .92) 72%); z-index: 3; }
+  .tt-logo { position: absolute; left: 50%; top: calc(var(--st) + 5vh); translate: -50% 0; width: min(56vw, 300px); z-index: 4; filter: drop-shadow(0 6px 22px rgba(58, 107, 255, .35)); }
+  .tt-name { position: absolute; left: 20px; bottom: calc(var(--sb) + 112px); z-index: 4; text-shadow: 0 2px 12px rgba(0, 0, 0, .55); }
+  .tt-name small { display: block; font: 700 10.5px/1 var(--font-en); letter-spacing: .32em; opacity: .9; }
+  .tt-name b { display: block; font-size: 30px; font-weight: 900; letter-spacing: .06em; line-height: 1.25; }
+  .tt-name span { display: inline-block; margin-top: 4px; font: 800 10.5px/1 var(--font-en); letter-spacing: .14em; padding: 4px 10px; border-radius: 99px; background: var(--c, #3a6bff); color: #fff; text-shadow: none; }
+  .tt-tap { position: absolute; left: 0; right: 0; bottom: calc(var(--sb) + 58px); z-index: 5; text-align: center; font: 700 13px/1 var(--font-en); letter-spacing: .5em; color: #fff; text-shadow: 0 0 14px rgba(127, 240, 255, .6); animation: tt-pulse 2.2s ease-in-out infinite; }
+  .tt-tap::before, .tt-tap::after { content: ""; display: inline-block; width: 26px; height: 1px; background: currentColor; vertical-align: 4px; margin: 0 12px; opacity: .6; }
+  @keyframes tt-pulse { 50% { opacity: .45; } }
+  .tt-wait { position: absolute; left: 50%; bottom: calc(var(--sb) + 50px); translate: -50% 0; z-index: 5; display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--on-night-2); }
+  .tt-cred { position: absolute; left: 0; right: 0; bottom: calc(var(--sb) + 18px); z-index: 5; text-align: center; font: 600 9.5px/1.6 var(--font-en); letter-spacing: .22em; color: #c9b8e8; }
+
+  /* ===== ロード（C：全身＋ヒント） ===== */
+  .fx-load { position: fixed; inset: 0; z-index: 940; background: var(--twilight); color: #fff; opacity: 0; transition: opacity .25s; overflow: hidden; }
+  .fx-load.show { opacity: 1; }
+  .fx-load .p-stars { position: absolute; inset: 0; background: var(--stars); }
+  .fx-load .ch { position: absolute; left: 50%; bottom: -5%; translate: -50% 0; height: min(86vh, 860px); width: auto; max-width: none; opacity: .5; }
+  .fx-load .tip { position: absolute; left: 20px; right: 20px; bottom: calc(var(--sb) + 78px); max-width: 520px; margin: 0 auto; background: rgba(11, 14, 31, .84); border: 1px solid rgba(255, 255, 255, .14); border-radius: 16px; padding: 12px 14px; font-size: 13.5px; line-height: 1.7; }
+  .fx-load .tip b { display: block; font: 800 11px/1 var(--font-en); letter-spacing: .26em; color: #9fe9ff; margin-bottom: 6px; }
+  .fx-load .bar { position: absolute; left: 20px; right: 20px; bottom: calc(var(--sb) + 46px); max-width: 520px; margin: 0 auto; height: 4px; border-radius: 99px; background: rgba(255, 255, 255, .14); overflow: hidden; }
+  .fx-load .bar i { display: block; height: 100%; width: 0; background: var(--grad); border-radius: 99px; transition: width .2s; }
+  .fx-load .bar.ind i { width: 34%; animation: fx-ind 1.2s ease-in-out infinite; }
+  @keyframes fx-ind { from { transform: translateX(-100%); } to { transform: translateX(300%); } }
+
+  /* ===== ガチャ（A：オービット・サモン → キャラの登場 → 結果） ===== */
+  .gx { position: fixed; inset: 0; z-index: 800; background: var(--twilight); color: #fff; overflow: hidden; user-select: none; -webkit-user-select: none; }
+  .gx .p-stars { position: absolute; inset: 0; background: var(--stars); }
+  .gx-skip { position: absolute; top: calc(var(--st) + 12px); right: 14px; z-index: 60; font-size: 13px; font-weight: 800; color: #fff; background: rgba(255, 255, 255, .12); border: 1px solid rgba(255, 255, 255, .25); padding: 6px 14px; border-radius: 99px; }
+  .gx-glow { position: absolute; left: 50%; top: 46%; width: min(120vw, 580px); aspect-ratio: 1; translate: -50% -50%; border-radius: 50%; background: radial-gradient(circle, var(--g, rgba(58, 107, 255, .55)), transparent 62%); }
+  .gx-ring { position: absolute; left: 50%; top: 46%; translate: -50% -50%; width: min(88vw, 430px); }
+  .gx-pulse { position: absolute; left: 50%; top: 46%; width: 60px; height: 60px; translate: -50% -50%; border-radius: 50%; border: 3px solid var(--pc, #ffd56a); }
+  .gx-core { position: absolute; left: 50%; top: 46%; width: 40px; height: 40px; translate: -50% -50%; border-radius: 50%; background: radial-gradient(circle, #fff, rgba(255, 255, 255, 0) 70%); }
+  .gx-flash { position: absolute; inset: 0; background: #fff; z-index: 40; pointer-events: none; }
+  .gx-cut { position: absolute; inset: 0; z-index: 30; overflow: hidden; background: radial-gradient(circle at 62% 38%, var(--c2), var(--c) 46%, #0b0e1f 100%); }
+  .gx-band { position: absolute; left: -30%; width: 160%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .55), transparent); }
+  .gx-cut img { position: absolute; right: -8%; bottom: -4%; height: min(90vh, 900px); width: auto; max-width: none; }
+  .gx-cname { position: absolute; left: 22px; bottom: calc(var(--sb) + 92px); text-shadow: 0 2px 12px rgba(0, 0, 0, .45); }
+  .gx-cname small { font: 800 11px/1 var(--font-en); letter-spacing: .34em; }
+  .gx-cname b { display: block; font-size: 44px; font-weight: 900; letter-spacing: .06em; line-height: 1.2; }
+  .gx-cname span { display: inline-block; margin-top: 6px; font: 800 11px/1 var(--font-en); letter-spacing: .16em; padding: 5px 11px; border-radius: 99px; background: rgba(255, 255, 255, .92); color: var(--c); text-shadow: none; }
+  .gx-stamp { position: absolute; left: 24px; top: calc(var(--st) + 72px); font: 900 42px/1.1 var(--font-en); letter-spacing: .04em; background: linear-gradient(180deg, #fff7cf, #ffcf4a 55%, #ff9f2e); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 2px 6px rgba(0, 0, 0, .35)); }
+  .gx-stamp.rb { background: linear-gradient(90deg, #ff6b9e, #ffd56a, #5df0ff, #9a7bff); -webkit-background-clip: text; background-clip: text; }
+  .gx-stamp.jp { font-family: var(--font); font-size: 34px; }
+  .gx-hint { position: absolute; left: 0; right: 0; bottom: calc(var(--sb) + 34px); text-align: center; font-size: 12px; font-weight: 800; opacity: .8; text-shadow: 0 1px 6px rgba(0, 0, 0, .5); }
+  .gx-res { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; padding: calc(var(--st) + 22px) 14px calc(var(--sb) + 20px); }
+  .gx-res h2 { margin: 0 0 16px; font: 800 15px/1 var(--font-en); letter-spacing: .5em; }
+  .gx-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; width: 100%; max-width: 560px; margin: auto 0; }
+  .gx-grid.one { grid-template-columns: 1fr; max-width: 220px; }
+  .gx-card { position: relative; aspect-ratio: 3 / 4; border-radius: 12px; overflow: hidden; background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .16); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+  .gx-card.char { --c: var(--g3); border: 2px solid var(--c); box-shadow: 0 0 18px color-mix(in srgb, var(--c) 60%, transparent); background: var(--night-2); }
+  .gx-card.char.flare { --c: var(--flare); } .gx-card.char.tide { --c: var(--tide); } .gx-card.char.terra { --c: var(--terra); }
+  .gx-card.char img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .gx-card .lab { position: absolute; left: 0; right: 0; bottom: 0; padding: 14px 4px 5px; background: linear-gradient(transparent, rgba(5, 6, 26, .85)); font-size: 10px; font-weight: 900; text-align: center; letter-spacing: .04em; }
+  .gx-card .tag { position: absolute; top: 4px; left: 4px; font: 800 8.5px/1 var(--font-en); letter-spacing: .06em; padding: 3px 6px; border-radius: 99px; background: var(--grad); }
+  .gx-card.xeva .x-cur.xeva { width: 30px; height: 30px; }
+  .gx-card.xeva b { font-size: 12px; font-variant-numeric: tabular-nums; }
+  .gx-foot { display: flex; gap: 10px; width: 100%; max-width: 420px; padding-top: 14px; }
+  .gx-foot .x-btn { flex: 1; }
+
+  /* ===== 入手（A：お財布へ飛ぶ／C：GET! のカード） ===== */
+  .fx-coin { position: fixed; left: 0; top: 0; width: 24px; height: 24px; z-index: 990; pointer-events: none; background: center / contain no-repeat; }
+  .fx-get { position: fixed; inset: 0; z-index: 970; display: grid; place-items: center; padding: 20px; background: rgba(5, 6, 26, .6); }
+  .fx-get-card { width: min(100%, 360px); background: var(--surface); color: var(--text); border-radius: 24px; padding: 20px 18px 18px; text-align: center; box-shadow: 0 20px 50px rgba(0, 0, 0, .35); }
+  .fx-get-card h3 { margin: 0; font: 900 32px/1 var(--font-en); letter-spacing: .08em; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .fx-get-card p { margin: 6px 0 12px; font-size: 12.5px; color: var(--text-3); }
+  .fx-get-rows { display: flex; flex-direction: column; gap: 8px; text-align: left; }
+  .fx-get-row { display: flex; align-items: center; gap: 10px; background: var(--surface-2); border-radius: 12px; padding: 9px 12px; font-weight: 800; }
+  .fx-get-row span { flex: 1; }
+  .fx-get-row b { font-variant-numeric: tabular-nums; }
+  .fx-get-card .x-btn { margin-top: 16px; }
+}

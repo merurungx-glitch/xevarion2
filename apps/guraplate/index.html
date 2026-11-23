@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<!-- ★ XEVARION II のアプリ：II の中（#/app/gura の iframe）でだけ動く。II の機能は親の window.X2（src/portal/bridge.js）だけを使う。
+     直接開かれたら II の入口へ送る。初代の共通部品（xeva.js・xeva-cloud・game-link・各 SW・起動ロゴ・safebottom など）は読まない -->
+<script>
+(function () {
+  var P = null;
+  try { P = window.parent !== window ? window.parent.X2 : null; } catch (e) { P = null; }
+  if (!P) {
+    if (window.parent === window) location.replace('../../index.html#/app/gura');
+    throw new Error('MagiGura Plate は XEVARION II の中で開いてください');
+  }
+  window.X2 = P;
+  P.attach(window); /* 余白・動作モード・省電力のコマ数 */
+})();
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>MagiGura Plate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800;900&family=Baloo+2:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=1">
+<link rel="stylesheet" href="css/xevarion.css?v=1">
+</head>
+<body data-scr="titleScr">
+<!-- ══════════════════════════════════════════════════════════════
+     MagiGura Plate（2026-11-16 新作 → 11-17 初代 XEVARION へ → 2026-11-23 XEVARION II へ移しかえ・中身はそのまま）
+     ・はじめの画面と準備の3段（① メンバー ② 席 ③ ルール）は全画面（#front・js/setup.js）。色はロゴの青
+     ・メンバーの連携・賞金は II のパーティーの部品（js/account.js → window.X2）
+     ・BGM（js/bgm.js）：オリジナル曲／自分の曲（この端末だけ）／オフ
+     ・ゲームのルール・物理（js/physics.js・render.js・audio.js）は初代と同じ
+     ══════════════════════════════════════════════════════════════ -->
+<canvas id="cv"></canvas>
+<div id="probe"></div>
+<div id="seats"></div>
+<div id="fly"></div>
+<button id="menuBtn" class="hidden" aria-label="メニュー"><i></i><i></i><i></i></button>
+
+<!-- はじめの画面・準備（全画面・中身は js/setup.js が描く） -->
+<div id="front" class="front on">
+  <div class="bg" aria-hidden="true"><i class="bg-rays"></i><i class="bg-grad"></i></div>
+  <section id="titleScr" class="scr"></section>
+  <section id="setupScr" class="scr"></section>
+</div>
+
+<!-- あそびかた -->
+<div id="howto" class="ov hidden">
+  <div class="panel wide">
+    <h2>あそびかた</h2>
+    <ol class="steps">
+      <li>自分の番がきたら、手持ちのコマを1つ<b>皿まで引っぱって</b>置く。<small>四角・三角・棒は<b>向きを変えられる</b>。手持ちをタップするか、つまんだまま<b>もう1本の指でひねる</b>（タップなら少しずつ）。</small></li>
+      <li>コマの<b>上にも置ける</b>（2段まで）。<small>上のコマのまん中が、下のコマに乗っていること。乗せられるコマは<b>黄色く光る</b>。</small></li>
+      <li>皿は重さで<b>かたむく</b>。かたむきすぎるとコマが<b>すべって落ちる</b>。</li>
+      <li>落ちたコマは、<b>落とした人の手持ち</b>になる。</li>
+      <li>手持ちを<b>全部置いた人の勝ち</b>。</li>
+    </ol>
+    <div class="legend" id="legend"></div>
+    <p class="tip">コマが増えるほど皿はグラグラになります。まん中の水準器の<b>泡は高い側（軽い側）</b>へ動きます。泡が色の輪を越えると、その色のコマがすべり出します。</p>
+    <p class="tip">重ねたコマは、<b>下のコマの材質</b>ですべりやすさが変わります（氷の上はよくすべる・ゴムの上は止まる・木の上は皿と同じ）。下のコマがすべると上のコマもいっしょに運ばれます。高く積むほど皿はグラグラになります。</p>
+    <p class="tip"><b>メンバーと席</b>：名前・アイコン・座る場所（iPad のまわりの10か所）を決められます。番は席の<b>時計まわり</b>。XEVARION II のアカウントと連携するか「この端末の本人」にすると、<b>順位で XEVA</b>がもらえます。</p>
+    <button id="howClose" class="big">とじる</button>
+  </div>
+</div>
+
+<!-- メニュー -->
+<div id="menu" class="ov hidden">
+  <div class="panel narrow">
+    <h2>メニュー</h2>
+    <button id="mResume" class="big">つづける</button>
+    <button id="mRestart" class="sub wide">はじめから</button>
+    <button id="mTitle" class="sub wide">はじめの画面へ（メンバーと席）</button>
+    <button id="mHow" class="sub wide">あそびかた</button>
+    <button id="mBgm" class="sub wide">BGM：オリジナル曲</button>
+    <button id="mSound" class="sub wide">効果音：ON</button>
+  </div>
+</div>
+
+<!-- けっか -->
+<div id="over" class="ov hidden">
+  <div class="panel narrow" id="overPanel">
+    <div class="crown"></div>
+    <h2 id="overTitle" class="otitle"></h2>
+    <ol id="rank" class="rank"></ol>
+    <p class="hint" id="overNote"></p>
+    <button id="againBtn" class="big">もういちど</button>
+    <button id="backBtn" class="sub wide">はじめの画面へ</button>
+  </div>
+</div>
+
+<!-- アイコン・連携・記録・設定のシート -->
+<div id="sheetOv" class="sov hidden"><div class="sheet" id="sheet"></div></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<!-- 自分の曲をえらぶ（この端末にだけ入れる） -->
+<input type="file" id="bgmFile" accept="audio/*,.m4a,.mp3,.aac,.wav,.ogg" hidden>
+
+<script src="js/physics.js?v=1"></script>
+<script src="js/render.js?v=1"></script>
+<script src="js/audio.js?v=1"></script>
+<script src="js/bgm.js?v=1"></script>
+<script src="js/account.js?v=1"></script>
+<script src="js/setup.js?v=1"></script>
+<script src="js/game.js?v=1"></script>
+<script>
+(function () {
+  /* 字（Web フォント）がそろったら II のロード画面を消す（1.5 秒まで待つ） */
+  var fonts = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+  Promise.race([fonts, new Promise(function (r) { setTimeout(r, 1500); })]).then(function () {
+    requestAnimationFrame(function () { X2.ready(); });
+  });
+})();
+</script>
+</body>
+</html>

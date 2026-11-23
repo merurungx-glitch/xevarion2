@@ -1,0 +1,69 @@
+/* XEVARION II — 土台の見た目（リセット・画面の箱・スクロールバー） */
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+
+  /* ★ body の色は下のバーと同じ夜空色にする（iPhone のアプリ表示で、描けない下の帯を iOS が body の色で塗るため） */
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: var(--night-1);
+    color: var(--text);
+    font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+  }
+  body { font-size: 15px; line-height: 1.6; }
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+  input, select, textarea { font: inherit; color: inherit; }
+  img { display: block; max-width: 100%; }
+  a { color: inherit; }
+  [hidden] { display: none !important; }
+
+  #app {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bg);
+  }
+  #screen { position: relative; flex: 1; min-height: 0; overflow: hidden; }
+
+  /* スクロールする箱（スクロールバーもデザインする） */
+  .x-scroll {
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+  .x-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+  .x-scroll::-webkit-scrollbar-track { background: transparent; margin: 12px; }
+  .x-scroll::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(58, 107, 255, .55), rgba(154, 61, 255, .55));
+    border-radius: 99px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  .night.x-scroll::-webkit-scrollbar-thumb,
+  .night .x-scroll::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(127, 240, 255, .45), rgba(227, 91, 255, .45));
+    background-clip: padding-box;
+  }
+  @supports (-moz-appearance: none) {
+    .x-scroll { scrollbar-width: thin; scrollbar-color: rgba(122, 92, 255, .55) transparent; }
+    .night.x-scroll, .night .x-scroll { scrollbar-color: rgba(127, 240, 255, .45) transparent; }
+  }
+
+  .night { background: var(--night-1); color: var(--on-night); }
+  .x-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .x-en { font-family: var(--font-en); letter-spacing: .18em; }
+  .x-num { font-variant-numeric: tabular-nums; }
+
+  /* 省電力では飾りの動きを止める（.x-fx を付けた飾りだけ） */
+  :root[data-power="saver"] .x-fx,
+  :root[data-motion="reduced"] .x-fx { animation: none !important; }
+
+  :focus-visible { outline: 2px solid var(--g1); outline-offset: 2px; }
+}

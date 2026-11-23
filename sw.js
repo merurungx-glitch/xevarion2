@@ -1,0 +1,175 @@
+// XEVARION II — Service Worker（1本だけ）
+//
+// ★ ここ（src/sw.js）は「ひな形」。tools/release.py が BUILD とファイルの一覧を入れて release/sw.js に書き出す。
+//   手元の src（試験用サーバー 8800）では登録しない（core/swc.js：BUILD が 'dev' のときは使わない）
+//
+// ・一覧 FILES＝{ パス: [中身のハッシュ, 組] }。組：
+//     shell   … 入れたときに保存する（起動に要るプログラムと、タイトルまでの絵）
+//     app:<x> … そのアプリを初めて開いたときに、アプリのファイルをまとめて保存する（次からオフラインで遊べる）
+//     lazy    … 表示したときに保存する（大きな絵など）
+// ・保存は1つの箱（x2-files）。中身ごとにハッシュの札（x2-h）を付けておき、新しい版ではハッシュが変わったものだけ取り直す
+//   （新しい版は、待っているあいだ別の箱に集め、入れかわるときに移す＝遊んでいる途中で古い版と混ざらない）
+// ・新しい版は「待機」する。画面で「更新する」を押す（message 'skip'）と入れかわる。初めて入るときだけ、すぐ動く
+// ・ほかのサイトで保存するのは Google Fonts と Firebase の SDK（版つきの URL）だけ。データ・サインインの通信はさわらない
+const BUILD = '2026-11-23-4';
+const FILES = {"apps/guraplate/css/style.css":["c8fa3f7977fd","app:guraplate"],"apps/guraplate/css/xevarion.css":["3726635d2464","app:guraplate"],"apps/guraplate/img/logo.webp":["b188470c5663","app:guraplate"],"apps/guraplate/index.html":["a9f3a82fba8c","app:guraplate"],"apps/guraplate/js/account.js":["1fbe10ca38df","app:guraplate"],"apps/guraplate/js/audio.js":["67b9050447e4","app:guraplate"],"apps/guraplate/js/bgm.js":["859a0a07ef67","app:guraplate"],"apps/guraplate/js/game.js":["21ae6a773005","app:guraplate"],"apps/guraplate/js/physics.js":["cd8bca61f143","app:guraplate"],"apps/guraplate/js/render.js":["78f562474033","app:guraplate"],"apps/guraplate/js/setup.js":["c1a090c86c62","app:guraplate"],"apps/shift/css/front.css":["88430bfa6ecf","app:shift"],"apps/shift/css/shift.css":["0de56e73ff00","app:shift"],"apps/shift/img/logo.webp":["802fd7023848","app:shift"],"apps/shift/index.html":["82368494de98","app:shift"],"apps/shift/js/shift-account.js":["03e2fb0a8114","app:shift"],"apps/shift/js/shift-ai.js":["09c009dffcf5","app:shift"],"apps/shift/js/shift-core.js":["aae085c32804","app:shift"],"apps/shift/js/shift-front.js":["35c554857154","app:shift"],"apps/shift/js/shift-ui.js":["b87ad7f7bd5c","app:shift"],"apps/yacht/css/yacht.css":["006827a44435","app:yacht"],"apps/yacht/img/logo.webp":["51a371f1e61b","app:yacht"],"apps/yacht/index.html":["843fcfadff8a","app:yacht"],"apps/yacht/js/account.js":["e77e2c0d293c","app:yacht"],"apps/yacht/js/audio.js":["f1a626c4ba9c","app:yacht"],"apps/yacht/js/bgm.js":["cb4e1127da33","app:yacht"],"apps/yacht/js/dice3d.js":["d04741b54fc5","app:yacht"],"apps/yacht/js/game.js":["c85ce6c4d51c","app:yacht"],"apps/yacht/js/howto.js":["e51466acdb96","app:yacht"],"apps/yacht/js/rules.js":["08d367552cf3","app:yacht"],"apps/yacht/js/setup.js":["b45b7aeb9195","app:yacht"],"assets/apps/chain-192.webp":["c5d28091aa43","shell"],"assets/apps/chain-96.webp":["e12e6d1192a4","lazy"],"assets/apps/derby-192.webp":["7544ebdea210","shell"],"assets/apps/derby-96.webp":["4365a8d90f5f","lazy"],"assets/apps/gura-192.webp":["44d449381c31","shell"],"assets/apps/gura-96.webp":["58f59c96f850","lazy"],"assets/apps/ishida-192.webp":["b81f90f48638","shell"],"assets/apps/ishida-96.webp":["451d97a0b744","lazy"],"assets/apps/lex-192.webp":["5b16e9bb67cc","shell"],"assets/apps/lex-96.webp":["e02e75b83497","lazy"],"assets/apps/ngx-192.webp":["5f3628004818","shell"],"assets/apps/ngx-96.webp":["ccc338883c9a","lazy"],"assets/apps/quiz-192.webp":["5545f6217910","shell"],"assets/apps/quiz-96.webp":["15f70040ff76","lazy"],"assets/apps/shift-192.webp":["40779b3fc3bc","shell"],"assets/apps/shift-96.webp":["6d110a0d3ac4","lazy"],"assets/apps/yacht-192.webp":["f336b7d097c1","shell"],"assets/apps/yacht-96.webp":["956dcc826265","lazy"],"assets/brand/icon-180.png":["5063710eeaf2","shell"],"assets/brand/icon-192.png":["9affce6d319f","lazy"],"assets/brand/icon-32.png":["7886122da28c","lazy"],"assets/brand/icon-512.png":["a2301da38e31","lazy"],"assets/brand/icon-64.png":["993243f9a4e3","shell"],"assets/brand/icon-maskable-512.png":["6d363c08107f","lazy"],"assets/brand/ishida-on-dark-480.webp":["1a0a6dde74d5","shell"],"assets/brand/logo-640.webp":["f1e41b376b6f","shell"],"assets/brand/mark-256.webp":["3170d05eb494","lazy"],"assets/brand/mark-512.webp":["82a042348d92","shell"],"assets/brand/ngx-on-dark-480.webp":["c635de09d51e","shell"],"assets/brand/wordmark-navy-560.webp":["d4547b8cfa58","lazy"],"assets/brand/wordmark-white-560.webp":["a53b9f348bda","shell"],"assets/chara/miduki/banner-470.webp":["5f5c6b9c05b0","lazy"],"assets/chara/miduki/banner-940.webp":["6f1888c42daf","lazy"],"assets/chara/miduki/face-256.webp":["7efcebaba48a","shell"],"assets/chara/miduki/face-96.webp":["b4f7be11ea7c","shell"],"assets/chara/miduki/full-1024.webp":["35add0c39d50","shell"],"assets/chara/miduki/full-512.webp":["cb74f0b888f4","lazy"],"assets/chara/minase/banner-470.webp":["c857c390abc8","lazy"],"assets/chara/minase/banner-940.webp":["a87dfde7d1ea","lazy"],"assets/chara/minase/face-256.webp":["7c392ccfbbd6","shell"],"assets/chara/minase/face-96.webp":["a0cd68d21c06","shell"],"assets/chara/minase/full-1024.webp":["0d5a0fd398c5","shell"],"assets/chara/minase/full-512.webp":["d978157a716a","lazy"],"assets/chara/yuzuha/banner-470.webp":["c6c5edc085fb","lazy"],"assets/chara/yuzuha/banner-940.webp":["72b337edd235","lazy"],"assets/chara/yuzuha/face-256.webp":["38c8f87bebc3","shell"],"assets/chara/yuzuha/face-96.webp":["b7a67c380d62","shell"],"assets/chara/yuzuha/full-1024.webp":["497798d37294","shell"],"assets/chara/yuzuha/full-512.webp":["e88b177de59a","lazy"],"assets/gacha/grand-debut-1200.webp":["ec37d99a1579","lazy"],"assets/gacha/grand-debut-600.webp":["e10a1961cb3d","lazy"],"assets/lobby/park-940.webp":["3100ce215035","lazy"],"assets/ui/gem-64.webp":["48a86ae1660b","shell"],"assets/ui/ticket-128.webp":["d4375810a002","shell"],"assets/ui/ticket-640.webp":["2dbeecd9d7aa","lazy"],"assets/ui/xeva-64.webp":["871d3213ba48","shell"],"core/account.js":["f885ee9d122a","shell"],"core/backend/firebase.js":["54f0d38a9788","shell"],"core/backend/index.js":["18bde72a7c61","shell"],"core/backend/local.js":["483d8ae013bb","shell"],"core/boot.js":["9fd3136f931e","shell"],"core/chara.js":["3eafad6c9c61","shell"],"core/config.js":["117412129aa7","shell"],"core/gacha.js":["fe11d89f4ad6","shell"],"core/i18n.js":["6ad2307bb815","shell"],"core/merge.js":["87790efe7b24","shell"],"core/party.js":["59b78e23483d","shell"],"core/power.js":["2a86245ee727","shell"],"core/router.js":["6e63fb643c4a","shell"],"core/store.js":["9076a9484941","shell"],"core/swc.js":["a45ff94638d7","shell"],"core/sync.js":["5d232fdaf0ae","shell"],"core/viewport.js":["2b7f386c4781","shell"],"core/wallet.js":["b412cd88f9bc","shell"],"index.html":["38eb6d41ec6e","shell"],"manifest.webmanifest":["a0aafc90a917","shell"],"portal/app-host.js":["511da49e2764","shell"],"portal/apps.js":["0d9a111cdca0","shell"],"portal/auth.js":["c5f392f2d506","shell"],"portal/bridge.js":["175009e172c4","shell"],"portal/chara.js":["a401b94d0719","shell"],"portal/first.js":["b04881f3d1ce","shell"],"portal/fx.css":["839ca9853322","shell"],"portal/gacha-result.js":["41ad970cfb27","shell"],"portal/gacha.js":["df6cfdfa2d9f","shell"],"portal/home.js":["2d66ce4f0285","shell"],"portal/intro.js":["4ab77072995a","shell"],"portal/lobby.js":["7d9d8f0254d7","shell"],"portal/menu.js":["a29599a0a6a5","shell"],"portal/portal.css":["3a392d5b2782","shell"],"portal/routes.js":["c8d652637e32","shell"],"portal/shell.js":["7c4714018454","shell"],"portal/title.js":["a1def6e57b3f","shell"],"portal/wallet-sheet.js":["65f0d6d52b87","shell"],"ui/base.css":["4df828c2374f","shell"],"ui/components.css":["2da22ced48c4","shell"],"ui/dom.js":["b85ababa534d","shell"],"ui/earn.js":["395fb07d33a2","shell"],"ui/fx.js":["fb48f46ddba4","shell"],"ui/icons.js":["361ad8630d4e","shell"],"ui/loading.js":["426b2d9363e3","shell"],"ui/sheet.js":["35d70025a610","shell"],"ui/toast.js":["b580dc2809b3","shell"],"ui/tokens.css":["7631e5d97f78","shell"]};
+
+const LIVE = 'x2-files';
+const STAGE = 'x2-stage-' + BUILD;
+const EXT = 'x2-ext';
+const EXT_MAX = 60;
+const BASE = new URL('./', self.location).href;
+const BASE_PATH = new URL(BASE).pathname;
+
+/** URL → 一覧のパス（? と # は見ない。「…/」は「…/index.html」） */
+function rel(href) {
+  const u = new URL(href);
+  let p = decodeURIComponent(u.pathname);
+  if (!p.startsWith(BASE_PATH)) return null;
+  p = p.slice(BASE_PATH.length);
+  if (p === '' || p.endsWith('/')) p += 'index.html';
+  return p;
+}
+const hashOf = (res) => (res ? res.headers.get('x2-h') : null);
+const groupOf = (p) => (FILES[p] ? FILES[p][1] : '');
+
+/** 同時に n 本まで */
+async function pool(list, n, fn) {
+  let i = 0;
+  const run = async () => { while (i < list.length) { const k = i++; try { await fn(list[k]); } catch (e) { /* 1つ失敗してもほかは続ける */ } } };
+  await Promise.all(Array.from({ length: Math.min(n, list.length) }, run));
+}
+
+/** 取ってきて、ハッシュの札を付ける（★ GitHub Pages の10分のキャッシュは使わない＝いつも確かめる） */
+async function fetchFile(p) {
+  const res = await fetch(BASE + p, { cache: 'no-cache' });
+  if (!res.ok) throw new Error(p + ' ' + res.status);
+  const headers = new Headers(res.headers);
+  headers.set('x2-h', FILES[p][0]);
+  return new Response(await res.blob(), { status: res.status, statusText: res.statusText, headers });
+}
+
+// ---- 入れる：shell のうち、変わったものだけを待機の箱へ ----
+self.addEventListener('install', (e) => {
+  e.waitUntil((async () => {
+    const live = await caches.open(LIVE);
+    const stage = await caches.open(STAGE);
+    const want = Object.keys(FILES).filter((p) => groupOf(p) === 'shell');
+    let bad = 0;
+    await pool(want, 6, async (p) => {
+      const old = await live.match(BASE + p);
+      if (old && hashOf(old) === FILES[p][0]) return;
+      const st = await stage.match(BASE + p);
+      if (st && hashOf(st) === FILES[p][0]) return;
+      try { await stage.put(BASE + p, await fetchFile(p)); } catch (err) { bad++; throw err; }
+    });
+    if (bad) throw new Error('shell: ' + bad + ' 件を取れませんでした');   // 足りないまま入らない（次の機会にやり直す）
+    if (!self.registration.active) self.skipWaiting();   // 初めて入るときは、すぐ動く
+  })());
+});
+
+// ---- 入れかわる：待機の箱を移して、古いものを消す ----
+self.addEventListener('activate', (e) => {
+  e.waitUntil((async () => {
+    const live = await caches.open(LIVE);
+    const stage = await caches.open(STAGE);
+    for (const req of await stage.keys()) await live.put(req, await stage.match(req));
+    for (const req of await live.keys()) {
+      const p = rel(req.url);
+      const f = p && FILES[p];
+      if (!f) { await live.delete(req); continue; }
+      if (hashOf(await live.match(req)) !== f[0]) await live.delete(req);
+    }
+    for (const k of await caches.keys()) if (k.startsWith('x2-stage-')) await caches.delete(k);
+    await self.clients.claim();
+  })());
+});
+
+self.addEventListener('message', (e) => {
+  if (e.data && e.data.t === 'skip') self.skipWaiting();
+});
+
+// ---- 出す ----
+self.addEventListener('fetch', (e) => {
+  const req = e.request;
+  if (req.method !== 'GET') return;
+  const url = new URL(req.url);
+  if (url.origin === self.location.origin) {
+    const p = rel(url.href);
+    if (!p || !FILES[p]) return;   // 一覧に無いもの（sw.js など）は SW を通さない
+    e.respondWith(serve(p, e));
+    return;
+  }
+  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com' || /^https:\/\/www\.gstatic\.com\/firebasejs\//.test(url.href)) {
+    e.respondWith(ext(e, url));
+  }
+});
+
+async function serve(p, e) {
+  const f = FILES[p];
+  const live = await caches.open(LIVE);
+  const hit = await live.match(BASE + p);
+  const app = f[1].startsWith('app:') ? f[1] : '';
+  if (hit && hashOf(hit) === f[0]) {
+    if (app) e.waitUntil(warm(app));
+    return hit;
+  }
+  try {
+    const res = await fetchFile(p);
+    await live.put(BASE + p, res.clone());
+    if (app) e.waitUntil(warm(app));
+    return res;
+  } catch (err) {
+    if (hit) return hit;   // 古い版のものでも、無いよりは出す
+    if (e.request.mode === 'navigate') return offlinePage(p);
+    return Response.error();
+  }
+}
+
+/** アプリを初めて開いたとき：そのアプリのファイルをまとめて保存（この SW が動いているあいだに1回） */
+const warmed = new Set();
+async function warm(g) {
+  if (warmed.has(g)) return;
+  warmed.add(g);
+  const live = await caches.open(LIVE);
+  const list = Object.keys(FILES).filter((p) => FILES[p][1] === g);
+  await pool(list, 4, async (p) => {
+    const old = await live.match(BASE + p);
+    if (old && hashOf(old) === FILES[p][0]) return;
+    await live.put(BASE + p, await fetchFile(p));
+  });
+}
+
+/** Google Fonts・Firebase の SDK：フォントの本体と SDK は版つき＝保存したものをそのまま。フォントの CSS は保存したものを出して裏で新しく */
+async function ext(e, url) {
+  const c = await caches.open(EXT);
+  const hit = await c.match(e.request);
+  const keep = url.hostname !== 'fonts.googleapis.com';
+  if (hit && keep) return hit;
+  const net = fetch(e.request).then(async (res) => {
+    if (res && (res.ok || res.type === 'opaque')) {
+      await c.put(e.request, res.clone());
+      const keys = await c.keys();
+      for (let i = 0; i < keys.length - EXT_MAX; i++) await c.delete(keys[i]);
+    }
+    return res;
+  }).catch(() => null);
+  if (hit) { e.waitUntil(net); return hit; }
+  return (await net) || Response.error();
+}
+
+/** 通信できないうえに保存も無いとき（まだ開いたことのないアプリなど） */
+function offlinePage(p) {
+  const inApp = p.startsWith('apps/');
+  const html = '<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<title>オフライン</title><style>html,body{margin:0;height:100%;background:#0b0e1f;color:#eef1ff;font-family:system-ui,-apple-system,"Hiragino Sans",sans-serif}' +
+    'main{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;box-sizing:border-box;text-align:center}' +
+    'b{font-size:18px}p{margin:0;color:#aab2d6;font-size:14px;line-height:1.8;max-width:420px}' +
+    'button{margin-top:6px;padding:12px 26px;border:0;border-radius:99px;background:linear-gradient(90deg,#3a6bff,#9a3dff 62%,#e35bff);color:#fff;font:inherit;font-weight:800;font-size:15px}</style></head><body><main>' +
+    '<b>オフラインです</b>' +
+    (inApp
+      ? '<p>このアプリは、まだこの端末に入っていません。通信できるときに一度ひらくと、次からはオフラインでも遊べます。</p><button onclick="try{parent.X2.exit()}catch(e){history.back()}">もどる</button>'
+      : '<p>通信できるときに、もう一度ひらいてください。一度ひらくと、次からはオフラインでも起動できます。</p><button onclick="location.reload()">もう一度ためす</button>') +
+    '</main></body></html>';
+  return new Response(html, { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+}

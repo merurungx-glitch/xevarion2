@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<!-- ★ XEVARION II のアプリ：II の中（#/app/shift の iframe）でだけ動く。II の機能は親の window.X2（src/portal/bridge.js）だけを使う。
+     直接開かれたら II の入口へ送る。初代の共通部品（xeva.js・xeva-cloud・game-link・各 SW・起動ロゴ・safebottom など）は読まない -->
+<script>
+(function () {
+  var P = null;
+  try { P = window.parent !== window ? window.parent.X2 : null; } catch (e) { P = null; }
+  if (!P) {
+    if (window.parent === window) location.replace('../../index.html#/app/shift');
+    throw new Error('MagiShift は XEVARION II の中で開いてください');
+  }
+  window.X2 = P;
+  P.attach(window); /* 余白・動作モード・省電力のコマ数 */
+})();
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
+<title>MagiShift</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Baloo+2:wght@700;800&display=swap" rel="stylesheet">
+<!-- はじめの画面と準備（MagiQuiz と同じ全画面）の字。Yacht・GuraPlate と同じ指定（読みこみを使い回せる） -->
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800;900&family=Baloo+2:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/shift.css?v=1" />
+<link rel="stylesheet" href="css/front.css?v=1" />
+</head>
+<body>
+<!-- ══════════════════════════════════════════════════════════════
+     MagiShift（2026-09-21 新作・10-13 作り直し → 2026-11-23 XEVARION II へ移しかえ）
+     ・はじめの画面と準備（① メンバー ② ルール）は MagiQuiz と同じ全画面（#front・js/shift-front.js）。色はロゴの青紫
+     ・順番のカード → 対戦 → 勝利 → 結果・設定・ルール・戦績は初代のまま（js/shift-ui.js）
+     ・連携・賞金・アイコンは II のパーティーの部品（js/shift-account.js → window.X2）
+     ══════════════════════════════════════════════════════════════ -->
+<div class="bgfx" aria-hidden="true"><i></i><i></i><i></i></div>
+
+<!-- ① はじめの画面・② 準備（全画面・中身は js/shift-front.js が描く） -->
+<div id="front" class="front">
+  <div class="bg" aria-hidden="true"><i class="bg-rays"></i><i class="bg-grad"></i></div>
+  <section id="titleScr" class="scr"></section>
+  <section id="setupScr" class="scr"></section>
+  <!-- アイコン・連携のシート -->
+  <div id="fSheetOv" class="sov hidden"><div class="fsheet" id="fSheet"></div></div>
+</div>
+
+<!-- ★★ 2026-09-22 順番の抽選 → ★★ 2026-10-15 カードめくり（1人1枚ずつめくって、数字の小さい人から） -->
+<section id="order" class="scr">
+  <div class="ocard">
+    <h2 id="orderTitle" class="otitle">カードを1枚えらんでね</h2>
+    <p id="orderSub" class="osub"></p>
+    <div id="orderCards" class="ocards"></div>
+    <button id="orderAuto" class="btn sm oauto" data-a="orderAuto"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h3l10 10h3M4 17h3l2.6-2.6M14.4 9.6 17 7h3"/><path d="M18 4.5 20.5 7 18 9.5M18 14.5l2.5 2.5-2.5 2.5"/></svg>おまかせ（のこりを全部めくる）</button>
+    <div id="orderList"></div>
+    <div id="orderBtns" class="obtns" hidden>
+      <button class="btn pri big" data-a="orderGo">この順番ではじめる！</button>
+      <button class="btn" data-a="orderRedo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4.5V9h-4.5"/></svg>もう一度きめる</button>
+    </div>
+    <button class="bbtn mid" data-a="orderBack"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg><span>準備にもどる</span></button>
+  </div>
+</section>
+
+<!-- ④ 対戦 -->
+<section id="game" class="scr">
+  <div class="gtop">
+    <button class="ibtn" data-a="gmenu" aria-label="メニュー"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14"/></svg></button>
+    <div class="gtitle"><b>Magi<i>Shift</i></b><span id="gmeta"></span></div>
+    <button class="ibtn" data-a="rules" aria-label="ルール"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.4 2.3c-.6.3-1 .8-1 1.5v.6"/><path d="M12 16.6v.4"/></svg></button>
+  </div>
+  <!-- ★★ 2026-10-20 プレイヤーの札と、その下に戦況バー（#gwar・設定で非表示にできる）をひとまとめに -->
+  <div class="gside"><div id="gplayers"></div><div id="gwar" class="gwar" hidden></div></div>
+  <div class="bstage"><div id="board"></div></div>
+  <div id="turnbar"></div>
+</section>
+
+<!-- ⑤ 勝利（盤の上に重ねて出す＝そろった列が見える） -->
+<div id="win" class="winov" hidden><div id="winbox"></div></div>
+
+<!-- ⑥ 結果 -->
+<section id="result" class="scr">
+  <div class="topbar"><span></span><h2>試合結果</h2><span></span></div>
+  <div class="swrap">
+    <div id="resultList"></div>
+    <div id="resultMeta"></div>
+  </div>
+  <div class="sticky row"><button class="btn pri big" data-a="again"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4.5V9h-4.5"/></svg>もう一度あそぶ</button><button class="btn big" data-a="menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.2 12 4.5l8 6.7"/><path d="M6.5 9.5v9.5h11V9.5"/><path d="M10 19v-5h4v5"/></svg>タイトルへ</button></div>
+</section>
+
+<!-- 設定 -->
+<section id="settings" class="scr">
+  <div class="topbar">
+<button class="bbtn" data-a="back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg><span>もどる</span></button>
+    <h2>設定</h2><span></span>
+  </div>
+  <div class="swrap">
+    <div class="card"><h3>盤面サイズ<small>「人数どおり」は 2人 5×5 〜 6人 9×9・7〜8人 10×10</small></h3><div class="chips" id="setSize"></div></div>
+    <div class="card"><h3>勝利条件（いくつ並べるか）</h3><div class="chips" id="setWin"></div></div>
+    <div class="card"><h3>1人が置ける駒の数</h3><div class="chips" id="setPieces"></div></div>
+    <!-- ★★ 2026-10-14 あと1つでそろうマスの印（ご指定・標準は表示しない） -->
+    <div class="card"><h3>あと1つでそろうマスの印<small>そこに置けばそろうマスに、その人の色の輪を出します</small></h3><div class="chips" id="setReach"></div></div>
+    <!-- ★★ 2026-10-20 戦況バー（ご指定・設定で非表示にもできる） -->
+    <div class="card"><h3>戦況バー<small>プレイヤーの札の下に、だれが優勢かを1本の帯で出します</small></h3><div class="chips" id="setWar"></div></div>
+    <div class="card">
+      <div class="srow first"><b>効果音</b><label class="sw"><input type="checkbox" id="setSe"><span></span></label></div>
+      <div class="srow"><b>BGM</b><label class="sw"><input type="checkbox" id="setBgm"><span></span></label></div>
+      <div class="srow"><b>CPU の手をゆっくり見せる</b><label class="sw"><input type="checkbox" id="setSlow"><span></span></label></div>
+    </div>
+    <div class="foot"><button class="btn sm ghost" data-a="setreset"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4.5V9h4.5"/></svg>初期設定に戻す</button></div>
+  </div>
+</section>
+
+<!-- ルール -->
+<section id="rules" class="scr">
+  <div class="topbar">
+<button class="bbtn" data-a="back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg><span>もどる</span></button>
+    <h2>ルール</h2><span></span>
+  </div>
+  <div class="swrap" id="rulesBody"></div>
+</section>
+
+<!-- 戦績 -->
+<section id="stats" class="scr">
+  <div class="topbar">
+<button class="bbtn" data-a="title"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg><span>もどる</span></button>
+    <h2>戦績</h2><span></span>
+  </div>
+  <div class="swrap"><div id="statList"></div></div>
+</section>
+
+<div id="ov" class="ov"><div class="sheet" id="sheet"></div></div>
+<div id="toast" class="toast" hidden></div>
+<div id="fx" class="fx" aria-hidden="true"></div>
+
+<script src="js/shift-core.js?v=1"></script>
+<script src="js/shift-ai.js?v=1"></script>
+<script src="js/shift-account.js?v=1"></script>
+<script src="js/shift-ui.js?v=1"></script>
+<script src="js/shift-front.js?v=1"></script>
+<script>
+(function () {
+  MShiftFront.init();
+  MShiftFront.showTitle();
+  /* 字（Web フォント）がそろったら II のロード画面を消す（1.5 秒まで待つ） */
+  var fonts = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+  Promise.race([fonts, new Promise(function (r) { setTimeout(r, 1500); })]).then(function () {
+    requestAnimationFrame(function () { X2.ready(); });
+  });
+})();
+</script>
+</body>
+</html>

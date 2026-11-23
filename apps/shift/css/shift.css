@@ -1,0 +1,646 @@
+/* ============================================================
+   MagiShift — 見た目（★★ 2026-10-13 1から作り直し）
+   ------------------------------------------------------------
+   ご指定「より分かりやすいシンプルかつライトな UI」「動きがあり盛り上がれる、カジュアルで少し控えめなモーション」
+   ・白と淡い青灰の2色を土台に、色はプレイヤーの駒と、いまの番の人の色（--tc）だけに使う
+   ・動き：画面の切りかえ（ふわっと）、置く（ぽんっと弾む＋波紋）、動かす・押す（すべる）、
+           番の交代（札が浮く・盤のふちが番の人の色に）、勝利（そろった列が光る＋紙ふぶきを少し）
+   ・動きを減らす設定（OS の「視差効果を減らす」）では止める
+   ★ どの画面も「画面の高さぶんの板（.scr）」の中でスクロールする。文書そのものは動かさない
+     （iPhone のアプリ表示＝html.xv-full でも下が切れない。xeva-safebottom.js が --xv-fullh を配る）
+   ============================================================ */
+:root{
+  --bg:#f5f7fc; --bg2:#eef2f9; --card:#fff; --ink:#1d2445; --sub:#69728f; --mute:#9aa3bd; --line:#e5eaf4; --line2:#d7deee;
+  --pri:#4c6fff; --pri2:#7a5cff; --priS:#eef1ff; --ok:#16a865; --warn:#f59e0b; --ng:#ef4b5a;
+  --r:20px;
+  --sh:0 1px 2px rgba(29,36,69,.04),0 6px 20px rgba(29,36,69,.07);
+  --sh2:0 2px 6px rgba(29,36,69,.05),0 18px 44px rgba(29,36,69,.12);
+  --ease:cubic-bezier(.2,.8,.2,1); --spring:cubic-bezier(.34,1.56,.64,1);
+  /* ★ II の中（iframe）では env() が 0 になるので、余白は II が --x2-st/sr/sb/sl で渡す（portal/bridge.js の attach） */
+  --safet:var(--x2-st,env(safe-area-inset-top,0px)); --safeb:var(--x2-sb,env(safe-area-inset-bottom,0px));
+  --pl:max(16px,var(--x2-sl,env(safe-area-inset-left,0px))); --pr:max(16px,var(--x2-sr,env(safe-area-inset-right,0px)));
+  --tc:#4c6fff;          /* いまの番の人の色（JS が入れる） */
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+html{background:var(--bg)}
+/* ★ 初代の「下の帯」の対策（html.xv-full）は II 側でしている：下の余白は II が実測した --x2-sb、描けない帯は html の地の色をアプリの色に（portal/app-host.js） */
+body{position:relative;background:var(--bg);color:var(--ink);font-family:'Noto Sans JP',system-ui,-apple-system,'Hiragino Sans',sans-serif;font-size:15px;line-height:1.6;
+  overscroll-behavior:none;-webkit-text-size-adjust:100%;-webkit-user-select:none;user-select:none}
+input{-webkit-user-select:text;user-select:text;font:inherit}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:none;touch-action:manipulation}
+a{color:inherit}
+[hidden]{display:none!important}
+svg{display:block}
+.btn svg,.ibtn svg,.tool svg,.homebtn svg,.tbtn svg,.mode svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.fl{fill:currentColor!important;stroke:none!important}
+
+/* うしろの、ゆっくり漂う淡い色 */
+.bgfx{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bgfx i{position:absolute;width:56vmax;height:56vmax;border-radius:50%;filter:blur(60px);opacity:.42;animation:drift 22s ease-in-out infinite alternate}
+.bgfx i:nth-child(1){left:-20vmax;top:-24vmax;background:#cfdcff}
+.bgfx i:nth-child(2){right:-22vmax;top:8vmax;background:#e6dcff;animation-duration:26s;animation-delay:-6s}
+.bgfx i:nth-child(3){left:10vmax;bottom:-30vmax;background:#d4f3e3;animation-duration:30s;animation-delay:-12s}
+@keyframes drift{to{transform:translate(4vmax,3vmax) scale(1.08)}}
+
+/* ══ 画面の板 ══ */
+.scr{position:absolute;inset:0;z-index:1;display:none;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+  padding:calc(var(--safet) + 12px) var(--pr) calc(var(--safeb) + 20px) var(--pl)}
+.scr.on{display:block;animation:scrIn .34s var(--ease) both}
+@keyframes scrIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+/* 下に固定のボタン列がある画面（準備・結果）：板を縦の flex にして、ボタン列は板の中で sticky */
+#setup.on,#result.on{display:flex;flex-direction:column;padding-bottom:0}
+#setup .swrap,#result .swrap{flex:1 0 auto}
+.sticky{position:sticky;bottom:0;z-index:5;display:flex;justify-content:center;gap:10px;flex:none;
+  margin:16px calc(-1 * var(--pr)) 0 calc(-1 * var(--pl));padding:14px var(--pr) calc(var(--safeb) + 14px) var(--pl);
+  background:linear-gradient(180deg,rgba(245,247,252,0) 0,rgba(245,247,252,.94) 26%,var(--bg) 60%)}
+.sticky .btn{width:min(520px,100%)}
+.sticky.row .btn{flex:1;max-width:260px}
+
+/* ══ 部品 ══ */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:0 20px;border-radius:16px;font-weight:900;font-size:15.5px;
+  background:var(--card);border:1.5px solid var(--line2);color:var(--ink);box-shadow:var(--sh);transition:transform .16s var(--ease),box-shadow .2s,background .2s,opacity .2s}
+.btn svg{width:20px;height:20px;flex:none}
+.btn.pri{background:linear-gradient(135deg,#5878ff,#7d5cff);border-color:transparent;color:#fff;box-shadow:0 8px 22px rgba(88,110,255,.32)}
+.btn.big{min-height:58px;font-size:17px;border-radius:18px}
+.btn.sm{min-height:38px;font-size:13px;padding:0 14px;border-radius:12px}
+.btn.ghost{background:transparent;box-shadow:none;color:var(--sub)}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.45;pointer-events:none}
+.ibtn{width:44px;height:44px;flex:none;border-radius:14px;background:var(--card);border:1px solid var(--line);box-shadow:var(--sh);display:grid;place-items:center;color:var(--ink);transition:transform .16s var(--ease)}
+.ibtn svg{width:22px;height:22px}
+.ibtn:active{transform:scale(.92)}
+.linkbtn{display:block;margin:10px auto 0;color:var(--sub);font-weight:800;font-size:13px;text-decoration:underline;text-underline-offset:3px;padding:6px}
+.note{color:var(--sub);font-size:12px;line-height:1.7;margin-top:10px}
+.note b{color:var(--ink)}
+/* ★★ 2026-10-14 左の「‹ もどる」が札になって幅が変わっても、見出しは画面のまん中（左右を同じ幅の列に） */
+.topbar{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:10px;max-width:720px;margin:0 auto 14px;
+  width:100%}   /* ★★ 2026-10-24 ご報告「ゲームの準備画面の戻るボタンが真ん中に寄っている」：中身の幅に縮んで中央に置かれていた → 本文と同じ幅いっぱい */
+.topbar h2{font-size:18px;font-weight:900;text-align:center;white-space:nowrap}
+.topbar>:first-child{justify-self:start}
+.topbar>:last-child{justify-self:end}
+.topbar>span{width:44px}
+.swrap{max-width:720px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;box-shadow:var(--sh)}
+.card h3{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:15px;font-weight:900;margin-bottom:12px}
+.card h3 small{flex-basis:100%;font-size:11.5px;color:var(--sub);font-weight:700;margin-top:-6px}
+.hn{width:24px;height:24px;border-radius:8px;background:var(--priS);color:var(--pri);display:grid;place-items:center;font-size:13px;font-weight:900}
+.foot{display:flex;gap:10px;justify-content:center;margin-top:6px;flex-wrap:wrap}
+
+/* ── 駒 ── */
+.pc{width:34px;height:34px;flex:none;display:block;overflow:visible}
+.pc .bg{fill:var(--pc);stroke:rgba(0,0,0,.10);stroke-width:.8}
+.pc .hl{fill:#fff;opacity:.22}
+.pc .mk{fill:var(--pk,#fff);stroke:var(--pk,#fff);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.pc .mk path,.pc .mk rect,.pc .mk circle{fill:var(--pk,#fff)}
+/* ★★ 2026-10-16 ✕（バツ）は線で描く形なので太く（塗りは使わない） */
+.pc .mk path[d^="M7.6 7.6"]{stroke-width:3.2}
+.av{width:32px;height:32px;border-radius:50%;object-fit:cover;background:var(--bg2);flex:none;box-shadow:0 0 0 2px #fff,0 0 0 3.5px var(--c,var(--line2))}
+.av.ph{display:grid;place-items:center;font-weight:900;color:var(--sub);font-size:13px}
+
+/* ══ ① タイトル ══ */
+#title.on{display:flex;align-items:center;justify-content:center}
+.homebtn{position:absolute;top:calc(var(--safet) + 12px);left:var(--pl);z-index:2;display:inline-flex;align-items:center;gap:2px;padding:7px 13px 7px 7px;border-radius:99px;
+  background:var(--card);border:1px solid var(--line);box-shadow:var(--sh);color:var(--sub);font-weight:900;font-size:12.5px;text-decoration:none}
+.homebtn svg{width:18px;height:18px}
+.tmain{display:flex;flex-direction:column;align-items:center;gap:22px;width:min(420px,100%);padding:58px 0 8px;margin:auto 0}
+.tlogo{text-align:center;animation:rise .6s var(--ease) both}
+.logo{font-family:'Baloo 2','Noto Sans JP',sans-serif;font-size:clamp(48px,14vw,76px);font-weight:800;line-height:1;color:var(--ink);letter-spacing:-.02em}
+.logo i,.gtitle i{font-style:normal;background:linear-gradient(135deg,#4c6fff,#8b5cf6);-webkit-background-clip:text;background-clip:text;color:transparent}
+.tagline{color:var(--sub);font-weight:800;font-size:14px;margin-top:8px}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.tdemo{--n:4;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr));gap:6px;width:min(230px,62vw);aspect-ratio:1;padding:8px;background:var(--card);border-radius:22px;border:1px solid var(--line);
+  box-shadow:var(--sh2);animation:rise .6s .08s var(--ease) both}
+.tdemo .cell{cursor:default}
+.tbtns{width:100%;display:flex;flex-direction:column;gap:10px;animation:rise .6s .16s var(--ease) both}
+.tbtns .btn{width:100%}
+.tsmall{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:2px}
+.tool{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px 10px;border-radius:16px;background:var(--card);border:1px solid var(--line);box-shadow:var(--sh);
+  font-weight:800;font-size:12.5px;color:var(--sub);transition:transform .16s var(--ease)}
+.tool svg{width:24px;height:24px;color:var(--pri)}
+.tool:active{transform:scale(.95)}
+
+/* ══ ② 準備 ══ */
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;background:var(--bg2);padding:4px;border-radius:15px}
+.seg button{min-height:46px;border-radius:12px;font-weight:900;font-size:15px;color:var(--sub);transition:background .2s,color .2s,box-shadow .2s,transform .16s var(--ease);line-height:1.2}
+.seg button small{display:block;font-size:10px;font-weight:700;opacity:.75}
+.seg button.on{background:var(--card);color:var(--ink);box-shadow:0 2px 10px rgba(29,36,69,.12)}
+.seg button:active{transform:scale(.96)}
+.rinfo{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.rinfo span{display:inline-flex;align-items:center;gap:4px;background:var(--bg2);color:var(--sub);font-weight:800;font-size:12px;padding:3px 10px;border-radius:99px}
+.rinfo span b{color:var(--ink)}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mode{position:relative;text-align:left;padding:14px 14px 12px;border-radius:16px;border:2px solid var(--line);background:var(--card);display:flex;flex-direction:column;gap:4px;
+  transition:border-color .2s,background .2s,box-shadow .2s,transform .16s var(--ease)}
+.mode .mt{display:flex;align-items:center;gap:8px;font-weight:900;font-size:15px}
+.mode .mt svg{width:26px;height:26px;color:var(--pri);flex:none}
+.mode small{font-size:12px;color:var(--sub);line-height:1.6;font-weight:600}
+.mode.on{border-color:var(--pri);background:var(--priS);box-shadow:0 8px 22px rgba(76,111,255,.16)}
+.mode.on::after{content:"";position:absolute;top:10px;right:10px;width:18px;height:18px;border-radius:50%;background:var(--pri) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 12.5l4 4 8-9' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/14px no-repeat}
+.mode:active{transform:scale(.98)}
+#plist{display:flex;flex-direction:column;gap:8px}
+.prow{display:flex;align-items:center;gap:8px;padding:8px;border-radius:16px;background:var(--bg2);animation:rowIn .32s var(--ease) both}
+@keyframes rowIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+.prow .pc{width:32px;height:32px}
+.prow .av{width:30px;height:30px}
+.pname-in{flex:1;min-width:0;height:42px;padding:0 12px;border-radius:12px;border:1.5px solid var(--line2);background:var(--card);font-size:16px;font-weight:800;color:var(--ink)}
+.pname-in:focus{outline:none;border-color:var(--c);box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 20%,transparent)}
+.ptype{display:flex;flex:none;background:var(--card);border:1px solid var(--line2);border-radius:12px;padding:3px;gap:2px}
+.ptype button{height:34px;padding:0 10px;border-radius:9px;font-size:12.5px;font-weight:900;color:var(--sub);transition:background .2s,color .2s}
+.ptype button.on{background:var(--c);color:#fff}
+.gl-link-btn{flex:none;max-width:36%;height:42px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 12px;border:1.5px solid var(--line2);
+  background:var(--card);color:#6d4be0;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer}
+.gl-link-btn.on{background:linear-gradient(100deg,#13c08a,#2e8bff);border-color:transparent;color:#fff}
+.gl-link-btn.pending{background:linear-gradient(100deg,#ffb020,#ff8c42);border-color:transparent;color:#fff;animation:glPulse 1.8s ease-in-out infinite}
+@keyframes glPulse{50%{filter:brightness(1.1)}}
+@media (max-width:480px){
+  .prow{flex-wrap:wrap}
+  .gl-link-btn.on,.gl-link-btn.pending{max-width:none;flex:1 1 100%;height:38px}
+  .modes{grid-template-columns:1fr}
+}
+.ptypeonly{font-size:11px;color:var(--sub);font-weight:800}
+#cpuCard.hide{display:none}
+
+/* ══ ③ 順番の抽選 ══ */
+#order.on{display:flex;align-items:center;justify-content:center}
+.ocard{background:var(--card);border:1px solid var(--line);border-radius:26px;padding:24px 20px 16px;width:min(440px,100%);text-align:center;box-shadow:var(--sh2);margin:auto 0;animation:rise .4s var(--ease) both}
+.ocard h2{font-size:19px;font-weight:900;margin-bottom:8px}
+.odice{width:78px;height:78px;margin:6px auto 14px;position:relative}
+.odice .die{width:100%;height:100%;border-radius:20px;background:#fff;border:2px solid var(--line2);box-shadow:0 10px 24px rgba(29,36,69,.14);display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:12px;gap:2px}
+.odice .die i{border-radius:50%;background:transparent;margin:3px}
+.odice .die i.p{background:var(--ink)}
+.odice .coin{width:100%;height:100%;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3b0,#f5c518 55%,#d99a00);box-shadow:0 10px 24px rgba(217,154,0,.3);display:grid;place-items:center;font-family:'Baloo 2';font-weight:800;font-size:30px;color:#a86f00}
+.odice.spin .die{animation:roll .5s linear infinite}
+.odice.spin .coin{animation:flip .45s linear infinite}
+.odice.land .die,.odice.land .coin{animation:land .5s var(--spring) both}
+@keyframes roll{0%{transform:rotate(0) translateY(0)}25%{transform:rotate(90deg) translateY(-8px)}50%{transform:rotate(180deg) translateY(0)}75%{transform:rotate(270deg) translateY(-8px)}100%{transform:rotate(360deg)}}
+@keyframes flip{to{transform:rotateY(360deg)}}
+@keyframes land{0%{transform:scale(.7)}100%{transform:scale(1)}}
+#orderList{display:flex;flex-direction:column;gap:8px}
+.oitem{display:flex;align-items:center;gap:10px;background:var(--bg2);border-radius:16px;padding:8px 12px;animation:popIn .42s var(--spring) both}
+.oitem .ork{width:30px;height:30px;border-radius:10px;background:var(--card);display:grid;place-items:center;font-size:16px;font-weight:900;color:var(--sub);flex:none}
+.oitem:first-child .ork{background:var(--c);color:#fff}
+.oitem .pc{width:30px;height:30px}
+.oitem .onm{font-size:16px;font-weight:900;flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.oitem .ofirst{font-size:11px;font-weight:900;background:var(--c);color:#fff;padding:2px 9px;border-radius:99px;flex:none}
+.oitem .ocpu{font-size:10.5px;font-weight:900;color:var(--sub);background:var(--card);padding:1px 7px;border-radius:99px;flex:none}
+.obtns{display:flex;flex-direction:column;gap:8px;margin-top:14px;animation:rise .35s var(--ease) both}
+@keyframes popIn{from{opacity:0;transform:scale(.86)}to{opacity:1;transform:none}}
+
+/* ══ ④ 対戦 ══ */
+#game.on{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr) auto;gap:10px;overflow:hidden;
+  padding:calc(var(--safet) + 10px) var(--pr) calc(var(--safeb) + 12px) var(--pl)}
+.gtop{display:flex;align-items:center;gap:10px}
+.gtitle{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;line-height:1.15}
+.gtitle b{font-family:'Baloo 2','Noto Sans JP',sans-serif;font-size:21px;font-weight:800}
+.gtitle span{font-size:11.5px;color:var(--sub);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+#gplayers{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:8px}
+#gplayers[data-n="2"]{grid-template-columns:repeat(2,minmax(0,1fr))}
+#gplayers[data-n="4"]{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (min-width:560px){#gplayers[data-n]{grid-template-columns:repeat(var(--cols,3),minmax(0,1fr))}}
+.pchip{position:relative;display:flex;align-items:center;gap:7px;padding:7px 9px;border-radius:15px;background:var(--card);border:1.5px solid var(--line);box-shadow:var(--sh);min-width:0;
+  transition:transform .35s var(--spring),border-color .3s,box-shadow .3s,background .3s,opacity .3s}
+.pchip .ord{flex:none;width:20px;height:20px;border-radius:7px;background:var(--bg2);color:var(--sub);font-size:11px;font-weight:900;display:grid;place-items:center}
+.pchip .pc{width:26px;height:26px}
+.pcw{position:relative;flex:none;display:block}
+.pcw .av.mini{position:absolute;right:-7px;bottom:-6px;width:17px;height:17px;box-shadow:0 0 0 2px #fff}
+.pchip .pn{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.2}
+.pchip .pn b{font-size:13px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* ★★ 2026-10-24 名前の横の守りの数（🛡） */
+.pchip .pnr{display:flex;align-items:center;gap:4px;min-width:0}
+.pchip .pnr b{min-width:0}
+.pchip .dfc{flex:none;font-style:normal;font-size:10px;font-weight:900;line-height:1.5;padding:0 5px;border-radius:99px;background:color-mix(in srgb,var(--c) 14%,#fff);color:#3a4258;font-variant-numeric:tabular-nums}
+#gplayers.cmp .pchip .dfc{font-size:9px;padding:0 3px}
+.rkf{margin:6px 0 2px;padding:8px 10px;border-radius:10px;background:#f4f6fb;display:flex;flex-direction:column;gap:3px;font-size:12px;line-height:1.45}
+.rkf>b{font-size:13px}
+.rkf span small{display:block;color:var(--sub);font-size:11px}
+.rkf em{font-style:normal;font-size:11.5px;color:#3a4258}
+.rl .rlb{display:block;font-size:10.5px;color:var(--sub);font-weight:700}
+.pchip .pn small{font-size:10.5px;color:var(--sub);font-weight:800;white-space:nowrap;display:flex;align-items:center;gap:5px}
+.pchip .pn small.out{color:var(--ng)}
+.pchip .tag{font-size:9.5px;font-weight:900;padding:0 5px;border-radius:5px;background:var(--bg2);color:var(--sub)}
+/* せまい画面では CPU の札を名前の下の行へ（名前を切らない） */
+@media (max-width:400px){.pchip .pn b .tag{display:none}.pchip.cpu .pn small::before{content:"CPU・";font-weight:900}}
+.pchip .bk{display:inline-flex;align-items:center;gap:2px}
+.pchip .bk i{width:7px;height:7px;border-radius:2px;background:#9aa6bd}
+.pchip.on{border-color:var(--c);background:color-mix(in srgb,var(--c) 8%,#fff);transform:translateY(-2px);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 16%,transparent),0 10px 22px color-mix(in srgb,var(--c) 20%,transparent)}
+.pchip.on .ord{background:var(--c);color:#fff;animation:beat 1.4s ease-in-out infinite}
+@keyframes beat{50%{transform:scale(1.14)}}
+
+.bstage{min-height:0;min-width:0;display:grid;place-items:center;container-type:size}
+#board{--g:clamp(3px,1.1cqmin,8px);width:min(100cqw,100cqh);height:min(100cqw,100cqh);display:grid;grid-template-columns:repeat(var(--n,7),minmax(0,1fr));grid-template-rows:repeat(var(--n,7),minmax(0,1fr));
+  gap:var(--g);padding:calc(var(--g) * 1.6);background:var(--card);border-radius:24px;border:2px solid color-mix(in srgb,var(--tc) 40%,var(--line));
+  box-shadow:var(--sh2),0 0 0 5px color-mix(in srgb,var(--tc) 12%,transparent);transition:border-color .45s,box-shadow .45s}
+@supports not (width:1cqw){#board{width:min(100%,58vh);height:auto;aspect-ratio:1}}
+#board.done{border-color:var(--line);box-shadow:var(--sh2)}
+.cell{position:relative;border-radius:22%;background:#f0f3f9;display:grid;place-items:center;min-width:0;min-height:0;transition:background .2s,box-shadow .2s}
+.cell:not(:disabled):hover{background:#e8edf7}
+.cell:disabled{cursor:default}
+.cell>.pc{width:84%;height:84%;filter:drop-shadow(0 2px 2.5px rgba(29,36,69,.22));transition:transform .25s var(--spring),filter .25s}
+.cell.put>.pc{animation:put .46s var(--spring) both}
+@keyframes put{0%{transform:scale(.25);opacity:0}100%{transform:scale(1);opacity:1}}
+.cell.ripple::before{content:"";position:absolute;inset:6%;border-radius:50%;border:2.5px solid var(--rc,var(--tc));animation:ripple .65s ease-out forwards;pointer-events:none}
+@keyframes ripple{from{transform:scale(.55);opacity:.85}to{transform:scale(1.45);opacity:0}}
+.cell.slide>.pc{animation:slide .34s var(--ease) both}
+@keyframes slide{from{transform:translate(var(--dx),var(--dy))}to{transform:none}}
+.cell.nudge>.pc{animation:nudge .34s var(--ease)}
+@keyframes nudge{40%{transform:translate(var(--nx),var(--ny))}}
+.cell.mine:not(:disabled):hover>.pc{transform:translateY(-4%)}
+.cell.sel{background:color-mix(in srgb,var(--tc) 14%,#fff);box-shadow:inset 0 0 0 2.5px color-mix(in srgb,var(--tc) 55%,transparent)}
+.cell.sel>.pc{transform:translateY(-7%) scale(1.06);filter:drop-shadow(0 7px 6px rgba(29,36,69,.26))}
+.cell.cand{background:color-mix(in srgb,var(--tc) 9%,#f0f3f9);box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--tc) 32%,transparent)}
+.cell.cand::after{content:"";width:28%;height:28%;border-radius:50%;background:var(--tc);opacity:.45;animation:candIn .3s var(--spring) both}
+.cell.cand.jump::after{width:34%;height:34%;background:transparent;border:3px solid var(--tc);opacity:.6}
+@keyframes candIn{from{transform:scale(0)}to{transform:scale(1)}}
+.cell.bcand{box-shadow:inset 0 0 0 2px #9aa6bd;background:repeating-linear-gradient(135deg,#f0f3f9 0 6px,#e6eaf2 6px 12px)}
+.cell.pushc{box-shadow:inset 0 0 0 2.5px var(--warn)}
+/* ★★ 2026-10-23 ご指定「タクティクスのとき、吹っ飛ぶ方向に矢印を向けて」
+   真因：向き（rotate）を .parr の transform に書いていたが、出てくるときの candIn（transform:scale・fill both）が
+   transform を上書きしたまま残る → どの矢印も右向きだった。→ 向きは中の svg に（押し出される向きへ回してから、その向きへ少しずらす）。 */
+.cell .parr{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;animation:candIn .3s var(--spring) both}
+.cell .parr svg{width:46%;height:46%;fill:var(--warn);stroke:#fff;stroke-width:1.5;filter:drop-shadow(0 1px 2px rgba(0,0,0,.25));transform:rotate(var(--rot,0deg)) translateX(38%)}
+.cell.last::before{content:"";position:absolute;inset:3px;border-radius:22%;box-shadow:0 0 0 2px color-mix(in srgb,var(--lc) 45%,transparent);pointer-events:none}
+.cell.lastfrom::after{content:"";width:20%;height:20%;border-radius:50%;border:2px dashed color-mix(in srgb,var(--lc) 55%,transparent)}
+.cell.win{background:#fff3c8;box-shadow:inset 0 0 0 2.5px #f5c518}
+.cell.win>.pc{animation:winp .8s ease-in-out infinite alternate;animation-delay:var(--wd,0s)}
+@keyframes winp{from{transform:scale(1)}to{transform:scale(1.12);filter:drop-shadow(0 0 8px rgba(245,197,24,.9))}}
+.blk{width:80%;height:80%;border-radius:24%;display:grid;place-items:center;position:relative;
+  background:repeating-linear-gradient(135deg,#a9b3c6 0 5px,#97a2b8 5px 10px);box-shadow:inset 0 0 0 2.5px var(--bc),0 2px 4px rgba(29,36,69,.2);animation:put .46s var(--spring) both}
+.blk svg{width:52%;height:52%;fill:none;stroke:#fff;stroke-width:2.4;stroke-linecap:round}
+.blk::after{content:"";position:absolute;right:-6%;top:-6%;width:30%;height:30%;border-radius:50%;background:var(--bc);box-shadow:0 0 0 2px #fff}
+
+/* ★ 手番の板は高さを変えない（中の文の長さで盤の大きさが毎手ゆれないように）：上の段＝だれの番＋ボタン、下の段＝できること（2行ぶん） */
+#turnbar{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"who acts" "hint hint";align-items:center;column-gap:10px;row-gap:4px;
+  background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--sh);padding:9px 12px 10px 16px;overflow:hidden}
+#turnbar::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--tc);transition:background .4s}
+.tb-who{grid-area:who;display:flex;align-items:center;gap:8px;min-width:0;min-height:40px}
+.tb-who .pc{width:32px;height:32px}
+.tb-who b{font-size:17px;font-weight:900;color:color-mix(in srgb,var(--tc) 78%,#1d2445);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:40vw}
+.tb-who small{font-size:13px;color:var(--sub);font-weight:800;white-space:nowrap}
+.tb-who.swap{animation:whoIn .45s var(--spring)}
+@keyframes whoIn{from{opacity:0;transform:translateY(8px) scale(.96)}to{opacity:1;transform:none}}
+.tb-hint{grid-area:hint;min-width:0;font-size:12.5px;color:var(--sub);font-weight:700;line-height:1.55;min-height:3.1em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tb-hint b{color:var(--ink)}
+.tb-hint .left{display:inline-block;margin-left:4px;padding:0 8px;border-radius:99px;background:var(--bg2);color:var(--sub);font-size:11px;font-weight:900}
+.tb-acts{grid-area:acts;display:flex;gap:6px;justify-content:flex-end}
+.tb-acts:empty{display:none}
+.tbtn{height:40px;padding:0 13px;border-radius:12px;background:var(--bg2);font-weight:900;font-size:12.5px;display:inline-flex;align-items:center;gap:6px;color:var(--ink);transition:background .2s,color .2s,transform .16s var(--ease)}
+.tbtn svg{width:18px;height:18px}
+.tbtn.on{background:var(--tc);color:#fff}
+.tbtn:disabled{opacity:.4}
+.tbtn:active{transform:scale(.95)}
+@media (max-width:440px){.tbtn .tl{display:none}.tbtn{padding:0 11px}}
+.tb-think{display:inline-flex;gap:4px;margin-left:2px}
+.tb-think i{width:6px;height:6px;border-radius:50%;background:var(--tc);animation:think 1s ease-in-out infinite}
+.tb-think i:nth-child(2){animation-delay:.15s}.tb-think i:nth-child(3){animation-delay:.3s}
+@keyframes think{0%,100%{opacity:.25;transform:translateY(0)}50%{opacity:1;transform:translateY(-3px)}}
+
+/* 横長の画面（iPad の横持ち・PC）は3列：プレイヤー｜盤｜手番の板 */
+@media (min-width:760px) and (min-aspect-ratio:5/4){
+  #game.on{grid-template-columns:minmax(180px,240px) minmax(0,1fr) minmax(220px,280px);grid-template-rows:auto minmax(0,1fr);column-gap:18px;row-gap:12px}
+  .gtop{grid-column:1/-1}
+  #gplayers{grid-column:1;grid-row:2;display:flex;flex-direction:column;align-self:start;max-height:100%;overflow-y:auto;padding:4px 4px 8px;margin:-4px}
+  .pchip{padding:9px 11px}
+  .pchip.on{transform:translateX(4px)}
+  .bstage{grid-column:2;grid-row:2}
+  #turnbar{grid-column:3;grid-row:2;align-self:start;display:flex;flex-direction:column;align-items:stretch;gap:10px;padding:16px 16px 14px}
+  #turnbar::before{left:0;right:0;top:0;bottom:auto;width:auto;height:5px}
+  .tb-who b{max-width:none}
+  .tb-hint{display:block;-webkit-line-clamp:unset;min-height:0}
+  .tb-acts{flex-direction:column}
+  .tbtn{justify-content:center}
+}
+
+/* ══ ⑤ 勝利（盤の上に重ねる） ══ */
+.winov{position:absolute;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;padding:24px;
+  background:rgba(245,247,252,.55);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);animation:fadeIn .35s ease both}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+#winbox{position:relative;background:var(--card);border-radius:28px;padding:24px 22px 18px;width:min(400px,100%);text-align:center;box-shadow:var(--sh2);animation:popIn .55s var(--spring) both}
+.crown{width:52px;height:52px;margin:-50px auto 4px;display:grid;place-items:center;border-radius:50%;background:linear-gradient(135deg,#ffe27a,#f5b301);box-shadow:0 8px 20px rgba(245,179,1,.4)}
+.crown svg{width:30px;height:30px;fill:#fff}
+.winttl{font-family:'Baloo 2',sans-serif;font-size:50px;font-weight:800;line-height:1.05;background:linear-gradient(135deg,#f5b301,#ff7a45);-webkit-background-clip:text;background-clip:text;color:transparent}
+.winttl.draw{background:linear-gradient(135deg,#6b7ba8,#9aa3bd);-webkit-background-clip:text;background-clip:text}
+.winp{display:flex;align-items:center;justify-content:center;gap:8px;margin:10px 0 6px}
+.winp .av{width:64px;height:64px}
+.winp .pc{width:48px;height:48px;animation:bounce 1.4s ease-in-out infinite}
+@keyframes bounce{50%{transform:translateY(-6px)}}
+#winbox h2{font-size:20px;font-weight:900;color:var(--c,var(--ink))}
+#winbox p{color:var(--sub);margin-top:2px;font-size:13px}
+.wbtns{display:flex;gap:8px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+.wbtns .btn{flex:1;min-width:120px}
+.fx{position:absolute;inset:0;z-index:45;pointer-events:none;overflow:hidden}
+.fx i{position:absolute;top:-12px;width:9px;height:14px;border-radius:2px;background:var(--cc);opacity:.9;animation:fall var(--du) cubic-bezier(.3,.6,.4,1) forwards}
+@keyframes fall{to{transform:translate(var(--sx),110vh) rotate(var(--rr));opacity:.7}}
+
+/* ══ 結果・戦績 ══ */
+#resultList,#statList{display:flex;flex-direction:column;gap:8px}
+.rrow{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 12px;box-shadow:var(--sh);animation:rowIn .35s var(--ease) both}
+.rrow.top{background:linear-gradient(100deg,#fffaf0,#fff);border-color:#f5d65f}
+.rrow .rk{flex:none;width:38px;height:38px;border-radius:12px;background:var(--bg2);display:grid;place-items:center;font-weight:900;font-size:15px;color:var(--sub)}
+.rrow.top .rk{background:linear-gradient(135deg,#ffe27a,#f5b301);color:#fff}
+.rrow .pc{width:30px;height:30px}
+.rrow .pn{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.3}
+.rrow .pn b{font-size:15px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rrow .pn small{color:var(--sub);font-size:11.5px;font-weight:700}
+.rrow .rl{font-size:12px;color:var(--sub);font-weight:800;text-align:right;flex:none}
+.rrow .rl b{display:block;font-size:15px;color:var(--ink)}
+/* ★★ 2026-10-16 賞金・同じ順位・順位の決めかた */
+.rrow .rk{position:relative}
+.rrow .rk .tie{position:absolute;left:50%;bottom:-7px;transform:translateX(-50%);font-style:normal;font-size:9px;font-weight:900;color:#fff;background:#8b93a8;border-radius:99px;padding:1px 5px;white-space:nowrap}
+.rrow .pn .pz{display:inline-block;margin-top:3px;font-style:normal;font-size:11.5px;font-weight:900;color:#0f8a52;background:#e7f8ef;border-radius:99px;padding:1px 8px;align-self:flex-start}
+.rrow .pn .pz.no{color:var(--sub);background:var(--bg2);font-weight:800}
+.rkrule{margin-top:12px}
+.rkrule h4{margin:0 0 6px;font-size:14px;font-weight:900}
+.rkrule ol{margin:0 0 12px;padding-left:1.3em;font-size:12.5px;line-height:1.7;color:var(--ink)}
+.rkrule p{margin:8px 0 0;font-size:11.5px;line-height:1.6;color:var(--sub)}
+.pztab{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.pztab span{display:flex;flex-direction:column;align-items:center;background:var(--bg2);border-radius:12px;padding:6px 2px}
+.pztab small{font-size:11px;font-weight:800;color:var(--sub)}
+.pztab b{font-size:15px;font-weight:900;color:var(--ink)}
+#resultMeta{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:4px}
+#resultMeta div{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:9px 12px;box-shadow:var(--sh)}
+#resultMeta small{display:block;color:var(--sub);font-size:11px;font-weight:800}
+#resultMeta b{font-size:16px}
+.empty{text-align:center;color:var(--sub);padding:30px 10px;font-weight:700}
+
+/* ══ 設定・ルール ══ */
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:8px 14px;border-radius:99px;border:1.5px solid var(--line2);background:var(--card);font-weight:800;font-size:13px;transition:background .2s,color .2s,border-color .2s}
+.chip.on{background:var(--pri);border-color:var(--pri);color:#fff}
+.srow{display:flex;align-items:center;gap:10px;padding:11px 0;border-top:1px solid var(--line)}
+.srow.first{border-top:none;padding-top:2px}
+.srow b{flex:1;font-size:14px}
+.sw{position:relative;width:52px;height:30px;flex:none}
+.sw input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;z-index:1}
+.sw span{position:absolute;inset:0;background:#dfe5f3;border-radius:999px;transition:.2s}
+.sw span::after{content:"";position:absolute;left:3px;top:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:.25s var(--spring);box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.sw input:checked + span{background:var(--ok)}
+.sw input:checked + span::after{transform:translateX(22px)}
+.rl-card{display:flex;gap:14px;align-items:center}
+.rl-card .rl-tx{flex:1;min-width:0}
+.rl-card h4{font-size:15px;font-weight:900;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.rl-card p{font-size:13px;color:var(--sub);line-height:1.75}
+.rl-card p b{color:var(--ink)}
+.rl-tag{font-size:10.5px;font-weight:900;padding:1px 8px;border-radius:99px;background:var(--priS);color:var(--pri)}
+.mb{--n:5;flex:none;display:grid;grid-template-columns:repeat(var(--n),1fr);gap:3px;width:132px;padding:6px;background:var(--bg2);border-radius:14px}
+.mb i{position:relative;aspect-ratio:1;border-radius:6px;background:#fff;display:grid;place-items:center}
+.mb i .pc{width:84%;height:84%}
+.mb i.c::after{content:"";width:34%;height:34%;border-radius:50%;background:var(--pri);opacity:.45}
+.mb i.s{box-shadow:inset 0 0 0 2px var(--pri)}
+.mb i.p{box-shadow:inset 0 0 0 2px var(--warn)}
+.mb i .blk{width:78%;height:78%}
+.mb i .blk::after{display:none}
+.rtable{width:100%;border-collapse:collapse;font-size:13px}
+.rtable th,.rtable td{padding:7px 6px;border-top:1px solid var(--line);text-align:center}
+.rtable th{color:var(--sub);font-size:11.5px;font-weight:800;border-top:none}
+.rtable td b{font-weight:900}
+@media (max-width:460px){.rl-card{flex-direction:column;align-items:flex-start}.mb{width:150px}}
+
+/* ══ シート・トースト ══ */
+.ov{position:absolute;inset:0;z-index:60;background:rgba(29,36,69,.32);display:none;align-items:flex-end;justify-content:center;padding:16px 16px calc(var(--safeb) + 16px)}
+.ov.on{display:flex;animation:fadeIn .25s ease both}
+.sheet{background:var(--card);border-radius:24px;padding:20px;width:min(440px,100%);box-shadow:var(--sh2);animation:sheetIn .38s var(--spring) both}
+@keyframes sheetIn{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+@media (min-width:600px){.ov{align-items:center}}
+.sheet h2{font-size:18px;font-weight:900;margin-bottom:6px}
+.sheet p{color:var(--sub);font-size:13px;margin-bottom:12px}
+.sheet .wbtns{flex-direction:column}
+.sheet .wbtns .btn{width:100%}
+.toast{position:absolute;left:50%;top:calc(var(--safet) + 64px);transform:translateX(-50%);z-index:70;background:var(--card);color:var(--ink);border:1px solid var(--line);
+  font-weight:800;font-size:13.5px;padding:10px 18px;border-radius:999px;max-width:calc(100% - 32px);text-align:center;box-shadow:var(--sh2);animation:toastIn .35s var(--spring) both}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,-10px)}to{opacity:1;transform:translate(-50%,0)}}
+
+/* 動きを減らす（OS の設定） */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  .bgfx i{animation:none}
+}
+
+/* ══ ★★ 2026-10-14 ご指定「戻るボタンなどは全てデザイン」══
+   ・戻る＝白い札に「‹ もどる」（左の矢印は色つきの丸）。押すと少し沈む
+   ・メニュー・確認・勝利の板・結果のボタンにはアイコン。やめる系は赤の札（.btn.danger）
+   ・順番の画面の「準備にもどる」も同じ札（下線の文字だけだったもの） */
+.bbtn{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 15px 0 6px;border-radius:99px;background:var(--card);border:1px solid var(--line);
+  box-shadow:var(--sh);color:var(--ink);font-weight:900;font-size:13.5px;white-space:nowrap;transition:transform .16s var(--ease),box-shadow .2s}
+.bbtn svg{width:28px;height:28px;padding:6px;border-radius:50%;background:linear-gradient(135deg,#5878ff,#7d5cff);color:#fff;fill:none;stroke:currentColor;stroke-width:2.6;
+  stroke-linecap:round;stroke-linejoin:round;box-shadow:0 3px 8px rgba(88,110,255,.3)}
+.bbtn:active{transform:scale(.95);box-shadow:none}
+.bbtn.mid{display:flex;margin:12px auto 0}
+.btn .fl,.bbtn .fl{fill:currentColor;stroke:none}
+.btn.danger{background:#fff5f6;border-color:#ffd3d9;color:#d93a4f;box-shadow:none}
+.btn.danger svg{color:#ef4b5a}
+.btn.ghost svg{color:var(--pri)}
+.wbtns .btn svg{width:19px;height:19px}
+.btn:not(.pri):not(.danger) svg{color:var(--pri)}
+.wbtns.col{flex-direction:column;align-items:stretch}
+.wbtns.col .btn{flex:none;width:100%}
+.wbtns .wrow{display:flex;gap:8px}
+.wbtns .wrow .btn{flex:1;min-width:0}
+
+/* ══ ★★ 2026-10-14 ご指定（1手もどる・あと1つでそろう印・使いきりの表示・いくつもの中断）══ */
+/* ① 1手もどる：白い札に、いまの番の人の色の ↩。押すと ↩ がくるっと戻る */
+.tbtn.undo{background:var(--card);border:1.5px solid var(--line2);box-shadow:var(--sh);color:var(--ink);padding:0 13px 0 9px}
+.tbtn.undo svg{width:26px;height:26px;padding:4px;border-radius:50%;color:#fff;background:var(--tc);stroke-width:2.6;box-shadow:0 3px 8px color-mix(in srgb,var(--tc) 35%,transparent);transition:transform .4s var(--spring)}
+.tbtn.undo:active svg{transform:rotate(-70deg)}
+.tbtn.undo .ts{display:none}
+@media (max-width:440px){.tbtn.undo .ts{display:inline}.tbtn.undo{padding:0 11px 0 7px}}
+@media (min-width:760px) and (min-aspect-ratio:5/4){.tbtn.undo{order:9;margin-top:4px}}
+.cell.rew>.pc,.cell.rew>.blk{animation:rew .5s var(--spring) both}
+.cell.rew::before{content:"";position:absolute;inset:6%;border-radius:50%;border:2.5px dashed color-mix(in srgb,var(--tc) 60%,transparent);animation:ripple .55s ease-out forwards;pointer-events:none}
+@keyframes rew{0%{transform:scale(.4) rotate(-40deg);opacity:0}100%{transform:none;opacity:1}}
+/* ② あと1つでそろうマス：その人の色の輪（何人ぶんも重なるときは小さく並べる）。ゆっくり光る */
+.cell .rch{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6%;padding:16%;pointer-events:none}
+.cell .rch i{width:40%;aspect-ratio:1;border-radius:50%;border:2.5px solid var(--rc);background:color-mix(in srgb,var(--rc) 16%,transparent);animation:rchGlow 1.8s ease-in-out infinite}
+.cell .rch.n1 i{width:46%}
+.cell .rch.n3 i,.cell .rch.n4 i{width:34%;border-width:2px}
+@keyframes rchGlow{50%{box-shadow:0 0 0 3px color-mix(in srgb,var(--rc) 22%,transparent);transform:scale(1.08)}}
+.cell.cand .rch,.cell.bcand .rch{opacity:.55}
+/* ③ 駒を使いきった札：短い赤い札。はみ出しても札の中で切る */
+.pchip .pn small{overflow:hidden;min-width:0}
+.pchip .pn small.out .ob{flex:none;padding:0 7px;border-radius:99px;background:color-mix(in srgb,var(--ng) 12%,#fff);color:var(--ng);font-size:10px;font-weight:900;line-height:1.6}
+/* ④ 中断の一覧（つづきから） */
+.sheet .svh{display:flex;align-items:center;gap:8px}
+.sheet .svh svg{width:24px;height:24px;color:var(--pri);fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.svlist{display:flex;flex-direction:column;gap:8px;max-height:min(52vh,460px);overflow-y:auto;margin:0 -4px 4px;padding:2px 4px}
+.svrow{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"p t" "b b";gap:6px 10px;align-items:center;padding:10px 12px;border-radius:16px;background:var(--bg2);animation:rowIn .3s var(--ease) both}
+.svrow .svp{grid-area:p;display:flex;flex-wrap:wrap;width:62px;gap:2px}
+.svrow .svp .pc{width:19px;height:19px}
+.svrow .svt{grid-area:t;min-width:0;display:flex;flex-direction:column;line-height:1.35}
+.svrow .svt b{font-size:13.5px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.svrow .svt small{font-size:11.5px;color:var(--sub);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.svrow .svt small.svn{font-weight:700;opacity:.85}
+.svrow .svb{grid-area:b;display:flex;gap:8px;align-items:center;justify-content:flex-end}
+.svrow .svb .btn.sm{min-height:36px}
+.svrow .svb .btn.pri{flex:1}
+.svrow .svb .ibtn.sm{width:36px;height:36px;border-radius:12px;color:var(--ng)}
+.svrow .svb .ibtn.sm svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.svrow.ask{background:#fff5f6;box-shadow:inset 0 0 0 1.5px #ffd3d9}
+.svrow .svq{flex:1;font-size:12.5px;font-weight:900;color:#d93a4f}
+@media (min-width:520px){.svrow{grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"p t b"}.svrow .svb .btn.pri{flex:none}}
+.sheet:has(.svlist){width:min(580px,100%)}
+
+/* ══ ★★ 2026-10-15 順番の決め方：カードめくり（ご指定「新しい決め方・カジュアルかつシンプルに」） ══ */
+.otitle{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;min-height:34px}
+.otitle .pc{width:28px;height:28px;flex:none}
+.otitle small{font-size:14px;font-weight:800;color:var(--sub)}
+.osub{font-size:12.5px;font-weight:800;color:var(--sub);margin:0 0 12px;min-height:1.4em}
+.ocards{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:2px auto 12px;max-width:380px;perspective:700px}
+.ocd{--c:#9aa3bd;width:74px;height:100px;padding:0;border:0;background:none;cursor:pointer;position:relative;animation:ocdIn .42s var(--spring) var(--d,0s) both;-webkit-tap-highlight-color:transparent}
+.ocards[data-n="6"] .ocd,.ocards[data-n="5"] .ocd{width:66px;height:90px}
+.ocd .in{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .5s var(--spring)}
+.ocd .bk,.ocd .fr{position:absolute;inset:0;border-radius:14px;backface-visibility:hidden;-webkit-backface-visibility:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ocd .bk{background:repeating-linear-gradient(45deg,rgba(255,255,255,.16) 0 7px,transparent 7px 14px),linear-gradient(150deg,#7b6cff,#4fa3ff);
+  border:3px solid #fff;box-shadow:0 0 0 1.5px var(--line2),0 8px 18px rgba(29,36,69,.16)}
+.ocd .bk i{font-style:normal;font-family:'Baloo 2',system-ui,sans-serif;font-weight:800;font-size:34px;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.16)}
+.ocd .fr{transform:rotateY(180deg);background:#fff;border:3px solid var(--c);box-shadow:0 8px 18px rgba(29,36,69,.14);gap:2px}
+.ocd .fr b{font-family:'Baloo 2',system-ui,sans-serif;font-size:40px;font-weight:800;line-height:1;color:color-mix(in srgb,var(--c) 78%,#1d2445)}
+.ocd .fr em{font-style:normal;display:flex;align-items:center;gap:3px;max-width:92%;font-size:10.5px;font-weight:900;color:var(--ink)}
+.ocd .fr em .pc{width:15px;height:15px;flex:none}
+.ocd .fr em span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ocd.open .in{transform:rotateY(180deg)}
+.ocd.first .fr{background:linear-gradient(180deg,#fff,#fff7d6)}
+.ocd.first .fr::after{content:"先攻";position:absolute;top:-11px;left:50%;translate:-50% 0;white-space:nowrap;padding:1px 8px;border-radius:99px;font-size:10px;font-weight:900;color:#fff;background:var(--c);border:2px solid #fff}
+.ocd:not(:disabled):hover .in{transform:translateY(-4px)}
+.ocd:not(:disabled):active .in{transform:translateY(-1px) scale(.97)}
+.ocd:disabled{cursor:default}
+.ocd:disabled:not(.open) .bk{filter:saturate(.75) brightness(.98)}
+#order:not(.done) .ocd:not(:disabled) .bk{box-shadow:0 0 0 2.5px var(--tc,#4fa3ff),0 8px 18px rgba(29,36,69,.16)}
+.oauto{margin:0 auto 6px;display:inline-flex}
+.oauto[hidden]{display:none}
+@keyframes ocdIn{from{opacity:0;transform:translateY(16px) rotate(-6deg)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.ocd{animation:none}.ocd .in{transition:none}}
+/* ★★ 2026-10-15 止めた CPU の「再開」 */
+.tbtn.go{color:#fff;background:linear-gradient(180deg,#43c16a,#2f9e52);border-color:#2f9e52}
+.tbtn.go svg .fl{fill:currentColor;stroke:none}
+
+/* ══════════════════════════════════════════════════════════════
+   ★★ 2026-10-20 ご指定 8つ（8人まで・途中交代・ヒント・手番の時計・札がまとまって盤が動く・TOP3・戦況バー・カードをそろえる）
+   ══════════════════════════════════════════════════════════════ */
+/* 札と戦況バーをひとまとめ（たて長＝2段目・横長＝左の列） */
+.gside{display:flex;flex-direction:column;gap:8px;min-width:0;min-height:0}
+@media (min-width:760px) and (min-aspect-ratio:5/4){
+  .gside{grid-column:1;grid-row:2;align-self:start;max-height:100%;min-height:0}
+  .gside #gplayers{grid-column:auto;grid-row:auto;min-height:0}
+}
+/* 5人以上・せまい画面：札を小さく（印＋名前＋のこり） */
+#gplayers.cmp{gap:6px}
+#gplayers.cmp .pchip{gap:5px;padding:5px 6px;border-radius:12px}
+#gplayers.cmp .pchip .ord{display:none}
+#gplayers.cmp .pchip .pc{width:22px;height:22px}
+#gplayers.cmp .pcw .av.mini{display:none}
+#gplayers.cmp .pchip .pn b{font-size:11.5px}
+#gplayers.cmp .pchip .pn b .tag{display:none}
+#gplayers.cmp .pchip .pn small{font-size:9.5px;gap:3px}
+#gplayers.cmp .pchip.cpu .pn small::before{content:none}
+#gplayers.cmp .pchip.cpu .pcw::after{content:"CPU";position:absolute;left:50%;bottom:-6px;translate:-50% 0;padding:0 3px;border-radius:4px;font-size:7px;font-weight:900;line-height:1.35;color:#fff;background:#4a5373;box-shadow:0 0 0 1.5px #fff;letter-spacing:.02em}
+#gplayers.cmp .pchip .pn small.out .ob{padding:0 5px;font-size:9px}
+#gplayers.cmp .pchip.on{transform:translateY(-1px)}
+/* 途中から CPU（代打） */
+.pchip.sub{background:repeating-linear-gradient(135deg,var(--card) 0 8px,color-mix(in srgb,var(--c) 6%,var(--card)) 8px 16px)}
+.pchip.sub .tag{background:color-mix(in srgb,var(--c) 18%,#fff);color:color-mix(in srgb,var(--c) 80%,#1d2445)}
+
+/* 戦況バー */
+.gwar{display:flex;align-items:center;gap:8px;min-width:0}
+.gwar[hidden]{display:none}
+.gwar .wl{flex:none;font-size:10.5px;font-weight:900;color:var(--sub);letter-spacing:.06em}
+.gwar .wbar{flex:1;min-width:0;display:flex;height:16px;border-radius:99px;overflow:hidden;background:var(--bg2);box-shadow:inset 0 0 0 1px var(--line),0 1px 0 rgba(255,255,255,.7)}
+.gwar .wbar i{position:relative;flex:1 1 0;min-width:3px;background:linear-gradient(180deg,color-mix(in srgb,var(--c) 82%,#fff),var(--c));transition:flex-grow .6s var(--ease),filter .3s;display:grid;place-items:center;overflow:hidden}
+.gwar .wbar i+i{box-shadow:inset 1.5px 0 0 rgba(255,255,255,.85)}
+.gwar .wbar i b{font-size:9.5px;font-weight:900;color:#fff;text-shadow:0 1px 1.5px rgba(0,0,0,.35);white-space:nowrap;line-height:1}
+.gwar .wbar i.on{filter:brightness(1.12) saturate(1.1)}
+.gwar .wbar i.on::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.45) 50%,transparent 70%);animation:warShine 2.2s ease-in-out infinite}
+.gwar .wbar i.rch::before{content:"";position:absolute;right:3px;top:50%;width:6px;height:6px;margin-top:-3px;border-radius:50%;background:#fff;box-shadow:0 0 0 1.5px var(--c),0 0 6px #fff;animation:beat 1s ease-in-out infinite}
+@keyframes warShine{from{transform:translateX(-120%)}to{transform:translateX(120%)}}
+@media (min-width:760px) and (min-aspect-ratio:5/4){.gwar{flex-direction:column;align-items:stretch;gap:4px}.gwar .wl{text-align:left}}
+
+/* 手番の時計 */
+.tb-clock{flex:none;margin-left:auto;display:inline-flex;align-items:center;gap:4px;padding:3px 9px 3px 7px;border-radius:99px;background:var(--bg2);color:var(--sub);font-size:12.5px;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.tb-clock svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+.tb-clock.long{color:#b85a00;background:#fff1dc}
+.tb-who{flex-wrap:nowrap}
+@media (min-width:760px) and (min-aspect-ratio:5/4){.tb-clock{margin-left:auto}}
+
+/* ヒント */
+.tbtn.hint{background:#fff6d6;color:#8a5a00}
+.tbtn.hint svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tbtn.hint.on{background:#ffc93c;color:#4a2c00}
+.cell.hto{background:#fff6d1;box-shadow:inset 0 0 0 3px #ffc021,0 0 0 3px rgba(255,192,33,.35);z-index:2}
+.cell.hto::after{content:"";position:absolute;inset:-4px;border-radius:26%;border:3px solid #ffc021;animation:hintPulse 1.1s ease-in-out infinite;pointer-events:none}
+.cell.hfrom{box-shadow:inset 0 0 0 3px #ffc021;z-index:2}
+.cell.hfrom>.pc{animation:hintLift 1.1s ease-in-out infinite}
+.cell.hpush{box-shadow:inset 0 0 0 3px #ff8a1f;z-index:2}
+@keyframes hintPulse{0%,100%{transform:scale(.94);opacity:.95}50%{transform:scale(1.06);opacity:.5}}
+@keyframes hintLift{50%{transform:translateY(-8%) scale(1.06)}}
+
+/* 勝利の板：上位3人 */
+.podium{display:flex;flex-direction:column;gap:6px;margin:4px 0 14px;text-align:left}
+.pdr{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:14px;background:var(--card);border:1.5px solid color-mix(in srgb,var(--c) 30%,var(--line));animation:popIn .45s var(--spring) both;min-width:0}
+.pdr.r1{background:linear-gradient(100deg,#fff8d8,var(--card) 70%);border-color:#f5c518}
+.pdr .pdm{flex:none;font-size:20px;line-height:1;width:24px;text-align:center}
+.pdr .pdk{flex:none;font-size:12px;font-weight:900;color:var(--sub);display:flex;flex-direction:column;align-items:center;line-height:1.1;min-width:28px}
+.pdr .pdk i{font-style:normal;font-size:9px;color:var(--warn)}
+.pdr .pc{width:28px;height:28px}
+.pdr .av.mini{width:22px;height:22px;border-radius:50%;object-fit:cover;margin-left:-14px;box-shadow:0 0 0 2px #fff}
+.pdr .pdn{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}
+.pdr .pdn b{font-size:14px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pdr .pdn small{font-size:10.5px;font-weight:800;color:var(--sub)}
+.pdr .pdz{flex:none;font-size:12px;font-weight:900;color:#0e8a5c;background:#e6f8ef;padding:2px 8px;border-radius:99px}
+.pdr .pdz.no{color:var(--sub);background:var(--bg2)}
+
+/* プレイヤーの交代 */
+.seatlist{display:flex;flex-direction:column;gap:6px;margin:6px 0 10px}
+.seat{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:14px;background:var(--bg2);border-left:4px solid var(--c)}
+.seat .pc{width:28px;height:28px}
+.seat .av.mini{width:22px;height:22px;border-radius:50%;object-fit:cover;margin-left:-14px;box-shadow:0 0 0 2px #fff}
+.seat .sn{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}
+.seat .sn b{font-size:14px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seat .sn small{font-size:10.5px;font-weight:800;color:var(--sub)}
+.seat .ptype button:disabled{opacity:.35}
+.sth{font-size:13px;font-weight:900;margin:4px 0 6px}
+.seg.sm button{padding:7px 4px;font-size:12.5px}
+
+/* 順番決めのカード：段ごとに同じ数・残りの段はまん中（--cols は shift-ui.js が入れる） */
+.ocards{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;max-width:calc(var(--cols,4) * 84px + (var(--cols,4) - 1) * 10px);margin-left:auto;margin-right:auto}
+.ocards[data-n="5"],.ocards[data-n="6"]{max-width:calc(var(--cols,3) * 74px + (var(--cols,3) - 1) * 10px)}
+.ocards[data-n="7"],.ocards[data-n="8"]{gap:9px;max-width:calc(var(--cols,4) * 66px + (var(--cols,4) - 1) * 9px)}
+.ocards[data-n="7"] .ocd,.ocards[data-n="8"] .ocd{width:66px;height:90px}
+.ocards[data-n="7"] .ocd .fr b,.ocards[data-n="8"] .ocd .fr b{font-size:34px}
+.ocards[data-n="7"] .ocd .bk i,.ocards[data-n="8"] .ocd .bk i{font-size:28px}
+.ocd{flex:none}
+
+/* 7・8人の準備画面：人数のボタンを7つ並べる */
+#segN button{padding-left:2px;padding-right:2px}
+@media (max-width:400px){#segN button{font-size:13.5px}}
+@media (prefers-reduced-motion:reduce){.gwar .wbar i.on::after,.gwar .wbar i.rch::before,.cell.hto::after,.cell.hfrom>.pc{animation:none}}
+
+/* ★★ 2026-10-20 勝利の板のボタンは1行に（上位3人を足したので幅がせまい） */
+#winbox .wbtns .btn{white-space:nowrap;padding-left:12px;padding-right:12px}
+@media (max-width:400px){#winbox .wbtns .btn{font-size:14px}}
+
+/* ══ ★★ 2026-10-24 終局後の盤面の見返し・試しの対局 ══ */
+.tb-who.rv b{color:var(--ink)}
+.tb-who.rv svg{width:22px;height:22px;fill:none;stroke:var(--pri,#5878ff);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.tb-acts.rvb{flex-wrap:wrap;justify-content:center;gap:6px}
+.tb-acts.rvb .tbtn b{font-size:15px;line-height:1}
+.tb-acts.rvb .tbtn[disabled]{opacity:.38}
+.tb-sand{margin:-2px 0 6px;padding:4px 10px;border-radius:99px;background:#fff4d6;color:#8a5a00;font-size:12px;font-weight:900;text-align:center}
+.btn.rvgo{display:flex;width:100%;justify-content:center;margin:12px 0 4px}
+.btn.rvgo svg,.wbtns .btn svg{fill:none;stroke:currentColor}
+#winbox h2 small{display:block;font-size:12px;font-weight:800;color:var(--sub);margin-top:2px}
+
+/* ══ ★★ 2026-10-26 完凸のアイコンは光る（XEVARION ホームの #xhAv.xh-av-max と同じ：金→桃→空色の光） ══ */
+.av.avmax{box-shadow:0 0 0 1.5px #fff,0 0 0 3px #ffc93c!important;animation:shAvMax 2.6s ease-in-out infinite}
+@keyframes shAvMax{0%,100%{filter:drop-shadow(0 0 3px rgba(255,205,70,.95)) drop-shadow(0 0 8px rgba(255,190,40,.6))}
+  33%{filter:drop-shadow(0 0 4px rgba(255,130,200,.95)) drop-shadow(0 0 11px rgba(255,120,190,.55))}
+  66%{filter:drop-shadow(0 0 4px rgba(120,200,255,.95)) drop-shadow(0 0 11px rgba(110,190,255,.55))}}
+@media (prefers-reduced-motion:reduce){.av.avmax{animation:none;filter:drop-shadow(0 0 4px rgba(255,205,70,.95))}}
+/* ══ ★★ 2026-10-26 守りの数の盾 ══ */
+.pchip .dfc{display:inline-flex;align-items:center;gap:2px}
+.dfc .shd{width:13px;height:14px;flex:none;overflow:visible;filter:drop-shadow(0 1px 0 rgba(0,0,0,.18))}
+.dfc .shd .o{fill:#fff;stroke:color-mix(in srgb,var(--c) 70%,#1d2433);stroke-width:1.4;stroke-linejoin:round}
+.dfc .shd .i{fill:var(--c)}
+.dfc .shd .s{fill:#fff}
+.dfc .shd .g{fill:none;stroke:rgba(255,255,255,.75);stroke-width:1.2;stroke-linecap:round}
+.dfc b{font-weight:900}
+#gplayers.cmp .dfc .shd{width:11px;height:12px}

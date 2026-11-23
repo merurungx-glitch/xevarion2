@@ -1,0 +1,103 @@
+/* XEVARION II — 色・文字・大きさの決まり（デザイン C「ツートーン」）
+   枠と演出＝夜空（--night-*）／中身＝昼（--bg・--surface…）。中身は夜に自動で暗くなる。
+   @layer の順：tokens → base → components → portal → apps（あとの層ほど強い） */
+@layer tokens, base, components, portal, apps;
+
+@layer tokens {
+  :root {
+    /* 夜空（枠・演出） */
+    --night-0: #05061a;
+    --night-1: #0b0e1f;
+    --night-2: #141a33;
+    --night-3: #1f2547;
+    --night-line: rgba(255, 255, 255, .09);
+    --on-night: #eef1ff;
+    --on-night-2: #aab2d6;
+    --on-night-3: #6f78a3;
+    --twilight: linear-gradient(180deg, #070a24 0%, #1f1a55 46%, #4a2a7a 80%, #6a3a8e 100%);
+    --stars: radial-gradient(1.2px 1.2px at 18% 12%, #fff 60%, transparent),
+             radial-gradient(1px 1px at 74% 8%, #fff 60%, transparent),
+             radial-gradient(1.3px 1.3px at 88% 30%, #fff 60%, transparent),
+             radial-gradient(1px 1px at 40% 22%, #cfd8ff 60%, transparent),
+             radial-gradient(1px 1px at 9% 41%, #fff 60%, transparent),
+             radial-gradient(1.1px 1.1px at 62% 47%, #e7dcff 60%, transparent);
+
+    /* ロゴのグラデーション */
+    --g1: #22e4ff;
+    --g2: #3a6bff;
+    --g3: #9a3dff;
+    --g4: #e35bff;
+    --grad: linear-gradient(90deg, var(--g1), var(--g2) 36%, var(--g3) 70%, var(--g4));
+    --grad-btn: linear-gradient(90deg, #3a6bff, #9a3dff 62%, #e35bff);
+
+    /* 5属性 */
+    --flare: #ff5b4a;
+    --tide: #2e9bff;
+    --terra: #25b871;
+    --nova: #f0a91c;
+    --void: #8e5cff;
+
+    /* お金 */
+    --xeva: #f5b52e;
+    --gem: #9a3dff;
+    --ticket: #ff9a3d;
+
+    /* 形 */
+    --r-xs: 8px;
+    --r-s: 11px;
+    --r-m: 14px;
+    --r-l: 20px;
+    --r-xl: 26px;
+    --font: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Meiryo", system-ui, sans-serif;
+    --font-en: "Avenir Next", "Segoe UI", "Helvetica Neue", var(--font);
+    --ease: cubic-bezier(.2, .8, .2, 1);
+    --dur: .22s;
+
+    /* 画面の端（--sb は core/viewport.js が実測で上書きする） */
+    --st: env(safe-area-inset-top, 0px);
+    --sb: env(safe-area-inset-bottom, 0px);
+    --tab-h: 58px;
+
+    /* 中身（昼） */
+    --bg: #f6f7fb;
+    --surface: #ffffff;
+    --surface-2: #eef0f6;
+    --line: #e3e6ef;
+    --text: #151a33;
+    --text-2: #5d6684;
+    --text-3: #8a92b2;
+    --shadow: 0 2px 8px rgba(20, 26, 51, .07);
+    --accent: #3a6bff;
+  }
+
+  /* 中身の夜（端末のダークモード・または設定で「暗い」） */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1226;
+      --surface: #171b33;
+      --surface-2: #20254a;
+      --line: rgba(255, 255, 255, .09);
+      --text: #eef1ff;
+      --text-2: #aab2d6;
+      --text-3: #7d86ad;
+      --shadow: none;
+      --accent: #8aa4ff;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1226;
+    --surface: #171b33;
+    --surface-2: #20254a;
+    --line: rgba(255, 255, 255, .09);
+    --text: #eef1ff;
+    --text-2: #aab2d6;
+    --text-3: #7d86ad;
+    --shadow: none;
+    --accent: #8aa4ff;
+  }
+
+  /* 省電力・動きを減らす：うつりかわりを短く（core/power.js が data-power を付ける） */
+  :root[data-power="saver"], :root[data-motion="reduced"] {
+    --dur: .08s;
+  }
+}
