@@ -17,7 +17,7 @@ export const ROUTES = {
  * bg＝アプリの地の色（開いているあいだの html の色・iPhone の下の帯）・roomMax＝部屋（X2.rooms）の人数の上限（無ければ 6）
  */
 export const APPS = [
-  { id: 'lex', name: 'MagiLex' },
+  { id: 'lex', name: 'MagiLex', path: 'apps/lex/index.html', bg: '#ffffff' },
   { id: 'quiz', name: 'MagiQuiz', path: 'apps/quiz/index.html', bg: '#6704dc', roomMax: 4 },
   { id: 'derby', name: 'MagiDerby' },
   { id: 'shift', name: 'MagiShift', path: 'apps/shift/index.html', bg: '#f5f7fc' },

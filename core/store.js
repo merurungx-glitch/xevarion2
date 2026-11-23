@@ -28,7 +28,7 @@ const clone = (v) => (v === undefined ? undefined : JSON.parse(JSON.stringify(v)
 /**
  * キーを登録する。
  * @param {string} name
- * @param {{scope?:'user'|'device', sync?:boolean, kind?:'lww'|'counter'|'flags', def?:any}} o
+ * @param {{scope?:'user'|'device', sync?:boolean, kind?:'lww'|'counter'|'flags'|'lex', def?:any}} o
  */
 export function define(name, o = {}) {
   const scope = o.scope || 'user';
@@ -66,10 +66,10 @@ export function get(name) {
 export const kindOf = (name) => def(name).kind;
 export const isSync = (name) => { const d = DEFS.get(name); return !!(d && d.sync && d.scope === 'user'); };
 
-/** lww のキーに書く */
+/** lww（と lex＝アプリの記録）のキーに書く */
 export function set(name, value) {
   const d = def(name);
-  if (d.kind !== 'lww') throw new Error('store.set は lww だけ: ' + name);
+  if (d.kind !== 'lww' && d.kind !== 'lex') throw new Error('store.set は lww・lex だけ: ' + name);
   write(d, { v: clone(value), t: Date.now() }, true);
 }
 

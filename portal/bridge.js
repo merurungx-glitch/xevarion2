@@ -14,6 +14,9 @@
 //   X2.isMax(id)          この端末の本人がそのキャラを完凸しているか（完凸の光）
 //   X2.owned(id)          この端末の本人がそのキャラを持っているか（MagiQuiz の司会）
 //   X2.asset(path)        src/assets/ の絵の URL（例 'ui/xeva-64.webp'）
+//   X2.wallet() / onWallet(fn)   お財布の中身 { xeva, gem, ticket }
+//   X2.earn({ xeva, gem, ticket }, why)  アプリのごほうびを本人のお財布へ（1回の上限 EARN_CAP）
+//   X2.appData            アプリの同期する記録（MagiLex）：load()→JSON・save(json)・on(fn)。無いアプリは null（core/appdata.js）
 //   X2.online()           通信できそうか
 //   X2.party.PRIZES       共通の賞金（順位ごと）
 //   X2.party.verify(id, pass) → { acc } | { error }   連携（合言葉は保存しない）
@@ -29,6 +32,11 @@ import * as rooms from '../core/rooms.js';
 import * as power from '../core/power.js';
 import * as viewport from '../core/viewport.js';
 import * as chara from '../core/chara.js';
+import * as wallet from '../core/wallet.js';
+import * as appdata from '../core/appdata.js';
+
+/** アプリのごほうび（X2.earn）の1回の上限（まちがいで大きな数を入れないように） */
+const EARN_CAP = { xeva: 20000, gem: 50, ticket: 20 };
 
 const abs = (p) => new URL(p, document.baseURI).href;
 const faceSrc = (id) => (chara.byId(id) ? abs(chara.art(id, 'face-256')) : '');
@@ -108,6 +116,24 @@ export function makeBridge(app, { exit, ready }) {
     owned: (id) => !!(chara.byId(id) && chara.owned(id)),
     asset: (p) => abs('assets/' + String(p).replace(/^\/+/, '')),
     online: () => navigator.onLine !== false,
+    /** お財布の中身 { xeva, gem, ticket } */
+    wallet: () => ({ ...wallet.get() }),
+    onWallet(fn) { const off = wallet.on(() => fn({ ...wallet.get() })); offs.push(off); return off; },
+    /** アプリのごほうび（MagiLex の学習・ビンゴなど）：この端末の本人のお財布へ。items＝{ xeva, gem, ticket }。入れた数を返す */
+    earn(items, why) {
+      const out = {};
+      for (const f of Object.keys(EARN_CAP)) {
+        const n = Math.min(EARN_CAP[f], Math.floor(Number((items || {})[f]) || 0));
+        if (n > 0) { wallet.add(f, n); out[f] = n; }
+      }
+      return out;
+    },
+    /** アプリが持つ、アカウントごとの同期する記録（MagiLex の学習の記録）。JSON の文字で load()／save(json)・on(fn)。持たないアプリは null */
+    appData: appdata.keyOf(app.id) ? Object.freeze({
+      load: () => appdata.load(app.id),
+      save: (json) => appdata.save(app.id, json),
+      on(fn) { const off = appdata.on(app.id, fn); offs.push(off); return off; },
+    }) : null,
     party: Object.freeze({
       PRIZES: Object.freeze([...party.PRIZES]),
       MAX_AMT: party.MAX_AMT,

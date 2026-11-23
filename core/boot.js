@@ -11,6 +11,7 @@ import { t } from './i18n.js';
 import { installIconDefs } from '../ui/icons.js';
 import { showLoading } from '../ui/loading.js';
 import * as party from './party.js';
+import './appdata.js'; // アプリの同期する記録（MagiLex）のキーを、同期の最初の読みこみより前に登録する
 import { toast } from '../ui/toast.js';
 import { fmt } from '../ui/dom.js';
 import * as swc from './swc.js';
