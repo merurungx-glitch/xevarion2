@@ -21,7 +21,7 @@ export const APPS = [
   { id: 'quiz', name: 'MagiQuiz' },
   { id: 'derby', name: 'MagiDerby' },
   { id: 'shift', name: 'MagiShift', path: 'apps/shift/index.html', bg: '#f5f7fc' },
-  { id: 'chain', name: 'MagiChainParty', short: 'ChainParty' },
+  { id: 'chain', name: 'MagiChainParty', short: 'ChainParty', path: 'apps/chainparty/index.html', bg: '#f6f7fd' },
   { id: 'gura', name: 'MagiGuraPlate', short: 'GuraPlate', path: 'apps/guraplate/index.html', bg: '#090b1c' },
   { id: 'yacht', name: 'MagiYacht', path: 'apps/yacht/index.html', bg: '#0c2c8c' },
 ];

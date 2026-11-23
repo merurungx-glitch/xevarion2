@@ -132,6 +132,24 @@ export async function takeInbox(uid) {
   return out;
 }
 
+// ---- 部屋（core/rooms.js だけが使う）：リアルタイムのデータの口 ----
+// ★ 書きこみの失敗（ルールで拒否など）は Promise の reject で返る。rooms.js が「denied／net」に分ける
+export const rt = {
+  get: async (path) => (await D.get(D.ref(db, path))).val(),
+  set: (path, v) => D.set(D.ref(db, path), v),
+  update: (path, obj) => D.update(D.ref(db, path), obj),
+  async txn(path, fn) {
+    const r = await D.runTransaction(D.ref(db, path), fn, { applyLocally: false });
+    return { committed: r.committed, value: r.snapshot.val() };
+  },
+  /** 変わるたびに cb(値)。止める関数を返す */
+  on: (path, cb) => D.onValue(D.ref(db, path), (s) => cb(s.val()), (e) => console.warn('rt:', path, e && e.message)),
+  onDisconnectSet(path, v) { try { D.onDisconnect(D.ref(db, path)).set(v); } catch (e) { console.warn(e); } },
+  cancelDisconnect(path) { try { D.onDisconnect(D.ref(db, path)).cancel(); } catch {} },
+  connected: (cb) => D.onValue(D.ref(db, '.info/connected'), (s) => cb(!!s.val())),
+  now: () => D.serverTimestamp(),
+};
+
 let analytics = false;
 /** 利用状況の送信（設定で止められる）。起動が落ちついてから呼ぶ */
 export async function startAnalytics() {

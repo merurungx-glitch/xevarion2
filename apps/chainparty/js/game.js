@@ -1,0 +1,1641 @@
+/* ============================================================
+   チェインパーティ CHAIN PARTY
+   iPadを2〜6人で囲む連鎖バクハツの陣取り頭脳戦（CPU対戦対応）
+   ★ XEVARION II へ移しかえ（2026-11-23）
+     ・はじめの画面と準備は js/chain-front.js（MagiQuiz と同じ全画面の ① メンバー ② ルール）。ここの #setup は使わない
+     ・連携・賞金・アイコンは II のパーティーの部品（window.X2）。オンラインの部屋は X2.rooms（js/online.js）
+     ・ゲームのしくみ（連鎖・CPU・順位・途中保存・オンラインの進め方）は初代のまま
+   ============================================================ */
+
+const $  = (s) => document.querySelector(s);
+const $$ = (s) => [...document.querySelectorAll(s)];
+
+const COLORS = ["#ff4d6d", "#2e8bff", "#13c08a", "#ffab17", "#9b5bff", "#ff7a00"];
+const NAMES  = ["あか", "あお", "みどり", "きいろ", "むらさき", "だいだい"];
+const FACES  = ["🔴", "🔵", "🟢", "🟡", "🟣", "🟠"];
+
+// 人数ごとの「席（盤のどの辺に座るか）」
+const SEATS = {
+  2: ["bottom", "top"],
+  3: ["bottom", "left", "right"],
+  4: ["bottom", "right", "top", "left"],
+  5: ["bottomL", "right", "top", "left", "bottomR"],
+  6: ["bottomL", "bottomR", "right", "topR", "topL", "left"],
+};
+
+let S = {};
+let setup = { n: 3, size: 8, players: [], cpuLevel: 1, roundLimit: 0 };
+let muted = false;
+let ONLINE = null; // オンライン対戦中は { roomPlayers, mySlot, isHost, entered, ... } を保持
+const SAVE_KEY = "x2a.chain.save";
+const SETUP_KEY = "x2a.chain.setup";   // 名前・連携・人数などの前回設定（この端末だけ）
+
+/* ============================================================
+   前回の設定（名前・紐づけ・人数など）の保存と引き継ぎ
+   ・紐づけは「引き継ぎ候補」として復元し、必ず4桁パスワードの再入力で確認する
+     （link.confirmed=true になるまで賞金の対象にはならない）
+   ============================================================ */
+function saveSetup() {
+  try {
+    localStorage.setItem(SETUP_KEY, JSON.stringify({
+      v: 2, n: setup.n, size: setup.size, cpuLevel: setup.cpuLevel, roundLimit: setup.roundLimit, played: !!setup.played,
+      players: setup.players.map((p) => ({
+        name: p.name, type: p.type, owner: !!p.owner, pic: p.pic || "",
+        link: (p.link && p.link.uid) ? { uid: p.link.uid, id: p.link.id || "", name: p.link.name, face: p.link.face || "" } : null,
+      })),
+    }));
+  } catch (e) {}
+}
+function loadSetup() {
+  try {
+    const d = JSON.parse(localStorage.getItem(SETUP_KEY) || "null");
+    if (!d || !Array.isArray(d.players)) return false;
+    setup.n = [2, 3, 4, 5, 6].includes(d.n) ? d.n : setup.n;
+    setup.size = [6, 8, 10].includes(d.size) ? d.size : setup.size;
+    setup.cpuLevel = [0, 1, 2].includes(d.cpuLevel) ? d.cpuLevel : setup.cpuLevel;
+    setup.roundLimit = [0, 10, 15, 20].includes(d.roundLimit) ? d.roundLimit : setup.roundLimit;
+    setup.played = !!d.played;
+    d.players.slice(0, NAMES.length).forEach((sp, i) => {
+      const p = setup.players[i];
+      if (!p || !sp) return;
+      if (sp.name) p.name = String(sp.name).slice(0, 6);
+      if (sp.type === "cpu" || sp.type === "human") p.type = sp.type;
+      p.owner = !!sp.owner && p.type !== "cpu";
+      p.pic = sp.pic ? String(sp.pic).slice(0, 24) : "";
+      /* ★ 連携は「未確認」で復元 → 合言葉をもう一度入れると有効になる */
+      if (sp.link && sp.link.uid && p.type !== "cpu" && !p.owner) p.link = { uid: sp.link.uid, id: sp.link.id || "", name: sp.link.name, face: sp.link.face || "", confirmed: false };
+    });
+    return true;
+  } catch (e) { return false; }
+}
+/* この端末の本人（XEVARION II でサインインしている人） */
+function myII() {
+  try { const m = window.X2 && X2.me(); return m ? { uid: m.uid, id: m.id, name: m.name, face: m.face || "" } : null; } catch (e) { return null; }
+}
+
+/* ============================================================
+   ダブルタップ拡大の無効化（iPad）
+   ============================================================ */
+function preventZoom() {
+  let last = 0;
+  document.addEventListener("touchend", (e) => {
+    const now = Date.now();
+    if (now - last <= 320) e.preventDefault();
+    last = now;
+  }, { passive: false });
+  ["gesturestart", "gesturechange", "gestureend"].forEach((ev) =>
+    document.addEventListener(ev, (e) => e.preventDefault()));
+  document.addEventListener("dblclick", (e) => e.preventDefault());
+}
+
+/* ============================================================
+   はじまり（★ II：はじめの画面と準備は js/chain-front.js。ここは席の情報と、ほかの画面のボタン）
+   ============================================================ */
+function initSetup() {
+  // 席の情報 → 前回の設定（名前・連携・人数など）があれば引き継ぐ。はじめては1人目をこの端末の本人に
+  setup.players = NAMES.map((nm) => ({ name: nm, type: "human", link: null, owner: false, pic: "" }));
+  setup.restored = loadSetup();
+  if (!setup.restored && myII()) setup.players[0].owner = true;
+
+  $("#tut-x").addEventListener("click", () => toggleModal("#rules", false));
+  $("#tut-prev").addEventListener("click", () => gotoStep(tutIndex - 1));
+  $("#tut-next").addEventListener("click", () => { if (tutIndex >= STEPS.length - 1) toggleModal("#rules", false); else gotoStep(tutIndex + 1); });
+  $("#tut-replay").addEventListener("click", () => gotoStep(tutIndex));
+  $("#order-go").addEventListener("click", enterGame);
+  $("#order-redo").addEventListener("click", () => beginOrder());
+  $("#play-again").addEventListener("click", () => { toggleModal("#win", false); if (ONLINE) return leaveOnlineToSetup(); beginOrder(); });
+  $("#back-setup").addEventListener("click", () => { toggleModal("#win", false); if (ONLINE) return leaveOnlineToSetup(); goSetup(); });
+  $("#menu-btn").addEventListener("click", openMenu);
+  $("#undo-btn").addEventListener("click", undoMove);
+  buildMenu();
+  initOnline();
+  initOfflinePwa();
+}
+
+/* ============================================================
+   オフライン対応（PWA）
+   ・オフライン中：ローカル対戦はそのまま遊べる／オンライン対戦・紐づけは不可
+   ・オンライン復帰：クラウドへ自動同期（xeva-cloud.js の flushPush）
+   ============================================================ */
+function updateOnlineAvail() {
+  const off = navigator.onLine === false;
+  const btn = $("#open-online");
+  if (btn) {
+    btn.classList.toggle("offline", off);
+    const tx = btn.querySelector(".ob-tx");
+    if (tx) tx.innerHTML = off
+      ? "<b>オンライン対戦 — オフライン中は利用できません</b><small>オンラインに戻ると自動で使えるようになります</small>"
+      : "<b>オンラインで対戦</b><small>部屋番号でつながる・XEVA賞金つき</small>";
+  }
+}
+function initOfflinePwa() {
+  updateOnlineAvail();
+  window.addEventListener("offline", () => {
+    updateOnlineAvail();
+    toast("📴 オフラインになりました — ローカル対戦はこのまま遊べます", "#ff8c42");
+  });
+  window.addEventListener("online", () => {
+    updateOnlineAvail();
+    toast("📡 オンラインに復帰 — データをクラウドと同期します", "#13c08a");
+    /* オフライン中に進んだセーブ・設定をクラウドへ反映 */
+    try { if (window.XevaCloud && XevaCloud.flushPush) XevaCloud.flushPush(); } catch (e) {}
+  });
+  /* PWA インストール（オフラインでも遊べるようにダウンロード） */
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault(); window._mcpInstall = e;
+    const b = $("#mcp-install"); if (b) b.classList.remove("hidden");
+  });
+  const ib = $("#mcp-install");
+  if (ib) {
+    const standalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+    if (standalone) ib.classList.add("hidden");
+    else if (/iPad|iPhone|iPod/.test(navigator.userAgent)) ib.classList.remove("hidden");
+    ib.addEventListener("click", () => {
+      if (window._mcpInstall) {
+        window._mcpInstall.prompt();
+        window._mcpInstall.userChoice.finally(() => { window._mcpInstall = null; ib.classList.add("hidden"); });
+        return;
+      }
+      alert("このブラウザでは次の手順でインストールできます：\n\n【iPad / iPhone（Safari）】\n① 共有ボタン（□↑）をタップ\n②「ホーム画面に追加」を選ぶ\n\n【PC（Chrome / Edge）】\nアドレスバー右端のインストールアイコンをクリック\n\nインストール後はオフラインでもローカル対戦が遊べます（オンライン対戦はオンライン時のみ）。オンラインに戻るとデータは自動でクラウドに同期されます。");
+    });
+  }
+}
+
+/* ============================================================
+   一手もどす（置き間違えたとき、直前の人間の手を取り消す）
+   ============================================================ */
+function pushHistory() {
+  if (!S) return;
+  if (!S.history) S.history = [];
+  S.history.push(serializeState());
+  if (S.history.length > 30) S.history.shift();  // メモリ節約
+  updateUndoBtn();
+}
+function updateUndoBtn() {
+  const b = $("#undo-btn"); if (!b) return;
+  const can = !!(S && !S.busy && !S.over && S.history && S.history.length);
+  b.disabled = !can;
+  b.classList.toggle("disabled", !can);
+}
+function undoMove() {
+  if (!S || S.busy || S.over) return;
+  if (!S.history || !S.history.length) { toast("もう戻せる手がありません", "#8892a6"); return; }
+  const d = S.history.pop();
+  // 盤面と手番を巻き戻す（プレイヤーの色/名前などは維持し、可変フィールドのみ復元）
+  S.board = d.board.map((row) => row.map((c) => ({ owner: c.owner, count: c.count })));
+  S.orderPos = d.orderPos; S.turn = d.turn;
+  S.deaths = d.deaths || 0; S.round = d.round || 1; S.moves = d.moves || 0;
+  S.players.forEach((p) => {
+    const sp = d.players.find((x) => x.id === p.id);
+    if (sp) { p.started = sp.started; p.dead = sp.dead; p.deadAt = sp.deadAt || 0; }
+  });
+  S.busy = false; S.over = false;
+  paintAll(); updatePanels(); setBoardFrame(); updateRoundInfo();
+  saveGame(); updateUndoBtn();
+  toast("↩ 一手もどしました", "#2e8bff");
+}
+
+/* ★ II：#setup（はじめの画面）は #front（chain-front.js）。ほかの画面は初代のまま */
+function showScreen(id) {
+  if (id === "#setup") {
+    $$(".screen").forEach((s) => s.classList.remove("active"));
+    if (window.ChainFront) ChainFront.showTitle();
+    return;
+  }
+  if (window.ChainFront) ChainFront.hide();
+  $$(".screen").forEach((s) => s.classList.remove("active"));
+  $(id).classList.add("active");
+  if (id === "#game") setTimeout(fitPanelCols, 0);
+}
+function toggleModal(id, show) { $(id).classList.toggle("hidden", !show); }
+/* 準備（① メンバー）へ */
+function goSetup() {
+  $$(".screen").forEach((s) => s.classList.remove("active"));
+  if (window.ChainFront) ChainFront.openSetup(1);
+}
+
+/* つづきからの表示は、はじめの画面（chain-front.js）が中断のセーブを見て出す → 出ていれば描きなおす */
+function refreshResume() {
+  if (window.ChainFront && ChainFront.isTitle()) ChainFront.showTitle();
+}
+
+/* ============================================================
+   順番きめ（コイントス／抽選）
+   ============================================================ */
+function beginOrder() {
+  // 状態を作る（席は固定、順番はこれから抽選）
+  const n = setup.n, size = setup.size;
+  const board = [];
+  for (let r = 0; r < size; r++) { const row = []; for (let c = 0; c < size; c++) row.push({ owner: null, count: 0 }); board.push(row); }
+  const players = [];
+  let unconfirmed = 0;
+  const me = myII();
+  for (let i = 0; i < n; i++) {
+    const sp = setup.players[i];
+    /* ★ II：この端末の本人＝II でサインインしている人。連携は合言葉を確かめた席だけ（前回引き継ぎの未確認は無効） */
+    const cpu = sp.type === "cpu", own = !cpu && sp.owner && me;
+    const lk = !cpu && !own ? sp.link : null;
+    const ok = lk && lk.uid && lk.confirmed !== false;
+    if (lk && lk.uid && !ok) unconfirmed++;
+    players.push({
+      id: i, color: COLORS[i], face: FACES[i], seat: SEATS[n][i],
+      name: (own ? String(me.name).slice(0, 6) : (sp.name || NAMES[i]).trim()) || NAMES[i],
+      type: sp.type, started: false, dead: false, owner: !!own,
+      xvUid: own ? me.uid : ok ? lk.uid : null,
+      xvName: own ? me.name : ok ? lk.name : null,
+      chara: cpu ? "" : own ? (me.face || "") : ok ? (lk.face || "") : (sp.pic || ""),
+    });
+  }
+  if (unconfirmed) toast(`🔒 合言葉を確かめていない連携 ${unconfirmed} 件は、今回は使いません（準備の ① メンバーで確かめられます）`, "#ff8c42");
+  setup.played = true;
+  saveSetup();
+  S = { gid: Date.now(), board, players, size, n, order: [], orderPos: 0, turn: 0, busy: false, over: false, moves: 0, deaths: 0,
+        round: 1, roundLimit: setup.roundLimit || 0, cpuLevel: (setup.cpuLevel == null ? 1 : setup.cpuLevel), history: [] };
+
+  showScreen("#order");
+  $("#order-actions").classList.add("hidden");
+  $("#order-result").innerHTML = "";
+  $("#order-title").textContent = (n === 2 ? "コイントス中…" : "順番を抽選中…");
+  $("#order-dice").textContent = (n === 2 ? "🪙" : "🎲");
+  $("#order-dice").classList.add("spin");
+
+  setTimeout(revealOrder, 1300);
+}
+
+function revealOrder() {
+  if (ONLINE) return; // オンラインの順番はホストの抽選結果を使う（showOnlineOrder が演出）
+  if (!$("#order").classList.contains("active")) return; // ゲーム開始後の保留タイマーで順番を壊さない
+  const order = [...Array(S.n).keys()];
+  for (let i = order.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0;[order[i], order[j]] = [order[j], order[i]]; }
+  S.order = order;
+
+  $("#order-dice").classList.remove("spin");
+  $("#order-title").textContent = "順番が決まりました！";
+  const res = $("#order-result");
+  res.innerHTML = "";
+  order.forEach((pid, rank) => {
+    const p = S.players[pid];
+    const item = document.createElement("div");
+    item.className = "order-item";
+    item.style.setProperty("--c", p.color);
+    item.style.animationDelay = (rank * 0.12) + "s";
+    item.innerHTML = `
+      <span class="rank">${rank + 1}</span>
+      <span class="pdot"></span>
+      <span class="nm">${escapeHtml(p.name)}</span>
+      ${p.type === "cpu" ? '<span class="tag-cpu">CPU</span>' : ""}`;
+    res.appendChild(item);
+  });
+  setTimeout(() => $("#order-actions").classList.remove("hidden"), order.length * 120 + 250);
+}
+
+/* ============================================================
+   ゲーム開始
+   ============================================================ */
+function enterGame() {
+  showScreen("#game");
+  buildBoardSkeleton();
+  buildPanels();
+  paintAll();
+  S.orderPos = 0; S.turn = S.order[0];
+  S.over = false; S.round = 1; S.history = [];
+  updatePanels();
+  setBoardFrame();
+  updateRoundInfo();
+  updateUndoBtn();
+  saveGame();
+  toast(S.roundLimit ? `🎯 ${S.roundLimit}ラウンドで領土の多い人が勝ち！` : "🎯 相手の色を全部消したら勝ち！", "#ff7a59");
+  maybeCpu();
+}
+
+function updateRoundInfo() {
+  const el = $("#round-info"); if (!el) return;
+  if (S.roundLimit > 0) { el.classList.remove("hidden"); el.textContent = `R ${S.round} / ${S.roundLimit}`; }
+  else el.classList.add("hidden");
+}
+
+function buildBoardSkeleton() {
+  const b = $("#board");
+  b.classList.toggle("sides", S.n >= 3); // 横に席がある時だけ横幅を多く確保
+  b.style.gridTemplateColumns = `repeat(${S.size},1fr)`;
+  b.style.gridTemplateRows = `repeat(${S.size},1fr)`;
+  b.innerHTML = "";
+  S.cellEls = [];
+  for (let r = 0; r < S.size; r++) {
+    const row = [];
+    for (let c = 0; c < S.size; c++) {
+      const el = document.createElement("div");
+      el.className = "cell";
+      el.addEventListener("click", () => onTap(r, c));
+      b.appendChild(el);
+      row.push(el);
+    }
+    S.cellEls.push(row);
+  }
+}
+
+function buildPanels() {
+  const bar = $("#player-bar");
+  if (bar) bar.innerHTML = "";
+  /* ★ さいころで決まった手番の順（S.order）どおりに上部の名前を並べる */
+  const seq = (S.order && S.order.length === S.n)
+    ? S.order.map((pid) => S.players[pid]).filter(Boolean)
+    : S.players;
+  seq.forEach((p) => {
+    const el = document.createElement("div");
+    el.className = "pside";
+    el.dataset.pid = p.id;
+    el.style.setProperty("--c", p.color);
+    el.innerHTML = `
+      <span class="pdot"></span>
+      ${olAvatarHTML(p.chara, "sm")}
+      <span class="pname">${escapeHtml(p.name)}</span>
+      <span class="pbadge">${p.type === "cpu" ? "CPU" : ""}</span>
+      <span class="pscore">0</span>
+      <span class="pturn"></span>`;
+    if (bar) bar.appendChild(el);
+    p.el = el;
+  });
+  fitPanelCols();
+}
+/* ★★ 2026-10-13 札の列の数を人数に合わせて均等に（3人なら3列、4人なら2列×2、6人なら3列×2） */
+function fitPanelCols() {
+  const bar = $("#player-bar"); if (!bar || !S || !S.n) return;
+  const w = bar.clientWidth || 340, mx = Math.max(1, Math.floor((w + 8) / 108));
+  let cols = Math.min(S.n, mx); if (cols < S.n) cols = Math.ceil(S.n / Math.ceil(S.n / cols));
+  bar.style.gridTemplateColumns = "repeat(" + cols + ",minmax(0,1fr))";
+}
+window.addEventListener("resize", () => { try { if ($("#game").classList.contains("active")) fitPanelCols(); } catch (e) {} });
+
+/* ============================================================
+   盤面ユーティリティ（size を引数化してデモ/AIでも使う）
+   ============================================================ */
+function neighborsN(r, c, size) {
+  const a = [];
+  if (r > 0) a.push([r - 1, c]);
+  if (r < size - 1) a.push([r + 1, c]);
+  if (c > 0) a.push([r, c - 1]);
+  if (c < size - 1) a.push([r, c + 1]);
+  return a;
+}
+function critN(r, c, size) { return neighborsN(r, c, size).length; }
+const neighbors = (r, c) => neighborsN(r, c, S.size);
+const critical  = (r, c) => critN(r, c, S.size);
+function cur() { return S.players[S.turn]; }
+
+function ownedCount(b, size, pid) { let n = 0; for (let r = 0; r < size; r++) for (let c = 0; c < size; c++) if (b[r][c].owner === pid) n++; return n; }
+function gemCountB(b, size, pid) { let n = 0; for (let r = 0; r < size; r++) for (let c = 0; c < size; c++) if (b[r][c].owner === pid) n += b[r][c].count; return n; }
+function gemCount(pid) { return gemCountB(S.board, S.size, pid); }
+function activeOwnersB(b, size) {
+  const set = new Set();
+  for (let r = 0; r < size; r++) for (let c = 0; c < size; c++) if (b[r][c].owner !== null && b[r][c].count > 0) set.add(b[r][c].owner);
+  return set;
+}
+
+/* ============================================================
+   描画
+   ============================================================ */
+function paintCell(r, c) {
+  const el = S.cellEls[r][c];
+  const cell = S.board[r][c];
+  el.className = "cell";
+  el.style.removeProperty("--c");
+  if (cell.owner === null || cell.count === 0) {
+    el.style.background = "var(--cell)";
+    el.innerHTML = "";
+    return;
+  }
+  const color = S.players[cell.owner].color;
+  el.style.setProperty("--c", color);
+  el.style.background = `color-mix(in srgb, ${color} 15%, #fff)`;
+  el.classList.add("own");
+  if (cell.count === critical(r, c) - 1) el.classList.add("ready");
+  el.innerHTML = gemsHtml(cell.count, color);
+}
+function gemsHtml(count, color) {
+  const k = Math.min(count, 4);
+  let g = `<div class="gems n${k}">`;
+  for (let i = 0; i < k; i++) g += `<div class="gem" style="--c:${color}"></div>`;
+  return g + "</div>";
+}
+function paintAll() { for (let r = 0; r < S.size; r++) for (let c = 0; c < S.size; c++) paintCell(r, c); }
+
+function updatePanels() {
+  S.players.forEach((p) => {
+    if (!p.el) return;
+    p.el.classList.toggle("active", S.turn === p.id && !S.over);
+    p.el.classList.toggle("dead", p.dead);
+    /* ★★ 2026-10-13 数が変わったら、数字を小さく弾ませる */
+    const sc = p.el.querySelector(".pscore"), v = String(gemCount(p.id));
+    if (sc.textContent !== v) {
+      sc.textContent = v;
+      sc.classList.remove("bump"); void sc.offsetWidth; sc.classList.add("bump");
+      clearTimeout(sc._bt); sc._bt = setTimeout(() => sc.classList.remove("bump"), 260);
+    }
+    p.el.querySelector(".pturn").textContent = p.dead ? "脱落" : ((S.turn === p.id && !S.over) ? "番" : "");
+  });
+  /* ★★ 2026-10-13 縦持ちのときは盤の上に「◯◯ の番」を大きく（CSS で縦持ちのときだけ見える） */
+  const tb = $("#turn-banner");
+  if (tb) {
+    const p = S.over ? null : cur();
+    if (p) {
+      const html = '<span class="pdot"></span><b>' + escapeHtml(p.name) + "</b><span>の番" + (p.type === "cpu" ? "（CPU）" : "") + "</span>";
+      tb.style.setProperty("--c", p.color);
+      /* ★★ 2026-10-13 番がかわったときだけ、ふわっと入れかえる */
+      if (tb.innerHTML !== html) { tb.innerHTML = html; tb.classList.remove("swap"); void tb.offsetWidth; tb.classList.add("swap"); }
+    }
+    else tb.innerHTML = "";
+  }
+}
+/* ★★ 2026-10-13 盤のふち・CPU の表示などの色は CSS の --tc（いまの番の人の色）1つで決める */
+function setBoardFrame() {
+  const g = $("#game");
+  if (g) g.style.setProperty("--tc", S.over ? "#9aa2bf" : cur().color);
+  $("#board").classList.toggle("over", !!S.over);
+}
+
+/* ============================================================
+   入力 → 配置 → 連鎖
+   ============================================================ */
+function onTap(r, c) {
+  if (S.busy || S.over) return;
+  if (ONLINE && !isMyOnlineTurn()) { toast("いまは相手の番です", "#8892a6"); return; }
+  const cell = S.board[r][c];
+  if (cell.owner != null && cell.owner !== S.turn) {
+    S.cellEls[r][c].classList.add("invalid");
+    setTimeout(() => S.cellEls[r][c].classList.remove("invalid"), 300);
+    return;
+  }
+  if (!ONLINE && cur().type !== "cpu") pushHistory();   // 人間の手だけ記録（間違えたら「一手もどす」で戻せる。オンラインでは無効）
+  cell.owner = S.turn; cell.count += 1;
+  cur().started = true; S.moves++;
+  blip(540, 0.05, "triangle");
+  paintCell(r, c);
+  resolve();
+}
+
+/* ══ ★★ 2026-10-13 演出（ご指定「動きがあり盛り上がれる、カジュアルで少し控えめなモーション」）══
+   ・バクハツ：マスの中心から、となり（上下左右）へ小さな粒が飛ぶ＋輪が広がる。1回に出す数は 24 マスぶんまで（重くしない）
+   ・（連鎖の数の札「n CHAIN!」は 2026-10-13 その2 でやめた・ご指定）
+   ・勝利：紙ふぶきを少しだけ
+   ・OS の「視差効果を減らす」がオンなら出さない */
+const FX_OFF = () => !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+/* ★★ 2026-10-14 ご指定「爆発の演出を派手過ぎずカジュアルな演出に」
+   前は「光る粒（ぼかしの光つき）＋太い輪」をはじけたマスの数（24 マスまで）だけ一度に出していたので、大きな連鎖では盤が光だらけになっていた。
+   → ・はじけたマスは「ぷにっ」とつぶれて戻る（光らせない・style.css の pop）
+     ・まわりへは小さな<b>しゃぼん玉のような丸</b>（色は淡く・白いつや・光らない）がとなりのマスへ「ぽよん」と飛ぶ
+     ・輪は細く淡く、小さく広がるだけ
+     ・一度に出すのは 10 マスぶんまで（大きな連鎖でもうるさくしない）
+     ・音は「ブー」（のこぎり波）から、連鎖が続くほど少しずつ高くなる「ぽん」に（chainPop） */
+function fxBurst(cells, color) {
+  const host = $("#burst"), bd = $("#board"); if (!host || !bd || FX_OFF()) return;
+  const hb = host.getBoundingClientRect();
+  let h = "";
+  cells.slice(0, 10).forEach(([r, c]) => {
+    const el = S.cellEls[r] && S.cellEls[r][c]; if (!el) return;
+    const b = el.getBoundingClientRect(), x = b.left - hb.left + b.width / 2, y = b.top - hb.top + b.height / 2, d = b.width * 0.62;
+    h += '<b style="left:' + x.toFixed(1) + "px;top:" + y.toFixed(1) + "px;--s:" + (b.width * 0.72).toFixed(1) + "px;--c:" + color + '"></b>';
+    neighbors(r, c).forEach(([nr, nc], k) => {
+      h += '<i style="left:' + x.toFixed(1) + "px;top:" + y.toFixed(1) + "px;--c:" + color + ";--fx:" + ((nc - c) * d).toFixed(1) + "px;--fy:" + ((nr - r) * d).toFixed(1) + "px;--z:" + (b.width * 0.24).toFixed(1) + "px;animation-delay:" + (k * 0.012).toFixed(3) + 's"></i>';
+    });
+  });
+  host.insertAdjacentHTML("beforeend", h);
+  clearTimeout(host._t); host._t = setTimeout(() => { host.innerHTML = ""; }, 520);
+}
+/* 連鎖の「ぽん」：段（step）が進むほど少しずつ高く（上限あり）。はじけたマスが多くても音量は上げない */
+function chainPop(step) {
+  if (muted) return; const ctx = ac(); if (!ctx) return;
+  try {
+    const t = ctx.currentTime, f = Math.min(1100, 480 * Math.pow(1.06, Math.min(step, 14)));
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = "sine"; o.frequency.setValueAtTime(f * 1.35, t); o.frequency.exponentialRampToValueAtTime(f, t + 0.07);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.11, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.13);
+    o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t + 0.15);
+  } catch (e) {}
+}
+/* ══ ★★ 2026-10-13 その2 ご指定「ホームに画像がありますが、画像ではなく MagiShift のような名前と動きのものに」══
+   タイトルの文字のロゴの下に 4×4 の小さな盤を置き、あか・あおが交互に置いて、たまったらバクハツ → 連鎖、をゆっくりくり返す。
+   ・タイトル（#setup）が出ているときだけ動かす（ほかの画面・タブが裏のときは止める）。OS の「視差効果を減らす」では止めたまま
+   ・ルールは本番と同じ（角2・辺3・中央4でバクハツ・となりへ1個ずつ・飛んだ先は置いた人の色） */
+const HD = { n: 4, b: null, els: null, t: 0, turn: 0, moves: 0, on: false };
+function hdBuild() {
+  const host = $("#cdemo"); if (!host) return false;
+  if (!host.childElementCount) host.innerHTML = Array.from({ length: HD.n * HD.n }, () => '<div class="cell"></div>').join("");
+  HD.els = [...host.children];
+  return true;
+}
+function hdPaint() {
+  for (let r = 0; r < HD.n; r++) for (let c = 0; c < HD.n; c++) {
+    const el = HD.els[r * HD.n + c], cell = HD.b[r][c];
+    const own = cell.owner !== null && cell.count > 0, color = own ? COLORS[cell.owner] : "";
+    const key = own ? cell.owner + ":" + cell.count : "";
+    el.classList.toggle("own", own);
+    el.classList.toggle("ready", own && cell.count === critN(r, c, HD.n) - 1);
+    if (el._k === key) continue;
+    el._k = key;
+    if (!own) { el.style.background = ""; el.style.removeProperty("--c"); el.innerHTML = ""; continue; }
+    el.style.setProperty("--c", color);
+    el.style.background = `color-mix(in srgb, ${color} 15%, #fff)`;
+    el.innerHTML = gemsHtml(cell.count, color);
+  }
+}
+function hdReset() {
+  HD.b = Array.from({ length: HD.n }, () => Array.from({ length: HD.n }, () => ({ owner: null, count: 0 })));
+  HD.turn = 0; HD.moves = 0;
+  if (HD.els) hdPaint();
+}
+function hdPick(p) {
+  const own = [], ready = [], empty = [];
+  for (let r = 0; r < HD.n; r++) for (let c = 0; c < HD.n; c++) {
+    const cell = HD.b[r][c];
+    if (cell.owner === p && cell.count > 0) { own.push([r, c]); if (cell.count === critN(r, c, HD.n) - 1) ready.push([r, c]); }
+    else if (cell.owner === null || cell.count === 0) empty.push([r, c]);
+  }
+  const one = (a) => a[(Math.random() * a.length) | 0];
+  if (ready.length && Math.random() < 0.7) return one(ready);
+  const edge = empty.filter(([r, c]) => critN(r, c, HD.n) <= 3);
+  if (edge.length && Math.random() < 0.6) return one(edge);
+  if (own.length && Math.random() < 0.5) return one(own);
+  return empty.length ? one(empty) : (own.length ? one(own) : null);
+}
+async function hdStep() {
+  if (!HD.on) return;
+  const p = HD.turn, mv = hdPick(p);
+  if (!mv) { hdReset(); HD.t = setTimeout(hdStep, 900); return; }
+  const cell = HD.b[mv[0]][mv[1]];
+  cell.owner = p; cell.count += 1;
+  hdPaint();
+  let guard = 0;
+  while (HD.on && guard++ < 40) {
+    const un = [];
+    for (let r = 0; r < HD.n; r++) for (let c = 0; c < HD.n; c++) if (HD.b[r][c].count > 0 && HD.b[r][c].count >= critN(r, c, HD.n)) un.push([r, c]);
+    if (!un.length) break;
+    un.forEach(([r, c]) => HD.els[r * HD.n + c].classList.add("pop"));
+    await sleep(360);
+    if (!HD.on) return;
+    const delta = new Map(), touched = new Set(), add = (k, d) => delta.set(k, (delta.get(k) || 0) + d);
+    for (const [r, c] of un) {
+      const k = r * HD.n + c; add(k, -critN(r, c, HD.n)); touched.add(k);
+      for (const [nr, nc] of neighborsN(r, c, HD.n)) { const k2 = nr * HD.n + nc; add(k2, 1); touched.add(k2); }
+    }
+    delta.forEach((d, k) => { HD.b[(k / HD.n) | 0][k % HD.n].count += d; });
+    touched.forEach((k) => { const x = HD.b[(k / HD.n) | 0][k % HD.n]; if (x.count <= 0) { x.count = 0; x.owner = null; } else x.owner = p; });
+    un.forEach(([r, c]) => HD.els[r * HD.n + c].classList.remove("pop"));
+    hdPaint();
+    await sleep(240);
+    if (!HD.on) return;
+  }
+  HD.moves++;
+  const owners = new Set();
+  HD.b.forEach((row) => row.forEach((x) => { if (x.count > 0) owners.add(x.owner); }));
+  if ((HD.moves >= 4 && owners.size <= 1) || HD.moves > 26) {
+    HD.t = setTimeout(() => { if (!HD.on) return; hdReset(); HD.t = setTimeout(hdStep, 700); }, 1700);
+    return;
+  }
+  HD.turn = 1 - HD.turn;
+  HD.t = setTimeout(hdStep, 820);
+}
+function heroDemo(on) {
+  if (on && (document.hidden || FX_OFF())) on = false;
+  if (on) {
+    if (HD.on) return;
+    if (!hdBuild()) return;
+    if (!HD.b) hdReset(); else hdPaint();
+    HD.on = true; clearTimeout(HD.t); HD.t = setTimeout(hdStep, 600);
+  } else { HD.on = false; clearTimeout(HD.t); }
+}
+document.addEventListener("visibilitychange", () => { const s = document.getElementById("setup"); heroDemo(!document.hidden && !!(s && s.classList.contains("active"))); });
+
+function fxConfetti(colors) {
+  const fx = $("#fx"); if (!fx || FX_OFF()) return;
+  const cols = (colors || COLORS).concat(["#ffd34d", "#ffffff"]);
+  let h = "";
+  for (let i = 0; i < 46; i++) {
+    h += '<i style="left:' + (Math.random() * 100).toFixed(1) + "%;--cc:" + cols[i % cols.length] + ";--du:" + (1.6 + Math.random() * 1.2).toFixed(2) + "s;--sx:" + ((Math.random() - 0.5) * 120).toFixed(0) + "px;--rr:" + ((Math.random() - 0.5) * 900).toFixed(0) + "deg;animation-delay:" + (Math.random() * 0.4).toFixed(2) + 's"></i>';
+  }
+  fx.innerHTML = h;
+  clearTimeout(fx._t); fx._t = setTimeout(() => { fx.innerHTML = ""; }, 3400);
+}
+const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
+
+async function resolve() {
+  S.busy = true;
+  updateUndoBtn();
+  // 連鎖中に「色が消えた（マス0になった）順番」を記録（早く消えた人ほど先に脱落＝下位）
+  S.chainDeathSeq = [];
+  const deathSeen = new Set();
+  const recordDeaths = () => {
+    S.players.forEach((p) => {
+      if (p.started && !p.dead && !deathSeen.has(p.id) && ownedCount(S.board, S.size, p.id) === 0) {
+        deathSeen.add(p.id); S.chainDeathSeq.push(p.id);
+      }
+    });
+  };
+  let guard = 0;
+  while (true) {
+    const unstable = [];
+    for (let r = 0; r < S.size; r++) for (let c = 0; c < S.size; c++)
+      if (S.board[r][c].count >= critical(r, c) && S.board[r][c].count > 0) unstable.push([r, c]);
+    if (!unstable.length) break;
+    if (activeOwnersB(S.board, S.size).size <= 1) break;
+
+    unstable.forEach(([r, c]) => S.cellEls[r][c].classList.add("pop"));
+    /* ★★ 2026-10-14 音は連鎖の段ごとに少し高くなる「ぽん」（前は低い「ブー」） */
+    chainPop(guard);
+    chainCount(guard + 1, cur().color);   /* ★★ 2026-10-15 連鎖の数を控えめに（盤の右上の小さな札・2連鎖から） */
+    /* ★★ 2026-10-13 はじけて粒がとなりへ飛ぶ（★ その2：「n CHAIN!」の札はやめた・ご指定）★ 10-14 しゃぼん玉のような控えめな丸に */
+    fxBurst(unstable, cur().color);
+    await sleep(150);
+
+    const delta = new Map(), touched = new Set();
+    const add = (k, d) => delta.set(k, (delta.get(k) || 0) + d);
+    for (const [r, c] of unstable) {
+      const key = r * S.size + c;
+      add(key, -critical(r, c)); touched.add(key);
+      for (const [nr, nc] of neighbors(r, c)) { const k2 = nr * S.size + nc; add(k2, +1); touched.add(k2); }
+    }
+    delta.forEach((d, key) => { S.board[(key / S.size) | 0][key % S.size].count += d; });
+    touched.forEach((key) => {
+      const cell = S.board[(key / S.size) | 0][key % S.size];
+      if (cell.count <= 0) { cell.count = 0; cell.owner = null; } else cell.owner = S.turn;
+    });
+
+    recordDeaths();   // このステップで色が消えた人を、消えた順に記録
+    unstable.forEach(([r, c]) => S.cellEls[r][c].classList.remove("pop"));
+    touched.forEach((key) => paintCell((key / S.size) | 0, key % S.size));
+    updatePanels();
+    await sleep(105);
+    if (++guard > 600) break;
+  }
+  chainCountEnd();
+  paintAll();
+  S.busy = false;
+  postMove();
+}
+/* ══ ★★ 2026-10-15 ご指定「連鎖のコンボ数を控えめに表示」══
+   10-13 その2 で大きな「n CHAIN!」の札はやめた（ご指定）。かわりに<b>盤の右上のふちに小さな札</b>「2 連鎖」を出す。
+   ・2連鎖から（1回だけのバクハツは出さない）。数が増えるたびに少しだけはねる。連鎖が終わったら少し残して消える
+   ・色は連鎖させた人の色。盤の上には重ねない（ふちに乗せるだけ）。光らせない・大きくしない */
+function chainCount(n, color) {
+  const host = $("#board-area"); if (!host) return;
+  let el = $("#chainCt");
+  if (!el) { el = document.createElement("div"); el.id = "chainCt"; el.className = "chain-ct"; el.setAttribute("aria-live", "polite"); host.appendChild(el); }
+  clearTimeout(el._t);
+  if (n < 2) { el.classList.remove("on"); return; }
+  el.style.setProperty("--c", color);
+  el.innerHTML = "<b>" + n + "</b>連鎖";
+  el.classList.add("on");
+  el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump");
+}
+function chainCountEnd() {
+  const el = $("#chainCt"); if (!el || !el.classList.contains("on")) return;
+  clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove("on"), 1100);
+}
+
+/* ============================================================
+   手番終了 / 勝敗
+   ============================================================ */
+function postMove() {
+  const justDead = [];
+  const kill = (p) => {
+    if (p.started && !p.dead && ownedCount(S.board, S.size, p.id) === 0) { p.dead = true; p.deadAt = ++S.deaths; justDead.push(p); blip(120, 0.25, "sine"); }
+  };
+  // 連鎖中に色が消えた順（早い順）に脱落を確定 → 同じ連鎖でも消えた順で順位が付く
+  (S.chainDeathSeq || []).forEach((pid) => { const p = S.players.find((x) => x.id === pid); if (p) kill(p); });
+  S.players.forEach(kill);   // 取りこぼし（同時消滅など）はスロット順で
+  S.chainDeathSeq = [];
+  justDead.forEach((p, i) => setTimeout(() => toast(`${p.face} ${p.name} の色が消えた！脱落！`, p.color), 200 + i * 1300));
+
+  const allStarted = S.players.every((p) => p.started);
+  const alive = S.players.filter((p) => !p.dead);
+  if (allStarted && alive.length === 1) return endGame(alive[0]);
+
+  let wrapped = false;
+  do { S.orderPos = (S.orderPos + 1) % S.n; if (S.orderPos === 0) wrapped = true; } while (S.players[S.order[S.orderPos]].dead);
+  if (wrapped) {
+    S.round++;
+    if (S.roundLimit > 0 && S.round > S.roundLimit) return endByTerritory();
+  }
+  S.turn = S.order[S.orderPos];
+
+  updatePanels();
+  setBoardFrame();
+  updateRoundInfo();
+  if (ONLINE) { afterMoveOnline(); }
+  else { saveGame(); updateUndoBtn(); maybeCpu(); }
+}
+
+function endGame(winner) {
+  if (ONLINE) return endOnline("last");
+  S.over = true; clearSave();
+  updatePanels(); setBoardFrame(); winChime(); fxConfetti(S.players.map((p) => p.color));
+  $("#win-emoji").textContent = winner.face;
+  $("#win-title").textContent = `${winner.name} の勝ち！`;
+  $("#win-title").style.color = winner.color;
+  $("#win-sub").textContent = "ほかの色をすべて消しました 🎉 順位は『長く生き残った順』！";
+  const stats = $("#win-stats"); stats.innerHTML = "";
+  // 順位＝生き残り順。優勝者(未脱落)が1位、あとは脱落が遅いほど上位。
+  const rankKey = (p) => p.dead ? p.deadAt : Infinity;
+  const medal = ["🥇", "🥈", "🥉"];
+  const ranked = [...S.players].sort((a, b) => rankKey(b) - rankKey(a));
+  ranked.forEach((p, i) => {
+    const row = document.createElement("div");
+    row.className = "win-row"; row.style.setProperty("--c", p.color);
+    const badge = medal[i] || (i + 1) + "位";
+    const right = p.dead ? `${p.deadAt}番目に脱落` : `${gemCount(p.id)}個で制覇 🏆`;
+    row.innerHTML = `<span class="pdot"></span>${olAvatarHTML(p.chara, "sm")}<span class="nm">${badge} ${escapeHtml(p.name)}${i === 0 ? "（優勝）" : ""}${p.xvUid ? " 🔗" : ""}</span><span>${right}</span>`;
+    stats.appendChild(row);
+  });
+  awardChainPrizes(ranked);
+  setTimeout(() => toggleModal("#win", true), 750);
+}
+
+// ★ II：この端末の本人と連携した人へ、順位の賞金（II の共通表 250・200・150・100・50）。本人はお財布へ・連携した人は受け取り箱へ
+function awardChainPrizes(ranked) {
+  if (!S || S.chainRewarded) return; S.chainRewarded = true;
+  if (!window.X2) return;
+  const P = X2.party.PRIZES;
+  const list = ranked.slice(0, P.length).map((p, i) => (p.xvUid ? { uid: p.xvUid, name: p.name, amt: P[i], why: (i + 1) + "位 賞金（MagiChainParty）", key: (S.gid || Date.now()) + "_" + p.id } : null)).filter(Boolean);
+  if (!list.length) return;
+  X2.party.award(list).then((res) => {
+    list.forEach((x, i) => {
+      const r = (res || []).find((z) => z.uid === x.uid);
+      setTimeout(() => toast(`🏆 ${x.name} に賞金 ${x.amt} XEVA！${r && r.kind === "wait" ? "（あとで送ります）" : ""}`, "#f0c040"), 1100 + i * 1200);
+    });
+  }).catch(() => {});
+}
+
+/* ラウンド制限の打ち切り → 領土(マス数)の多い順で順位決定 */
+function endByTerritory() {
+  if (ONLINE) return endOnline("territory");
+  S.over = true; clearSave();
+  updatePanels(); setBoardFrame(); winChime(); fxConfetti(S.players.map((p) => p.color));
+  const terr = (p) => ownedCount(S.board, S.size, p.id);
+  const ranked = [...S.players].sort((a, b) => (terr(b) - terr(a)) || (gemCount(b.id) - gemCount(a.id)));
+  const win = ranked[0];
+  $("#win-emoji").textContent = win.face;
+  $("#win-title").textContent = `${win.name} の勝ち！`;
+  $("#win-title").style.color = win.color;
+  $("#win-sub").textContent = `${S.roundLimit}ラウンド終了！ 領土（マス数）の多い順で順位を決定`;
+  const stats = $("#win-stats"); stats.innerHTML = "";
+  const medal = ["🥇", "🥈", "🥉"];
+  ranked.forEach((p, i) => {
+    const row = document.createElement("div");
+    row.className = "win-row"; row.style.setProperty("--c", p.color);
+    const badge = medal[i] || (i + 1) + "位";
+    row.innerHTML = `<span class="pdot"></span>${olAvatarHTML(p.chara, "sm")}<span class="nm">${badge} ${escapeHtml(p.name)}${i === 0 ? "（優勝）" : ""}${p.dead ? "・脱落" : ""}${p.xvUid ? " 🔗" : ""}</span><span>${terr(p)} マス</span>`;
+    stats.appendChild(row);
+  });
+  awardChainPrizes(ranked);
+  setTimeout(() => toggleModal("#win", true), 750);
+}
+
+/* ============================================================
+   途中保存 / 再開
+   ============================================================ */
+function serializeState() {
+  return {
+    v: 1, size: S.size, n: S.n, order: S.order.slice(), orderPos: S.orderPos, turn: S.turn,
+    deaths: S.deaths, round: S.round, moves: S.moves, roundLimit: S.roundLimit, cpuLevel: S.cpuLevel,
+    board: S.board.map((row) => row.map((c) => ({ owner: c.owner, count: c.count }))),
+    players: S.players.map((p) => ({ id: p.id, color: p.color, face: p.face, seat: p.seat, name: p.name, type: p.type, started: p.started, dead: p.dead, deadAt: p.deadAt || 0,
+      xvUid: p.xvUid || null, xvName: p.xvName || null, owner: !!p.owner, chara: p.chara || "" })),   /* ★ II：再開しても賞金とアイコンが残るように */
+  };
+}
+function saveGame() { if (!S || S.over) return; try { localStorage.setItem(SAVE_KEY, JSON.stringify(serializeState())); } catch (e) {} }
+function loadSave() { try { const s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; } }
+function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} refreshResume(); }
+
+function resumeGame() {
+  const d = loadSave(); if (!d) { refreshResume(); return; }
+  S = {
+    gid: Date.now(),
+    board: d.board, size: d.size, n: d.n, order: d.order, orderPos: d.orderPos, turn: d.turn,
+    busy: false, over: false, moves: d.moves || 0, deaths: d.deaths || 0, round: d.round || 1,
+    roundLimit: d.roundLimit || 0, cpuLevel: (d.cpuLevel == null ? 1 : d.cpuLevel),
+    players: d.players.map((p) => ({ ...p })), history: [],
+  };
+  // メニューの「やり直す」用に設定も合わせておく
+  setup.n = d.n; setup.size = d.size; setup.cpuLevel = S.cpuLevel; setup.roundLimit = S.roundLimit;
+  showScreen("#game");
+  buildBoardSkeleton();
+  buildPanels();
+  paintAll();
+  updatePanels();
+  setBoardFrame();
+  updateRoundInfo();
+  updateUndoBtn();
+  toast("▶ つづきから再開！", "#13c08a");
+  maybeCpu();
+}
+
+/* ============================================================
+   CPU（1手先＋連鎖シミュレーションで最善手）
+   ============================================================ */
+function maybeCpu() {
+  if (S.over) return;
+  if (cur().type === "cpu") { $("#thinking").classList.remove("hidden"); setTimeout(cpuMove, 620); }
+  else $("#thinking").classList.add("hidden");
+}
+function cpuMove() {
+  if (S.over || S.busy) return;
+  const me = S.turn;
+  if (cur().type !== "cpu") { $("#thinking").classList.add("hidden"); return; }
+  const mv = bestMove(me);
+  $("#thinking").classList.add("hidden");
+  if (mv) onTap(mv.r, mv.c);
+}
+function cloneBoard(b) { return b.map((row) => row.map((c) => ({ owner: c.owner, count: c.count }))); }
+function simResolve(b, size, player) {
+  let guard = 0;
+  while (true) {
+    const unstable = [];
+    for (let r = 0; r < size; r++) for (let c = 0; c < size; c++)
+      if (b[r][c].count >= critN(r, c, size) && b[r][c].count > 0) unstable.push([r, c]);
+    if (!unstable.length) break;
+    if (activeOwnersB(b, size).size <= 1) break;
+    const delta = new Map(), touched = new Set();
+    const add = (k, d) => delta.set(k, (delta.get(k) || 0) + d);
+    for (const [r, c] of unstable) {
+      const key = r * size + c;
+      add(key, -critN(r, c, size)); touched.add(key);
+      for (const [nr, nc] of neighborsN(r, c, size)) { const k2 = nr * size + nc; add(k2, +1); touched.add(k2); }
+    }
+    delta.forEach((d, key) => { b[(key / size) | 0][key % size].count += d; });
+    touched.forEach((key) => { const cell = b[(key / size) | 0][key % size]; if (cell.count <= 0) { cell.count = 0; cell.owner = null; } else cell.owner = player; });
+    if (++guard > 800) break;
+  }
+}
+function scoreBoard(b, size, me) {
+  let myG = 0, myC = 0, otherG = 0, otherC = 0, pos = 0;
+  for (let r = 0; r < size; r++) for (let c = 0; c < size; c++) {
+    const cell = b[r][c]; if (cell.owner === null || cell.count === 0) continue;
+    const crit = critN(r, c, size);
+    if (cell.owner === me) { myG += cell.count; myC++; pos += (crit === 2 ? 0.5 : crit === 3 ? 0.2 : 0); }
+    else { otherG += cell.count; otherC++; }
+  }
+  return myG * 1.0 + myC * 0.35 - otherG * 0.95 - otherC * 0.25 + pos;
+}
+// つよいCPU用：自分のマスのとなりに「あと1個で爆発する敵マス」があると次に奪われる危険
+function threatPenalty(b, size, me) {
+  let pen = 0;
+  for (let r = 0; r < size; r++) for (let c = 0; c < size; c++) {
+    const cell = b[r][c];
+    if (cell.owner === null || cell.owner === me) continue;
+    if (cell.count === critN(r, c, size) - 1) { // 敵が次の手で爆発させられる
+      for (const [nr, nc] of neighborsN(r, c, size)) {
+        const nb = b[nr][nc];
+        if (nb.owner === me && nb.count > 0) pen += nb.count * 0.6 + 0.6;
+      }
+    }
+  }
+  return pen;
+}
+function bestMove(me) {
+  const level = (S.cpuLevel == null) ? 1 : S.cpuLevel; // 0=よわい 1=ふつう 2=つよい
+  const legal = [];
+  for (let r = 0; r < S.size; r++) for (let c = 0; c < S.size; c++) {
+    const cell = S.board[r][c];
+    if (cell.owner === null || cell.owner === me) legal.push([r, c]);
+  }
+  if (!legal.length) return null;
+  // よわい：半分くらいは適当に置く
+  if (level === 0 && Math.random() < 0.55) { const m = legal[(Math.random() * legal.length) | 0]; return { r: m[0], c: m[1] }; }
+
+  const noise = level === 0 ? 2.5 : level === 1 ? 0.4 : 0.05;
+  let best = null, bestScore = -1e9;
+  for (const [r, c] of legal) {
+    const b = cloneBoard(S.board);
+    b[r][c].owner = me; b[r][c].count += 1;
+    simResolve(b, S.size, me);
+    let sc = scoreBoard(b, S.size, me) + Math.random() * noise;
+    if (level === 2) sc -= threatPenalty(b, S.size, me); // つよい：危険手を避ける
+    if (sc > bestScore) { bestScore = sc; best = { r, c }; }
+  }
+  return best;
+}
+
+/* ============================================================
+   あそびかた（自分のペースで進むステップ式・複数色で実演）
+   ============================================================ */
+const DSIZE = 4;
+let dB = null, dEls = null, dBusy = false, dTimers = [], demoTurn = 0, tutIndex = 0;
+const DCOL = [COLORS[0], COLORS[1]]; // 0=あか 1=あお
+
+const cap = (t) => { $("#tut-cap").textContent = t; };
+const after = (ms, fn) => dTimers.push(setTimeout(fn, ms));
+
+function openRules() { toggleModal("#rules", true); gotoStep(0); }
+
+function mountDemo() { $("#tut-stage").innerHTML = '<div id="demo-board"></div>'; buildDemo(); }
+function buildDemo() {
+  const host = $("#demo-board"); host.innerHTML = ""; dEls = [];
+  dB = Array.from({ length: DSIZE }, () => Array.from({ length: DSIZE }, () => ({ owner: null, count: 0 })));
+  for (let r = 0; r < DSIZE; r++) {
+    const row = [];
+    for (let c = 0; c < DSIZE; c++) {
+      const el = document.createElement("div"); el.className = "cell";
+      el.addEventListener("click", () => demoTap(r, c));
+      host.appendChild(el); row.push(el);
+    }
+    dEls.push(row);
+  }
+}
+function mountZone() {
+  const size = 5;
+  let h = `<div class="zone-board" style="grid-template-columns:repeat(${size},1fr);grid-template-rows:repeat(${size},1fr)">`;
+  for (let r = 0; r < size; r++) for (let c = 0; c < size; c++) {
+    const cr = critN(r, c, size);
+    const cls = cr === 2 ? "z-corner" : cr === 3 ? "z-edge" : "z-center";
+    const label = cr === 2 ? "角" : cr === 3 ? "辺" : "中央";
+    h += `<div class="zcell ${cls}"><span class="zn">${cr}</span><span class="zl">${label}</span></div>`;
+  }
+  $("#tut-stage").innerHTML = h + "</div>";
+}
+function paintD(r, c) {
+  const el = dEls[r][c], cell = dB[r][c];
+  el.className = "cell"; el.style.removeProperty("--c");
+  if (cell.owner === null || cell.count === 0) { el.style.background = "var(--cell)"; el.innerHTML = ""; return; }
+  const color = DCOL[cell.owner];
+  el.style.setProperty("--c", color);
+  el.style.background = `color-mix(in srgb, ${color} 22%, #fff)`;
+  if (cell.count === critN(r, c, DSIZE) - 1) el.classList.add("ready");
+  el.innerHTML = gemsHtml(cell.count, color);
+}
+function paintDAll() { for (let r = 0; r < DSIZE; r++) for (let c = 0; c < DSIZE; c++) paintD(r, c); }
+function dClear() { dB = Array.from({ length: DSIZE }, () => Array.from({ length: DSIZE }, () => ({ owner: null, count: 0 }))); paintDAll(); }
+function dSet(r, c, o, n) { dB[r][c] = { owner: o, count: n }; paintD(r, c); }
+
+/* --- ステップ定義（自分のペースで／ゆっくり再生） --- */
+const STEPS = [
+  { cap: "① 自分の番がきたら、自分の色のマスか空きマスをタップしてジェムを置きます。",
+    extra: "置けるのは「空きマス」か「自分の色のマス」だけ。相手の色には置けません。",
+    run() {
+      mountDemo(); dClear(); dBusy = true;
+      after(1400, () => { dSet(1, 1, 0, 1); blip(540, .05, "triangle"); });
+      after(3600, () => { dSet(2, 2, 1, 1); blip(500, .05, "triangle"); cap("① あかも あおも、それぞれ自分の番に1個ずつ置いていきます。"); });
+    } },
+
+  { cap: "② マスは『となりの数』ぶんジェムが集まると爆発します。場所で爆発しやすさがちがう！",
+    extra: '<span class="zone-legend"><span><i style="background:#ff6a4d"></i>角＝2こで爆発(最速)</span><span><i style="background:#3d8bff"></i>辺＝3こ</span><span><i style="background:#b9c6e6"></i>中央＝4こ</span></span>',
+    run() { mountZone(); } },
+
+  { cap: "③ 限界の数になると『バクハツ』！上下左右のとなりへジェムが1個ずつ飛びます。",
+    extra: "角は2こで爆発。角や辺はとても強い！",
+    run() {
+      mountDemo(); dClear(); dBusy = true;
+      after(1200, () => { dSet(0, 0, 0, 1); cap("③ 角のマスに、あと1こ置くと…"); });
+      after(3600, () => { cap("③ 2こでバクハツ！となりへ1個ずつ飛んだ！"); dB[0][0] = { owner: 0, count: 2 }; paintD(0, 0); demoResolve(0); });
+    } },
+
+  { cap: "④ 飛んだ先が相手のマスでも、自分の色に『奪える』のがポイント！",
+    extra: "あおのマスに あかのバクハツが飛ぶと、あお→あか に変わります。",
+    run() {
+      mountDemo(); dClear(); dBusy = true;
+      dSet(0, 1, 1, 1); dSet(1, 0, 1, 1);
+      after(1400, () => { dSet(0, 0, 0, 1); cap("④ あかが角で爆発しそう。まわりは あおのマス…"); });
+      after(4000, () => { cap("④ バクハツ！となりの あお を2マスとも奪った！"); dB[0][0] = { owner: 0, count: 2 }; paintD(0, 0); demoResolve(0); });
+    } },
+
+  { cap: "⑤ バクハツのとき、となりのマスの『数』はこうなります。",
+    extra: "相手の色＝<b>うばって＋1</b>／自分の色＝<b>＋1</b>／空き＝<b>自分の色で1個</b>。元のジェムは消えません！",
+    run() {
+      mountDemo(); dClear(); dBusy = true;
+      dSet(1, 1, 0, 3); // 中央のあか（あと1で爆発）
+      dSet(0, 1, 0, 1); // 上＝同じ色 あか(1)
+      dSet(1, 2, 1, 2); // 右＝ちがう色 あお(2)
+      dSet(2, 1, 1, 1); // 下＝ちがう色 あお(1)
+      // 左(1,0)＝空き
+      after(2600, () => { cap("⑤ 中央が4でバクハツ！4方向へ1個ずつ配られる…"); dB[1][1] = { owner: 0, count: 4 }; paintD(1, 1); demoResolve(0); });
+      after(5200, () => { cap("⑤ あお2→うばって あか3 ／ あか1→2 ／ 空き→あか1。元の数は残る！"); });
+    } },
+
+  { cap: "⑥ バクハツが次のバクハツを呼ぶ＝『連鎖』。うまく狙うと一気に大逆転！",
+    extra: "あかの1手が、あおの陣地をまとめてのみこみます。",
+    run() {
+      mountDemo(); dClear(); dBusy = true;
+      dSet(1, 1, 0, 3); dSet(0, 1, 0, 2); dSet(1, 0, 0, 2); dSet(0, 0, 0, 1);
+      dSet(0, 2, 1, 1); dSet(2, 1, 1, 1); dSet(1, 2, 1, 1); dSet(2, 0, 1, 1);
+      after(2800, () => { cap("⑥ 連鎖スタート！ドドドッと大逆転！"); dB[0][0] = { owner: 0, count: 2 }; paintD(0, 0); demoResolve(0); });
+    } },
+
+  { cap: "⑦【勝ちかた】盤の上から相手の色を“全部”消したら勝ち！",
+    extra: "自分の色のマスが0こになると<b>脱落</b>。最後に1色だけ残った人が優勝です 🏆",
+    run() {
+      mountDemo(); dClear(); dBusy = true;
+      dSet(3, 3, 1, 1); dSet(3, 2, 0, 2);
+      after(1400, () => { cap("⑦ 盤に残った最後の あお を、あかが消しにいく…"); });
+      after(3600, () => { cap("⑦ バクハツ！最後の あお が消えた…！"); dB[3][2] = { owner: 0, count: 3 }; paintD(3, 2); demoResolve(0); });
+      after(6000, () => { cap("⑦ 盤に残ったのは あか だけ → あかの勝ち！🏆"); });
+    } },
+
+  { cap: "▶ さいごに、このデモ盤で自由にためそう！タップで あか→あお と交互に置けます。",
+    extra: "角をねらう／相手の連鎖を止める…色々ためしてOK。「とじる」でゲームへ。",
+    run() { mountDemo(); dClear(); demoTurn = 0; dBusy = false; cap("▶ いまは『あか』の番。マスをタップ！"); } },
+];
+
+function gotoStep(i) {
+  i = Math.max(0, Math.min(STEPS.length - 1, i));
+  tutIndex = i;
+  dTimers.forEach(clearTimeout); dTimers = [];
+  const st = STEPS[i];
+  $("#tut-n").textContent = i + 1;
+  $("#tut-total").textContent = STEPS.length;
+  $("#tut-extra").innerHTML = st.extra || "";
+  $("#tut-prev").disabled = i === 0;
+  $("#tut-next").innerHTML = (i === STEPS.length - 1) ? "とじる" + CPI.check : "つぎへ" + CPI.next;
+  cap(st.cap);
+  st.run();
+}
+
+async function demoTap(r, c) {
+  if (dBusy) return;
+  const cell = dB[r][c];
+  if (cell.owner !== null && cell.owner !== demoTurn) { dEls[r][c].classList.add("invalid"); setTimeout(() => dEls[r][c].classList.remove("invalid"), 300); return; }
+  cell.owner = demoTurn; cell.count += 1; blip(540, .05, "triangle"); paintD(r, c);
+  await demoResolve(demoTurn);
+  demoTurn = demoTurn === 0 ? 1 : 0;
+  cap(`▶ つぎは『${demoTurn === 0 ? "あか" : "あお"}』の番。マスをタップ！`);
+}
+
+async function demoResolve(player) {
+  dBusy = true; let guard = 0;
+  while (true) {
+    const unstable = [];
+    for (let r = 0; r < DSIZE; r++) for (let c = 0; c < DSIZE; c++)
+      if (dB[r][c].count >= critN(r, c, DSIZE) && dB[r][c].count > 0) unstable.push([r, c]);
+    if (!unstable.length) break;
+    if (activeOwnersB(dB, DSIZE).size <= 1) break;
+    unstable.forEach(([r, c]) => dEls[r][c].classList.add("pop"));
+    chainPop(guard);   /* ★★ 2026-10-14 本番と同じ「ぽん」 */
+    await sleep(420); // デモはゆっくり見せる
+    const delta = new Map(), touched = new Set();
+    const add = (k, d) => delta.set(k, (delta.get(k) || 0) + d);
+    for (const [r, c] of unstable) {
+      const key = r * DSIZE + c; add(key, -critN(r, c, DSIZE)); touched.add(key);
+      for (const [nr, nc] of neighborsN(r, c, DSIZE)) { const k2 = nr * DSIZE + nc; add(k2, +1); touched.add(k2); }
+    }
+    delta.forEach((d, key) => { dB[(key / DSIZE) | 0][key % DSIZE].count += d; });
+    touched.forEach((key) => { const cell = dB[(key / DSIZE) | 0][key % DSIZE]; if (cell.count <= 0) { cell.count = 0; cell.owner = null; } else cell.owner = player; });
+    unstable.forEach(([r, c]) => dEls[r][c].classList.remove("pop"));
+    touched.forEach((key) => paintD((key / DSIZE) | 0, key % DSIZE));
+    await sleep(340); // 連鎖の各ステップをゆっくり
+    if (++guard > 100) break;
+  }
+  paintDAll(); dBusy = false;
+}
+
+/* ============================================================
+   お知らせトースト（脱落・勝利目標などを大きく表示）
+   ============================================================ */
+let toastTimer = null;
+function toast(msg, color) {
+  const t = $("#toast");
+  if (!t) return;
+  t.textContent = msg;
+  t.style.borderColor = color || "var(--line)";
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 1900);
+}
+
+/* ============================================================
+   メニュー（≡）
+   ============================================================ */
+/* ★★ 2026-10-14 ボタンのアイコン（絵文字や ▶ ✋ などの記号をやめて、線のアイコンにそろえた・ご指定「戻るボタンなどは全てデザイン」） */
+const CPI = {
+  play: '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="fl" d="M8 5.5v13l10.5-6.5z"/></svg>',
+  book: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5h9.5a2 2 0 0 1 2 2v13H7a2 2 0 0 1-2-2z"/><path d="M5 17.5a2 2 0 0 1 2-2h9.5"/><path d="M8.5 8.5h5M8.5 11.5h4"/></svg>',
+  pause: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6v12M15 6v12"/></svg>',
+  sound: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 9.5h3l4.5-4v13l-4.5-4h-3z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>',
+  mute: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 9.5h3l4.5-4v13l-4.5-4h-3z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>',
+  redo: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4.5V9h-4.5"/></svg>',
+  setup: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 12h4M12 12h8M4 17h12"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="17" r="2"/></svg>',
+  next: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>',
+  check: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  hand: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 11V6.5a1.5 1.5 0 0 1 3 0V11M11 10V5a1.5 1.5 0 0 1 3 0v5M14 10.5V6.5a1.5 1.5 0 0 1 3 0V14a6 6 0 0 1-6 6h-.6a5 5 0 0 1-4-2l-2.6-3.6a1.5 1.5 0 0 1 2.3-1.9L8 14"/></svg>',
+};
+function buildMenu() {
+  const m = document.createElement("div");
+  m.id = "menu"; m.className = "modal hidden";
+  /* ★★ 2026-10-13 新しい見た目（中身・id は前と同じ） */
+  m.innerHTML = `
+    <div class="modal-card menu-card">
+      <h2>メニュー</h2>
+      <div class="menu-list">
+        <button class="main" id="m-close"><span class="mi">${CPI.play}</span>ゲームにもどる</button>
+        <button id="m-rules"><span class="mi">${CPI.book}</span>あそびかた</button>
+        <button id="m-suspend"><span class="mi">${CPI.pause}</span>中断してタイトルへ（再開できます）</button>
+        <button id="m-sound"><span class="mi">${muted ? CPI.mute : CPI.sound}</span><span class="ml">${muted ? "音：OFF" : "音：ON"}</span></button>
+        <button id="m-restart"><span class="mi">${CPI.redo}</span>同じ設定でやり直す</button>
+        <button class="sub" id="m-setup"><span class="mi">${CPI.setup}</span>設定にもどる</button>
+      </div>
+    </div>`;
+  document.body.appendChild(m);
+  $("#m-rules").addEventListener("click", () => { toggleModal("#menu", false); openRules(); });
+  $("#m-suspend").addEventListener("click", () => { saveGame(); toggleModal("#menu", false); showScreen("#setup"); toast("💾 保存しました。タイトルの「つづきから」で再開できます", "#13c08a"); });
+  $("#m-sound").addEventListener("click", () => {
+    muted = !muted;
+    $("#m-sound").innerHTML = '<span class="mi">' + (muted ? CPI.mute : CPI.sound) + '</span><span class="ml">' + (muted ? "音：OFF" : "音：ON") + "</span>";
+  });
+  $("#m-restart").addEventListener("click", () => { toggleModal("#menu", false); beginOrder(); });
+  $("#m-setup").addEventListener("click", () => { toggleModal("#menu", false); goSetup(); });
+  $("#m-close").addEventListener("click", () => toggleModal("#menu", false));
+}
+function openMenu() { toggleModal("#menu", true); }
+
+/* ============================================================
+   サウンド（WebAudio）
+   ============================================================ */
+let actx = null;
+function ac() { if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } return actx; }
+function blip(freq, dur, type) {
+  if (muted) return; const ctx = ac(); if (!ctx) return;
+  try {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type || "sine"; o.frequency.value = freq; g.gain.value = 0.0001;
+    o.connect(g); g.connect(ctx.destination);
+    const t = ctx.currentTime;
+    g.gain.exponentialRampToValueAtTime(0.16, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.start(t); o.stop(t + dur + 0.02);
+  } catch (e) {}
+}
+function winChime() { if (muted) return;[523, 659, 784, 1046].forEach((f, i) => setTimeout(() => blip(f, 0.25, "triangle"), i * 120)); }
+
+/* ============================================================ */
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m])); }
+
+/* ============================================================
+   オンライン対戦（部屋番号でつながる・アカウント紐づけ・報酬）
+   ・状態は magichainparty Firebase(js/online.js=window.MCPOnline)に保存
+   ・手番プレイヤーの端末が連鎖を計算して盤面を書き込み、他端末は受信して再描画
+   ============================================================ */
+function whenMCP(timeout) {
+  return new Promise((res) => {
+    if (window.MCPOnline) return res(window.MCPOnline);
+    let done = false; const fin = () => { if (!done) { done = true; res(window.MCPOnline || null); } };
+    window.addEventListener("mcponline:ready", fin, { once: true });
+    setTimeout(fin, timeout || 6000);
+  });
+}
+/* ══════════════════════════════════════════════════════════════
+   オンライン対戦の「自分のアカウント」
+   ★ II：その端末の XEVARION II のアカウント（サインインしている人）がそのまま使われる。紐づけの手間はいらない
+   ══════════════════════════════════════════════════════════════ */
+function myOnlineAccount() {
+  const m = myII();
+  return m ? { uid: m.uid, name: String(m.name || "プレイヤー").slice(0, 6), chara: m.face || "" } : null;
+}
+/* 名前の左に出す丸いアイコン（II のキャラの顔。無ければ何も出さない） */
+function olAvatarHTML(chara, cls) {
+  const src = chara && window.X2 ? X2.faceSrc(chara) : "";
+  if (!src) return "";
+  return '<img class="ol-av' + (cls ? " " + cls : "") + '" src="' + src + '" alt="" loading="lazy">';
+}
+/* 入口の「アカウント」の欄 */
+function olRenderLinkRow() {
+  const box = document.getElementById("ol-linkbox");
+  if (!box) return;
+  const cur = myOnlineAccount();
+  box.innerHTML = '<div class="ol-linkcur">' +
+    (cur ? olAvatarHTML(cur.chara) + '<span class="ol-linknm">' + escapeHtml(cur.name) + '</span><span class="ol-linktag">XEVARION II のアカウント</span>'
+         : '<span class="ol-linknm none">サインインしていません</span>') + '</div>';
+}
+function olRefreshProfiles() { /* II：名前と顔はいつも II から読む（取り直しはいらない） */ }
+/* 入口のボタンの出しわけ（アカウントがあるかで決まる） */
+function olRefreshEntry() {
+  const acc = myOnlineAccount();
+  const c = $("#ol-create"), j = $("#ol-join-btn");
+  if (!acc) {
+    olMsg("オンライン対戦には XEVARION II へのサインインが必要です。", "#ff5d5d");
+    if (c) c.disabled = true; if (j) j.disabled = true;
+  } else {
+    olMsg("部屋をつくるか、4桁の番号で参加してください。");
+    if (c) c.disabled = false; if (j) j.disabled = false;
+  }
+}
+function isMyOnlineTurn() {
+  return !!(ONLINE && ONLINE.entered && window.MCPOnline && S.players && S.players[S.turn] &&
+            S.players[S.turn].uid === MCPOnline.myUid());
+}
+
+function initOnline() {
+  const btn = $("#open-online");
+  if (btn) btn.addEventListener("click", openOnline);
+  const back = $("#ol-back"); if (back) back.addEventListener("click", () => { showScreen("#setup"); });
+  const create = $("#ol-create"); if (create) create.addEventListener("click", onCreateRoom);
+  const join = $("#ol-join-btn"); if (join) join.addEventListener("click", onJoinRoom);
+  const ready = $("#ol-ready"); if (ready) ready.addEventListener("click", onToggleReady);
+  const start = $("#ol-start"); if (start) start.addEventListener("click", startOnline);
+  const leave = $("#ol-leave"); if (leave) leave.addEventListener("click", leaveOnlineToSetup);
+  const sizeSeg = $("#ol-size-seg");
+  if (sizeSeg) sizeSeg.addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b || !ONLINE || !ONLINE.isHost) return;
+    MCPOnline.setOptions({ size: +b.dataset.s });
+  });
+  const roundSeg = $("#ol-round-seg");
+  if (roundSeg) roundSeg.addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b || !ONLINE || !ONLINE.isHost) return;
+    MCPOnline.setOptions({ roundLimit: +b.dataset.r });
+  });
+}
+
+function olMsg(t, color) { const m = $("#ol-msg"); if (m) { m.innerHTML = t || ""; m.style.color = color || "#8892a6"; } }
+
+function openOnline() {
+  /* ★ オフライン中はオンライン対戦に入れない */
+  if (navigator.onLine === false) {
+    toast("📴 オフライン中はオンライン対戦できません（ローカル対戦は遊べます）", "#ff8c42");
+    return;
+  }
+  showScreen("#online");
+  $("#ol-lobby").classList.add("hidden");
+  $("#ol-home").classList.remove("hidden");
+  const st = $("#ol-sticky"); if (st) st.classList.add("hidden");
+  $("#ol-ready").classList.add("hidden");
+  $("#ol-start").classList.add("hidden");
+  $("#ol-code").value = "";
+  /* ★★ 2026-09-01 紐づけの行を出してから、ボタンの出しわけを決める */
+  olRenderLinkRow();
+  olRefreshEntry();
+  /* ★★ 2026-09-02 開くたびにキャラ・表示名を取り直す（force） */
+  try { olRefreshProfiles(true); } catch (e) {}
+  whenMCP().then((M) => { if (!M) olMsg("オンライン接続を準備できませんでした。通信環境を確認してください。", "#ff5d5d"); });
+}
+
+function onCreateRoom() {
+  const acc = myOnlineAccount(); if (!acc) return;
+  olMsg("部屋を作成中…");
+  whenMCP().then((M) => {
+    if (!M) { olMsg("オンライン接続がありません。", "#ff5d5d"); return; }
+    M.createRoom(acc, { size: setup.size || 8, roundLimit: setup.roundLimit || 0 }).then((r) => {
+      if (r && r.code) { startOnlineSession(); }
+      else if (r && r.error === "denied") olMsg("サーバーに接続できません（データベースのルール設定が必要です）。", "#ff5d5d");
+      else olMsg("部屋を作成できませんでした。通信環境を確認してもう一度お試しください。", "#ff5d5d");
+    });
+  });
+}
+function onJoinRoom() {
+  const acc = myOnlineAccount(); if (!acc) return;
+  const code = ($("#ol-code").value || "").trim();
+  if (!/^\d{4}$/.test(code)) { olMsg("4桁の部屋番号を入力してください。", "#ff5d5d"); return; }
+  olMsg("参加中…");
+  whenMCP().then((M) => {
+    if (!M) { olMsg("オンライン接続がありません。", "#ff5d5d"); return; }
+    M.joinRoom(code, acc).then((r) => {
+      if (r && r.ok) { startOnlineSession(); }
+      else if (r && r.error === "nofound") olMsg("その番号の部屋が見つかりません。", "#ff5d5d");
+      else if (r && r.error === "full") olMsg("その部屋は満員です（最大6人）。", "#ff5d5d");
+      else if (r && r.error === "started") olMsg("その部屋はすでにゲーム中です。", "#ff5d5d");
+      else if (r && r.error === "denied") olMsg("サーバーに接続できません（データベースのルール設定が必要です）。", "#ff5d5d");
+      else olMsg("参加できませんでした。通信環境を確認してもう一度お試しください。", "#ff5d5d");
+    });
+  });
+}
+
+/* 部屋に入ったら購読を開始 */
+function startOnlineSession() {
+  ONLINE = { roomPlayers: [], mySlot: -1, isHost: false, entered: false, room: null, pendingState: null, pushedSeq: 0, _pOnline: null, _connInit: false };
+  const M = window.MCPOnline;
+  $("#ol-home").classList.add("hidden");
+  $("#ol-lobby").classList.remove("hidden");
+  const st = $("#ol-sticky"); if (st) st.classList.remove("hidden");
+  $("#ol-ready").classList.remove("hidden");
+  $("#ol-roomnum").textContent = M.code();
+  M.watchRoom(onlineRoomUpdate);
+  M.watchState(onlineStateUpdate);
+  if (M.watchConnected) M.watchConnected(onlineConnChange);
+}
+
+/* ── 自分の接続状態（Firebase .info/connected）── 切れたらバナー表示 */
+function onlineConnChange(ok) {
+  if (!ONLINE) return;
+  if (!ONLINE._connInit) { ONLINE._connInit = true; if (ok) return; } // 初回の connected=true は無視
+  let b = document.getElementById("ol-connbar");
+  if (!ok) {
+    if (!b) {
+      b = document.createElement("div");
+      b.id = "ol-connbar";
+      b.textContent = "⚠️ 接続が切れました — 再接続しています…";
+      document.body.appendChild(b);
+    }
+    b.classList.add("show");
+  } else {
+    if (b) b.classList.remove("show");
+    toast("✅ 再接続しました", "#13c08a");
+  }
+}
+function hideConnBar() { const b = document.getElementById("ol-connbar"); if (b) b.classList.remove("show"); }
+
+function onlineRoomUpdate(room) {
+  if (!room) {
+    if (ONLINE && !ONLINE.entered) { toast("部屋が解散されました", "#ff5d5d"); softLeaveToSetup(); }
+    return;
+  }
+  if (!ONLINE) return;
+  ONLINE.room = room;
+  ONLINE.isHost = !!(room.meta && room.meta.host === MCPOnline.myUid());
+  const players = room.players ? Object.keys(room.players).map((uid) => ({ uid, ...room.players[uid] })) : [];
+  players.sort((a, b) => (a.slot - b.slot) || ((a.joinedAt || 0) - (b.joinedAt || 0)));
+  ONLINE.roomPlayers = players;
+  ONLINE.mySlot = players.findIndex((p) => p.uid === MCPOnline.myUid());
+  // 相手の接続状態の変化を通知（切断＝onDisconnect で online:false になる）
+  if (ONLINE._pOnline) {
+    players.forEach((p) => {
+      if (p.uid === MCPOnline.myUid()) return;
+      const was = ONLINE._pOnline[p.uid], now = p.online !== false;
+      if (was !== undefined && was !== now) {
+        toast(now ? `📡 ${p.name} が再接続しました` : `📡 ${p.name} の接続が切れました`, now ? "#13c08a" : "#ff8c42");
+      }
+    });
+  }
+  ONLINE._pOnline = {}; players.forEach((p) => { ONLINE._pOnline[p.uid] = p.online !== false; });
+  if (!ONLINE.entered) renderLobby(room, players);
+  if (!ONLINE.entered && ONLINE.pendingState && players.length) {
+    const st = ONLINE.pendingState; ONLINE.pendingState = null; enterOnlineGame(st);
+  }
+}
+function onlineStateUpdate(state) {
+  if (!state || !ONLINE) return;
+  if (!ONLINE.entered) {
+    if (!ONLINE.roomPlayers || !ONLINE.roomPlayers.length) { ONLINE.pendingState = state; return; }
+    enterOnlineGame(state); return;
+  }
+  applyOnlineState(state);
+}
+
+function renderLobby(room, players) {
+  const host = room.meta && room.meta.host;
+  const list = $("#ol-players"); if (list) {
+    list.innerHTML = players.map((p, i) => {
+      const isHostP = p.uid === host, me = p.uid === MCPOnline.myUid();
+      const off = p.online === false;
+      /* ★★ 2026-09-01 紐づけたアカウントの<b>アイコン画像</b>も出す（ご指定）。
+         charFile は部屋に入るときに書きこんである（online.js の players[uid].charFile）。 */
+      return `<div class="ol-prow" style="--c:${COLORS[i] || "#888"}">
+        <span class="pdot"></span>
+        ${olAvatarHTML(p.face)}
+        <span class="ol-pname">${escapeHtml(p.name || "?")}${me ? "（あなた）" : ""}${isHostP ? " 👑" : ""}${off ? " ⚪️" : ""}</span>
+        <span class="ol-pready">${p.ready ? "✅ 準備OK" : "…待機中"}</span>
+      </div>`;
+    }).join("") + (players.length < (MCPOnline.MAX_PLAYERS || 6)
+      ? `<div class="ol-prow empty"><span class="ol-pname">空き（あと ${(MCPOnline.MAX_PLAYERS || 6) - players.length} 人まで）</span></div>` : "");
+  }
+  // ホスト設定
+  $("#ol-host-opts").classList.toggle("hidden", !ONLINE.isHost);
+  if (ONLINE.isHost && room.meta) {
+    $$("#ol-size-seg button").forEach((b) => b.classList.toggle("on", +b.dataset.s === (room.meta.size || 8)));
+    $$("#ol-round-seg button").forEach((b) => b.classList.toggle("on", +b.dataset.r === (room.meta.roundLimit || 0)));
+  }
+  // 自分の準備ボタン（ホストは常に準備OKなので非表示）
+  const meP = players.find((p) => p.uid === MCPOnline.myUid());
+  const rb = $("#ol-ready");
+  if (rb) {
+    rb.classList.toggle("hidden", !!ONLINE.isHost);
+    rb.innerHTML = CPI.hand + ((meP && meP.ready) ? "準備OK（タップで解除）" : "準備する");
+    rb.classList.toggle("on", !!(meP && meP.ready));
+  }
+  // 開始ボタン（ホスト・2人以上・全員準備OK）
+  const allReady = players.length >= 2 && players.every((p) => p.ready);
+  const sb = $("#ol-start");
+  if (sb) { sb.classList.toggle("hidden", !ONLINE.isHost); sb.disabled = !allReady; sb.innerHTML = CPI.play + (allReady ? "ゲーム開始（ホスト）" : "全員の準備を待っています…"); }
+}
+
+function onToggleReady() {
+  if (!ONLINE) return;
+  const meP = ONLINE.roomPlayers.find((p) => p.uid === MCPOnline.myUid());
+  MCPOnline.setReady(!(meP && meP.ready));
+}
+
+function startOnline() {
+  if (!ONLINE || !ONLINE.isHost) return;
+  const players = ONLINE.roomPlayers.slice();
+  if (players.length < 2) { toast("2人以上必要です", "#ff5d5d"); return; }
+  const meta = (ONLINE.room && ONLINE.room.meta) || {};
+  const size = meta.size || 8, roundLimit = meta.roundLimit || 0, n = players.length;
+  const board = [];
+  for (let r = 0; r < size; r++) { const row = []; for (let c = 0; c < size; c++) row.push({ owner: null, count: 0 }); board.push(row); }
+  const order = [...Array(n).keys()];
+  for (let i = order.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0;[order[i], order[j]] = [order[j], order[i]]; }
+  const slotUpdates = {}; players.forEach((p, i) => { slotUpdates[p.uid] = i; });
+  const state = {
+    seq: 1, writer: -1, size, n, roundLimit,
+    order, orderPos: 0, turnSlot: order[0],
+    round: 1, deaths: 0, moves: 0, over: false,
+    board: board.map((row) => row.map((c) => ({ owner: c.owner, count: c.count }))),
+    players: players.map((p, i) => ({ slot: i, started: false, dead: false, deadAt: 0 })),
+    result: null,
+  };
+  MCPOnline.startGame(state, slotUpdates);
+}
+
+/* オンライン用に S を構築してゲーム画面へ */
+function enterOnlineGame(state) {
+  const rp = ONLINE.roomPlayers.slice().sort((a, b) => a.slot - b.slot);
+  const n = state.n || rp.length;
+  S = {
+    // 注意: Firebase は null 値を保存しない＝空マスの owner:null が欠落して届く。
+    // owner を必ず null に正規化しないと「自分の番なのに置けない」バグになる。
+    board: state.board.map((row) => row.map((c) => ({ owner: (c && c.owner != null) ? c.owner : null, count: (c && c.count) || 0 }))),
+    size: state.size, n,
+    order: state.order.slice(), orderPos: state.orderPos, turn: state.turnSlot,
+    busy: false, over: false, moves: state.moves || 0, deaths: state.deaths || 0,
+    round: state.round || 1, roundLimit: state.roundLimit || 0, cpuLevel: 0,
+    players: rp.slice(0, n).map((p, i) => ({
+      id: i, color: COLORS[i], face: FACES[i], seat: SEATS[n][i],
+      name: p.name || NAMES[i], type: "human", started: false, dead: false, deadAt: 0,
+      uid: p.uid, xvUid: p.uid, xvName: p.name,
+      /* ★ II：その人のパートナーの顔（部屋の players[uid].face） */
+      chara: p.face || "",
+    })),
+    history: [], onlineSeqApplied: state.seq || 0, onlineWinShown: false,
+  };
+  ONLINE.mySlot = S.players.findIndex((p) => p.uid === MCPOnline.myUid());
+  applyPlayersMeta(state);
+  buildBoardSkeleton();
+  buildPanels();
+  paintAll();
+  updatePanels();
+  setBoardFrame();
+  updateRoundInfo();
+  const ub = $("#undo-btn"); if (ub) ub.style.display = "none";
+  ONLINE.entered = true;
+  // 開幕（まだ誰も打っていない）なら順番抽選の演出を見せてからゲーム画面へ
+  if (!state.over && (state.moves || 0) === 0) {
+    showOnlineOrder();
+  } else {
+    showScreen("#game");
+    onlineStartToasts(state);
+  }
+}
+
+/* オンラインの順番抽選演出（順番自体はホストが抽選済み＝S.order を発表するだけ） */
+function showOnlineOrder() {
+  showScreen("#order");
+  $("#order-actions").classList.add("hidden");
+  $("#order-result").innerHTML = "";
+  $("#order-title").textContent = "順番を抽選中…";
+  $("#order-dice").textContent = (S.n === 2 ? "🪙" : "🎲");
+  $("#order-dice").classList.add("spin");
+  setTimeout(() => {
+    if (!ONLINE || !$("#order").classList.contains("active")) return;
+    $("#order-dice").classList.remove("spin");
+    $("#order-title").textContent = "順番が決まりました！";
+    const res = $("#order-result"); res.innerHTML = "";
+    S.order.forEach((pid, rank) => {
+      const p = S.players[pid]; if (!p) return;
+      const me = window.MCPOnline && p.uid === MCPOnline.myUid();
+      const item = document.createElement("div");
+      item.className = "order-item";
+      item.style.setProperty("--c", p.color);
+      item.style.animationDelay = (rank * 0.12) + "s";
+      item.innerHTML = `<span class="rank">${rank + 1}</span><span class="pdot"></span><span class="nm">${escapeHtml(p.name)}${me ? "（あなた）" : ""}</span>`;
+      res.appendChild(item);
+    });
+    setTimeout(() => {
+      if (!ONLINE || !$("#order").classList.contains("active")) return;
+      showScreen("#game");
+      onlineStartToasts(null);
+    }, S.order.length * 120 + 1500);
+  }, 1400);
+}
+
+function onlineStartToasts(state) {
+  toast(S.roundLimit ? `🎯 ${S.roundLimit}ラウンド制・オンライン対戦！` : "🎯 オンライン対戦スタート！全部の色を消したら勝ち", "#7c5bff");
+  if (state && state.over) showOnlineWin(state);
+  else if (S.over && S.result) showOnlineWin({ result: S.result });
+  else if (isMyOnlineTurn()) setTimeout(() => toast("▶ あなたの番です！", "#13c08a"), 700);
+}
+
+function applyPlayersMeta(state) {
+  if (!state.players) return;
+  state.players.forEach((sp) => {
+    const p = S.players[sp.slot];
+    if (p) { p.started = !!sp.started; p.dead = !!sp.dead; p.deadAt = sp.deadAt || 0; }
+  });
+}
+
+/* 受信した権威状態を反映（再描画） */
+function applyOnlineState(state) {
+  if (!state) return;
+  if (state.seq && state.seq <= (S.onlineSeqApplied || 0) && ONLINE.entered && !state.over && !S.over) return;
+  S.onlineSeqApplied = state.seq || 0;
+  // Firebase は null を保存しないため owner を null に正規化（enterOnlineGame と同じ）
+  S.board = state.board.map((row) => row.map((c) => ({ owner: (c && c.owner != null) ? c.owner : null, count: (c && c.count) || 0 })));
+  S.order = state.order.slice(); S.orderPos = state.orderPos; S.turn = state.turnSlot;
+  S.round = state.round || 1; S.deaths = state.deaths || 0; S.moves = state.moves || 0;
+  const prevDead = new Set(S.players.filter((p) => p.dead).map((p) => p.id));
+  applyPlayersMeta(state);
+  if (state.result) S.result = state.result;
+  S.over = !!state.over;
+  paintAll(); updatePanels(); setBoardFrame(); updateRoundInfo();
+  S.players.forEach((p) => { if (p.dead && !prevDead.has(p.id)) toast(`${p.face} ${p.name} の色が消えた！脱落！`, p.color); });
+  if (state.over) showOnlineWin(state);
+  else if (isMyOnlineTurn()) setTimeout(() => { if (isMyOnlineTurn() && !S.busy) toast("▶ あなたの番です！", "#13c08a"); }, 250);
+}
+
+/* 手番の手を打ち終えた後、確定盤面をFBへ送信 */
+function afterMoveOnline() {
+  const seq = (S.onlineSeqApplied || 0) + 1;
+  S.onlineSeqApplied = seq; ONLINE.pushedSeq = seq;
+  const state = {
+    seq, writer: ONLINE.mySlot,
+    size: S.size, n: S.n, roundLimit: S.roundLimit,
+    order: S.order.slice(), orderPos: S.orderPos, turnSlot: S.turn,
+    round: S.round, deaths: S.deaths, moves: S.moves, over: !!S.over,
+    board: S.board.map((row) => row.map((c) => ({ owner: c.owner, count: c.count }))),
+    players: S.players.map((p) => ({ slot: p.id, started: !!p.started, dead: !!p.dead, deadAt: p.deadAt || 0 })),
+    result: S.over ? (S.result || null) : null,
+  };
+  MCPOnline.pushState(state);
+}
+
+/* オンライン終局：順位を決めて result をセットし送信（勝敗表示は showOnlineWin が全端末で行う） */
+function endOnline(kind) {
+  S.over = true;
+  let ranked;
+  if (kind === "territory") {
+    const terr = (p) => ownedCount(S.board, S.size, p.id);
+    ranked = [...S.players].sort((a, b) => (terr(b) - terr(a)) || (gemCount(b.id) - gemCount(a.id)));
+  } else {
+    const rankKey = (p) => p.dead ? p.deadAt : Infinity;
+    ranked = [...S.players].sort((a, b) => rankKey(b) - rankKey(a));
+  }
+  S.result = { kind, rankedSlots: ranked.map((p) => p.id) };
+  updatePanels(); setBoardFrame();
+  afterMoveOnline();
+}
+
+function showOnlineWin(state) {
+  if (S.onlineWinShown) return; S.onlineWinShown = true;
+  winChime(); fxConfetti(S.players.map((p) => p.color));
+  const result = (state && state.result) || { kind: "last", rankedSlots: S.players.map((p) => p.id) };
+  const ranked = result.rankedSlots.map((slot) => S.players[slot]).filter(Boolean);
+  const win = ranked[0];
+  $("#win-emoji").textContent = win.face;
+  $("#win-title").textContent = `${win.name} の勝ち！`;
+  $("#win-title").style.color = win.color;
+  $("#win-sub").textContent = result.kind === "territory"
+    ? `${S.roundLimit}ラウンド終了！ 領土（マス数）の多い順で順位を決定`
+    : "ほかの色をすべて消しました 🎉 順位は『長く生き残った順』！";
+  const stats = $("#win-stats"); stats.innerHTML = "";
+  const medal = ["🥇", "🥈", "🥉"];
+  ranked.forEach((p, i) => {
+    const row = document.createElement("div");
+    row.className = "win-row"; row.style.setProperty("--c", p.color);
+    const badge = medal[i] || (i + 1) + "位";
+    const right = result.kind === "territory"
+      ? `${ownedCount(S.board, S.size, p.id)} マス`
+      : (p.dead ? `${p.deadAt}番目に脱落` : `${gemCount(p.id)}個で制覇 🏆`);
+    row.innerHTML = `<span class="pdot"></span><span class="nm">${badge} ${escapeHtml(p.name)}${i === 0 ? "（優勝）" : ""} 🔗</span><span>${right}</span>`;
+    stats.appendChild(row);
+  });
+  awardOnlinePrizes(ranked);
+  $("#play-again") && ($("#play-again").textContent = "ロビーにもどる");
+  setTimeout(() => toggleModal("#win", true), 700);
+}
+
+/* ホストのみ順位賞金を配布（awardOnce 内でも二重防止） */
+function awardOnlinePrizes(ranked) {
+  if (!ONLINE || !ONLINE.isHost || !window.MCPOnline) return;
+  if (MCPOnline.finish) MCPOnline.finish();   // ★ II：部屋に「終わり」の印（このあとホストが出ると部屋ごと消える）
+  const top = ranked.map((p) => ({ uid: p.uid, name: p.name }));
+  MCPOnline.awardOnce(top).then((list) => {
+    if (list && list.length) list.forEach((r, i) => setTimeout(() => toast(`🏆 ${r.name} に賞金 ${r.amount} XEVA！${r.kind === "wait" ? "（あとで送ります）" : ""}`, "#f0c040"), 1200 + i * 1200));
+  });
+}
+
+/* 退出処理 */
+function softLeaveToSetup() {
+  ONLINE = null;
+  hideConnBar();
+  const ub = $("#undo-btn"); if (ub) ub.style.display = "";
+  const pa = $("#play-again"); if (pa) pa.textContent = "もう一度あそぶ";
+  toggleModal("#win", false);
+  showScreen("#setup");
+}
+function leaveOnlineToSetup() {
+  try { if (window.MCPOnline) MCPOnline.leaveRoom(); } catch (e) {}
+  try { if (window.XevaPresence) XevaPresence.leave(); } catch (e) {}
+  softLeaveToSetup();
+}
+
+/* ★★ 2026-10-13 ご指定「特に iPhone・iPad で下バーのあたりに空白」：iPhone・iPad のアプリ表示（html.xv-full）では
+   文書が箱より少し長い（本当の画面の高さ）。中身はすべて画面の板の中でスクロールする作りなので、
+   <b>文書そのもの</b>が動くと（入力でキーボードが出たあと等）下バーごと上へずれて下に帯が見える → いつも 0 に留める。
+   ★ 入力中（キーボードが出ている）は iOS が持ち上げているので触らない。閉じたら戻す。 */
+function cpPinDoc() {
+  if (!document.documentElement.classList.contains("xv-full")) return;
+  if (!window.scrollY && !window.scrollX) return;
+  const a = document.activeElement;
+  if (a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.isContentEditable) && !a.readOnly) return;
+  window.scrollTo(0, 0);
+}
+window.addEventListener("scroll", cpPinDoc, { passive: true });
+document.addEventListener("focusout", () => { setTimeout(cpPinDoc, 60); setTimeout(cpPinDoc, 360); });
+if (window.visualViewport) visualViewport.addEventListener("resize", () => setTimeout(cpPinDoc, 60));
+
+/* ★ II：はじめの画面（chain-front.js）から使うもの */
+window.ChainGame = { get setup() { return setup; }, saveSetup, beginOrder, resumeGame, loadSave, openRules, openOnline, toast, escapeHtml, myII, COLORS, NAMES };
+window.addEventListener("DOMContentLoaded", () => { preventZoom(); initSetup(); });

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <!-- ★ XEVARION II のアプリ：II の中（#/app/chain の iframe）でだけ動く。II の機能は親の window.X2（src/portal/bridge.js）だけを使う。
+       直接開かれたら II の入口へ送る。初代の共通部品（xeva.js・xeva-cloud・game-link・各 SW・起動ロゴ・safebottom など）は読まない -->
+  <script>
+  (function () {
+    var P = null;
+    try { P = window.parent !== window ? window.parent.X2 : null; } catch (e) { P = null; }
+    if (!P) {
+      if (window.parent === window) location.replace('../../index.html#/app/chain');
+      throw new Error('MagiChainParty は XEVARION II の中で開いてください');
+    }
+    window.X2 = P;
+    P.attach(window); /* 余白・動作モード・省電力のコマ数 */
+  })();
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>MagiChainParty — チェインパーティ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- はじめの画面と準備（MagiQuiz と同じ全画面）の字。Yacht・GuraPlate・Shift と同じ指定（読みこみを使い回せる） -->
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800;900&family=Baloo+2:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=1" />
+  <link rel="stylesheet" href="css/front.css?v=1" />
+</head>
+<body>
+  <!-- ══════════════════════════════════════════════════════════════
+       MagiChainParty（2026-06 RENSA → 初代 XEVARION → 2026-11-23 XEVARION II へ移しかえ）
+       ・はじめの画面と準備（① メンバー ② ルール）は MagiQuiz と同じ全画面（#front・js/chain-front.js）。色はロゴの紫〜ピンク
+       ・オンライン（部屋番号）・順番きめ・ゲーム・あそびかた・勝利は初代のまま（js/game.js）。部屋は II の X2.rooms（js/online.js）
+       ・連携・賞金・アイコンは II のパーティーの部品（window.X2）
+       ══════════════════════════════════════════════════════════════ -->
+  <div class="bgfx" aria-hidden="true"><i></i><i></i><i></i></div>
+
+  <!-- ① はじめの画面・② 準備（全画面・中身は js/chain-front.js が描く） -->
+  <div id="front" class="front">
+    <div class="bg" aria-hidden="true"><i class="bg-rays"></i><i class="bg-grad"></i></div>
+    <section id="titleScr" class="scr"></section>
+    <section id="setupScr" class="scr"></section>
+    <!-- アイコン・連携のシート -->
+    <div id="fSheetOv" class="sov hidden"><div class="fsheet" id="fSheet"></div></div>
+  </div>
+
+  <!-- ===== オンライン対戦（部屋番号でつながる） ===== -->
+  <section id="online" class="screen">
+    <div class="setup-wrap">
+      <header class="su-top">
+        <button class="back-portal" id="ol-back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>もどる</button>
+      </header>
+      <h1 class="page-title">オンライン<span>対戦</span></h1>
+      <p class="tag">部屋番号でつながって、はなれた友だちと対戦！<br>勝つと <b>XEVA 賞金</b>がもらえます（XEVARION II のお財布へ）。</p>
+
+      <div id="ol-home">
+        <div class="su-card">
+          <div class="su-title"><span class="su-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8.5v7M8.5 12h7"/></svg></span>部屋をつくる<span class="su-hint">ホストになる</span></div>
+          <p class="seg-note" style="margin-top:0">4桁の部屋番号が発行されます。友だちに伝えて参加してもらいましょう。</p>
+          <button id="ol-create" class="primary">部屋をつくる（ホスト）</button>
+        </div>
+        <div class="su-card">
+          <div class="su-title"><span class="su-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4.5 7.5 19.5M16.5 4.5 15 19.5M4.5 9h16M3.5 15h16"/></svg></span>部屋に参加する<span class="su-hint">番号を入力</span></div>
+          <div class="ol-join">
+            <input id="ol-code" inputmode="numeric" maxlength="4" placeholder="0000" />
+            <button id="ol-join-btn" class="primary">参加</button>
+          </div>
+        </div>
+        <!-- ★ II：オンライン対戦は、この端末の XEVARION II のアカウントで入る（紐づけの手間はいらない） -->
+        <div class="su-card">
+          <div class="su-title"><span class="su-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></span>アカウント<span class="su-hint">対戦に使う名前とアイコン</span></div>
+          <div id="ol-linkbox" class="ol-linkbox"></div>
+          <p class="seg-note" style="margin-bottom:0">この端末の <b>XEVARION II のアカウント</b>（表示名・パートナーの顔）で参加します。順位に応じた XEVA も届きます。</p>
+        </div>
+        <p id="ol-msg" class="ol-msg"></p>
+      </div>
+
+      <div id="ol-lobby" class="hidden">
+        <div class="ol-roomcode">部屋番号 <b id="ol-roomnum">----</b></div>
+        <p class="seg-note" style="text-align:center">この番号を友だちに伝えて参加してもらいましょう（最大6人・2人からスタート）。</p>
+        <div class="su-card">
+          <div class="su-title"><span class="su-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 19.5c.4-3.6 2.6-5.6 5.5-5.6s5.1 2 5.5 5.6"/><circle cx="16.8" cy="9.4" r="2.5"/><path d="M15.6 14.1c2.6-.3 4.6 1.4 5 4.6"/></svg></span>参加者</div>
+          <div id="ol-players"></div>
+        </div>
+        <div id="ol-host-opts" class="hidden">
+          <div class="su-card">
+            <div class="su-title"><span class="su-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 12h4M12 12h8M4 17h12"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="17" r="2"/></svg></span>ゲームの設定<span class="su-hint">ホスト設定</span></div>
+            <div class="opt-row">
+              <span class="opt-lb">盤面の広さ</span>
+              <div id="ol-size-seg" class="seg">
+                <button data-s="6">小<small>6×6</small></button><button data-s="8" class="on">中<small>8×8</small></button><button data-s="10">大<small>10×10</small></button>
+              </div>
+            </div>
+            <div class="opt-row">
+              <span class="opt-lb">ラウンド制限</span>
+              <div id="ol-round-seg" class="seg">
+                <button data-r="0" class="on">なし</button><button data-r="10">10R</button><button data-r="15">15R</button><button data-r="20">20R</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="su-sticky ol" id="ol-sticky">
+      <div class="ol-actions">
+        <button id="ol-ready" class="ghost ready-btn hidden"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 11V6.5a1.5 1.5 0 0 1 3 0V11M11 10V5a1.5 1.5 0 0 1 3 0v5M14 10.5V6.5a1.5 1.5 0 0 1 3 0V14a6 6 0 0 1-6 6h-.6a5 5 0 0 1-4-2l-2.6-3.6a1.5 1.5 0 0 1 2.3-1.9L8 14"/></svg>準備する</button>
+        <button id="ol-start" class="primary big hidden"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="fl" d="M8 5.5v13l10.5-6.5z"/></svg>ゲーム開始（ホスト）</button>
+      </div>
+      <button id="ol-leave" class="leave-link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4"/><path d="M10 16l-4-4 4-4M6 12h10"/></svg>部屋を出る</button>
+    </div>
+  </section>
+
+  <!-- ===== 順番きめ ===== -->
+  <section id="order" class="screen">
+    <div class="order-card">
+      <h2 id="order-title">順番をきめています…</h2>
+      <div id="order-dice" class="order-dice">🎲</div>
+      <div id="order-result" class="order-result"></div>
+      <div id="order-actions" class="order-actions hidden">
+        <button id="order-go" class="primary">この順番ではじめる！</button>
+        <button id="order-redo" class="ghost"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4.5V9h-4.5"/></svg>もう一度きめる</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ゲーム ===== -->
+  <section id="game" class="screen">
+    <div class="g-top">
+      <button id="menu-btn" class="corner-btn" aria-label="メニュー"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14"/></svg></button>
+      <!-- ★★ 2026-10-13 「だれの番か」をいつも盤の上に大きく（中身は game.js の updatePanels） -->
+      <div class="g-mid">
+        <div id="turn-banner" class="turn-banner" aria-live="polite"></div>
+        <div id="round-info" class="round-info hidden"></div>
+      </div>
+      <button id="undo-btn" class="corner-btn undo" title="一手もどす" aria-label="一手もどす" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7 4.5 11.5 9 16"/><path d="M5 11.5h9a5 5 0 0 1 0 10h-2"/></svg></button>
+    </div>
+    <div id="player-bar"></div>
+    <div id="table">
+      <div id="board-area"><div id="board"></div><div id="burst" class="burst" aria-hidden="true"></div></div>
+    </div>
+    <div id="thinking" class="thinking hidden"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="7" width="14" height="11" rx="3"/><path d="M12 7V4.5M9.5 12h.01M14.5 12h.01M9.5 15.5h5"/></svg>CPU が考え中<span class="dots"><i></i><i></i><i></i></span></div>
+  </section>
+
+  <!-- ===== あそびかた（自分のペースで進むステップ式） ===== -->
+  <div id="rules" class="modal hidden">
+    <div class="modal-card">
+      <button id="tut-x" class="modal-x" aria-label="とじる"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"/></svg></button>
+      <h2 id="tut-title">あそびかた</h2>
+      <div class="tut-progress">ステップ <span id="tut-n">1</span> / <span id="tut-total">7</span></div>
+
+      <div id="tut-stage" class="tut-stage"></div>
+      <div id="tut-cap" class="demo-cap"></div>
+      <div id="tut-extra" class="tut-extra"></div>
+
+      <div class="tut-nav">
+        <button id="tut-prev" class="ghost"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>もどる</button>
+        <button id="tut-replay" class="ghost"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4.5V9h-4.5"/></svg>もう一度</button>
+        <button id="tut-next" class="primary">つぎへ<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 勝利 ===== -->
+  <div id="win" class="modal hidden">
+    <div class="modal-card win-card">
+      <div id="win-emoji" class="win-emoji">🏆</div>
+      <h2 id="win-title">勝者</h2>
+      <p id="win-sub" class="win-sub">盤上に残ったのは1色だけ！</p>
+      <div id="win-stats" class="win-stats"></div>
+      <button id="play-again" class="primary"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4.5V9h-4.5"/></svg>もう一度あそぶ</button>
+      <button id="back-setup" class="ghost"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 12h4M12 12h8M4 17h12"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="17" r="2"/></svg>設定にもどる</button>
+    </div>
+  </div>
+
+  <!-- お知らせトースト -->
+  <div id="toast" class="toast"></div>
+  <div id="fx" class="fx" aria-hidden="true"></div>
+
+  <script src="js/online.js?v=1"></script>
+  <script src="js/game.js?v=1"></script>
+  <script src="js/chain-front.js?v=1"></script>
+  <script>
+  /* game.js の DOMContentLoaded（席の情報の読みこみ）のあとで、はじめの画面を出す */
+  window.addEventListener("DOMContentLoaded", function () {
+    ChainFront.init();
+    ChainFront.showTitle();
+    /* 字（Web フォント）がそろったら II のロード画面を消す（1.5 秒まで待つ） */
+    var fonts = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+    Promise.race([fonts, new Promise(function (r) { setTimeout(r, 1500); })]).then(function () {
+      requestAnimationFrame(function () { X2.ready(); });
+    });
+  });
+  </script>
+</body>
+</html>

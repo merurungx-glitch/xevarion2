@@ -19,7 +19,11 @@
 //   X2.party.recent() / forget(uid)                     この端末で連携したことのある人
 //   X2.party.award([{ uid, amt, why, key }]) → [{ uid, amt, kind:'me'|'cloud'|'wait' }]
 //   X2.power.mode() / profile() / onChange(fn)
+//   X2.rooms              部屋（別々の端末で1つの部屋に入る）：create(opts)・join(code)・watchRoom/watchState/watchConnected(cb)・
+//                         setReady・setOptions・startGame(state, slots)・pushState・finish（終わりの印・ホスト）・leave・awardOnce・isHost・myUid・code・inRoom
+//                         （場所は rooms/<アプリの id>/<4桁>。窓を閉じると自動で片づける＝core/rooms.js）
 import * as party from '../core/party.js';
+import * as rooms from '../core/rooms.js';
 import * as power from '../core/power.js';
 import * as viewport from '../core/viewport.js';
 import * as chara from '../core/chara.js';
@@ -68,6 +72,8 @@ function saverDpr(win) {
 export function makeBridge(app, { exit, ready }) {
   const offs = [];
   const leaves = new Set();
+  let room = null;   // 部屋（使うアプリだけ・はじめて X2.rooms にさわったときに作る）
+  const roomApi = () => (room ||= rooms.open(app.id, { max: 6 }));
   const api = Object.freeze({
     v: 1,
     app: app.id,
@@ -112,6 +118,7 @@ export function makeBridge(app, { exit, ready }) {
       profile: () => ({ ...power.profile() }),
       onChange(fn) { const off = power.onChange(fn); offs.push(off); return off; },
     }),
+    get rooms() { return roomApi(); },
   });
   return {
     api,
@@ -120,6 +127,7 @@ export function makeBridge(app, { exit, ready }) {
       for (const fn of leaves) { try { fn(); } catch (e) { console.error(e); } }
       leaves.clear();
       offs.splice(0).forEach((f) => { try { f(); } catch {} });
+      if (room) { room.closeApp().catch(() => {}); room = null; }   // 部屋の監視を止める（ロビーなら出る）
     },
   };
 }

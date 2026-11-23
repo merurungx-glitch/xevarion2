@@ -132,3 +132,76 @@ export async function deleteAccount(uid) {
 }
 
 export async function startAnalytics() {}
+
+// ---- 部屋（core/rooms.js だけが使う）：手元の試験用のリアルタイムのデータ ----
+// localStorage の x2dev.rtdb に1本の木で持つ。同じパソコンのタブどうしは storage の知らせでつながる
+// （タブ A＝tester_1・タブ B＝tester_2 のようにして、部屋番号の対戦を1台で試せる）
+const RK = 'x2dev.rtdb';
+const segs = (path) => String(path).split('/').filter(Boolean);
+const copy = (v) => (v === undefined || v === null ? null : JSON.parse(JSON.stringify(v)));
+function rtLoad() { try { return JSON.parse(localStorage.getItem(RK)) || {}; } catch { return {}; } }
+function rtSave(tree) { localStorage.setItem(RK, JSON.stringify(tree)); }
+function getAt(tree, path) {
+  let n = tree;
+  for (const k of segs(path)) { if (n === null || typeof n !== 'object') return null; n = n[k]; }
+  return n === undefined ? null : copy(n);
+}
+function setAt(tree, path, v) {
+  const ks = segs(path);
+  let n = tree;
+  for (let i = 0; i < ks.length - 1; i++) {
+    if (n[ks[i]] === null || typeof n[ks[i]] !== 'object') { if (v === null) return; n[ks[i]] = {}; }
+    n = n[ks[i]];
+  }
+  if (v === null || v === undefined) delete n[ks[ks.length - 1]]; else n[ks[ks.length - 1]] = copy(v);
+}
+const rtSubs = new Set();
+function rtNotify() {
+  const tree = rtLoad();
+  for (const s of [...rtSubs]) {
+    const v = getAt(tree, s.path);
+    const j = JSON.stringify(v);
+    if (j !== s.last) { s.last = j; try { s.cb(v); } catch (e) { console.error(e); } }
+  }
+}
+addEventListener('storage', (e) => { if (e.key === RK) rtNotify(); });
+const offline = new Map();
+addEventListener('pagehide', () => {
+  if (!offline.size) return;
+  const tree = rtLoad();
+  for (const [p, v] of offline) setAt(tree, p, v);
+  rtSave(tree);
+});
+
+export const rt = {
+  async get(path) { await wait(40); return getAt(rtLoad(), path); },
+  async set(path, v) { await wait(40); const t = rtLoad(); setAt(t, path, v); rtSave(t); rtNotify(); },
+  async update(path, obj) {
+    await wait(40);
+    const t = rtLoad();
+    for (const [k, v] of Object.entries(obj)) setAt(t, `${path}/${k}`, v);
+    rtSave(t);
+    rtNotify();
+  },
+  async txn(path, fn) {
+    await wait(40);
+    const t = rtLoad();
+    const cur = getAt(t, path);
+    const next = fn(cur);
+    if (next === undefined) return { committed: false, value: cur };
+    setAt(t, path, next);
+    rtSave(t);
+    rtNotify();
+    return { committed: true, value: copy(next) };
+  },
+  on(path, cb) {
+    const s = { path, cb, last: undefined };
+    rtSubs.add(s);
+    setTimeout(() => { if (rtSubs.has(s)) { const v = getAt(rtLoad(), path); s.last = JSON.stringify(v); cb(v); } }, 0);
+    return () => rtSubs.delete(s);
+  },
+  onDisconnectSet(path, v) { offline.set(path, v); },
+  cancelDisconnect(path) { offline.delete(path); },
+  connected(cb) { setTimeout(() => cb(true), 0); return () => {}; },
+  now: () => Date.now(),
+};
