@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <!-- ★ XEVARION II のアプリ：II の中（#/app/quiz の iframe）でだけ動く。II の機能は親の window.X2（src/portal/bridge.js）だけを使う。
+       直接開かれたら II の入口へ送る。初代の共通部品（xeva.js・xeva-cloud・xevarion-fb・game-link・SW・起動ロゴ・safebottom など）は読まない -->
+  <script>
+  (function () {
+    var P = null;
+    try { P = window.parent !== window ? window.parent.X2 : null; } catch (e) { P = null; }
+    if (!P) {
+      if (window.parent === window) location.replace('../../index.html#/app/quiz');
+      throw new Error('MagiQuiz は XEVARION II の中で開いてください');
+    }
+    window.X2 = P;
+    P.attach(window); /* 余白・動作モード・省電力のコマ数 */
+  })();
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
+  <title>MagiQuiz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800;900&family=Baloo+2:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/quiz.css?v=1" />
+</head>
+<body>
+<!-- ══════════════════════════════════════════════════════════════
+     MagiQuiz（2026-10-23 新作 → 11-05 全面作り直し → 2026-11-23 XEVARION II へ移しかえ）
+     ・遊び方は4つ：見えない爆弾／早押しバトル／クイズタワー／スコアアタック。2台で対戦も。中身は初代のまま
+     ・問題は化学の基礎セット1〜4 の改題 196問（初代 MagiChemLex から問題と部品ごと写した＝js/quiz-qdata.js・js/quiz-chem.js）
+     ・連携・賞金・アイコンは II のパーティーの部品、司会は II のキャラ、2台で対戦は II の部屋（window.X2）
+     ・画面の中身はぜんぶ JS で描く：quiz-ui.js（タイトル・準備・記録）／quiz-play.js（試合）／quiz-result.js（結果）
+     ══════════════════════════════════════════════════════════════ -->
+<div class="bg" aria-hidden="true"><i class="bg-rays"></i><i class="bg-grad"></i></div>
+
+<section id="title" class="scr"></section>
+<section id="setup" class="scr"></section>
+<section id="turn" class="scr"></section>
+<section id="play" class="scr"></section>
+<section id="result" class="scr"></section>
+<section id="records" class="scr"></section>
+<section id="online" class="scr"></section>
+
+<!-- 見えない爆弾のまわりの演出（爆弾そのものは絵に出さない） -->
+<div id="amb" class="amb" aria-hidden="true"><i class="amb-g"></i><i class="amb-p"></i></div>
+<canvas id="fxc" class="fxc" aria-hidden="true"></canvas>
+<div id="fxt" class="fxt" aria-hidden="true"></div>
+<div id="ov" class="ov"><div class="sheet" id="sheet"></div></div>
+<div id="toast" class="toast" hidden></div>
+
+<script src="js/quiz-qdata.js?v=1"></script>
+<script src="js/quiz-chem.js?v=1"></script>
+<script src="js/quiz-data.js?v=1"></script>
+<script src="js/quiz-account.js?v=1"></script>
+<script src="js/quiz-fx.js?v=1"></script>
+<script src="js/quiz-ui.js?v=1"></script>
+<script src="js/quiz-pad.js?v=1"></script>
+<script src="js/quiz-play.js?v=1"></script>
+<script src="js/quiz-result.js?v=1"></script>
+<script src="js/quiz-host.js?v=1"></script>
+<script src="js/quiz-online.js?v=1"></script>
+<script>
+  /* ぜんぶ読んでからタイトルを出す（初代は quiz-result.js の最後で起動していた） */
+  MQ.boot();
+  /* 字（Web フォント）がそろったら II のロード画面を消す（1.5 秒まで待つ） */
+  (function () {
+    var fonts = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+    Promise.race([fonts, new Promise(function (r) { setTimeout(r, 1500); })]).then(function () {
+      requestAnimationFrame(function () { X2.ready(); });
+    });
+  })();
+  /* 閉じる直前：音を止める（試合の途中は quiz-play.js が自分で保存している） */
+  X2.onLeave(function () { try { MQ.FX.bgmStop(); } catch (e) {} });
+</script>
+</body>
+</html>

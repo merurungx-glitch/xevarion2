@@ -147,6 +147,8 @@ export const rt = {
   onDisconnectSet(path, v) { try { D.onDisconnect(D.ref(db, path)).set(v); } catch (e) { console.warn(e); } },
   cancelDisconnect(path) { try { D.onDisconnect(D.ref(db, path)).cancel(); } catch {} },
   connected: (cb) => D.onValue(D.ref(db, '.info/connected'), (s) => cb(!!s.val())),
+  /** サーバーの時刻と端末の時計の差（ms）。変わるたびに cb(差)。止める関数を返す */
+  offset: (cb) => D.onValue(D.ref(db, '.info/serverTimeOffset'), (s) => cb(Number(s.val()) || 0)),
   now: () => D.serverTimestamp(),
 };
 

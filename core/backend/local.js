@@ -203,5 +203,6 @@ export const rt = {
   onDisconnectSet(path, v) { offline.set(path, v); },
   cancelDisconnect(path) { offline.delete(path); },
   connected(cb) { setTimeout(() => cb(true), 0); return () => {}; },
+  offset(cb) { setTimeout(() => cb(0), 0); return () => {}; },   // 手元は同じ時計（差 0）
   now: () => Date.now(),
 };

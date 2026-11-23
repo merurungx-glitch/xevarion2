@@ -14,11 +14,11 @@ export const ROUTES = {
 
 /**
  * アプリの台帳。path があるものは移しかえずみ（#/app/<id> で開く）。無いものは「準備中」
- * bg＝アプリの地の色（開いているあいだの html の色・iPhone の下の帯）
+ * bg＝アプリの地の色（開いているあいだの html の色・iPhone の下の帯）・roomMax＝部屋（X2.rooms）の人数の上限（無ければ 6）
  */
 export const APPS = [
   { id: 'lex', name: 'MagiLex' },
-  { id: 'quiz', name: 'MagiQuiz' },
+  { id: 'quiz', name: 'MagiQuiz', path: 'apps/quiz/index.html', bg: '#6704dc', roomMax: 4 },
   { id: 'derby', name: 'MagiDerby' },
   { id: 'shift', name: 'MagiShift', path: 'apps/shift/index.html', bg: '#f5f7fc' },
   { id: 'chain', name: 'MagiChainParty', short: 'ChainParty', path: 'apps/chainparty/index.html', bg: '#f6f7fd' },

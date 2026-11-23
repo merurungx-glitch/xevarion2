@@ -12,6 +12,7 @@
 //   X2.faces()            メンバーのアイコンに選べるキャラ [{ id, name, src }]
 //   X2.faceSrc(id)        キャラの顔の絵の URL
 //   X2.isMax(id)          この端末の本人がそのキャラを完凸しているか（完凸の光）
+//   X2.owned(id)          この端末の本人がそのキャラを持っているか（MagiQuiz の司会）
 //   X2.asset(path)        src/assets/ の絵の URL（例 'ui/xeva-64.webp'）
 //   X2.online()           通信できそうか
 //   X2.party.PRIZES       共通の賞金（順位ごと）
@@ -20,8 +21,9 @@
 //   X2.party.award([{ uid, amt, why, key }]) → [{ uid, amt, kind:'me'|'cloud'|'wait' }]
 //   X2.power.mode() / profile() / onChange(fn)
 //   X2.rooms              部屋（別々の端末で1つの部屋に入る）：create(opts)・join(code)・watchRoom/watchState/watchConnected(cb)・
-//                         setReady・setOptions・startGame(state, slots)・pushState・finish（終わりの印・ホスト）・leave・awardOnce・isHost・myUid・code・inRoom
-//                         （場所は rooms/<アプリの id>/<4桁>。窓を閉じると自動で片づける＝core/rooms.js）
+//                         setReady・setOptions・startGame(state, slots)・pushState・finish（終わりの印・ホスト）・leave・forget（部屋が消えたとき：書かずに手を放す）・awardOnce・isHost・myUid・code・inRoom
+//                         部屋の中を直接：get/set/update/txn(sub…)・watch(sub, cb)・now()（サーバーの時刻）
+//                         （場所は rooms/<アプリの id>/<4桁>。人数の上限は APPS の roomMax（無ければ 6）。窓を閉じると自動で片づける＝core/rooms.js）
 import * as party from '../core/party.js';
 import * as rooms from '../core/rooms.js';
 import * as power from '../core/power.js';
@@ -73,7 +75,7 @@ export function makeBridge(app, { exit, ready }) {
   const offs = [];
   const leaves = new Set();
   let room = null;   // 部屋（使うアプリだけ・はじめて X2.rooms にさわったときに作る）
-  const roomApi = () => (room ||= rooms.open(app.id, { max: 6 }));
+  const roomApi = () => (room ||= rooms.open(app.id, { max: app.roomMax || 6 }));   // 部屋の人数の上限（routes.js の APPS の roomMax）
   const api = Object.freeze({
     v: 1,
     app: app.id,
@@ -103,6 +105,7 @@ export function makeBridge(app, { exit, ready }) {
     faces: () => chara.CHARS.map((c) => ({ id: c.id, name: c.name, src: faceSrc(c.id) })),
     faceSrc,
     isMax: (id) => !!(chara.byId(id) && chara.isMax(id)),
+    owned: (id) => !!(chara.byId(id) && chara.owned(id)),
     asset: (p) => abs('assets/' + String(p).replace(/^\/+/, '')),
     online: () => navigator.onLine !== false,
     party: Object.freeze({
