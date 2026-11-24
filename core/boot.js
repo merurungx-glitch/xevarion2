@@ -15,6 +15,7 @@ import './appdata.js'; // アプリの同期する記録（MagiLex・MagiDerby�
 import './daily.js';   // ログボ・ミッション・今日のチケットのキーも同じく（appdata のあと：ミッションが MagiLex の記録を読む）
 import './news.js';    // お知らせの読んだ印（newsSeen）も同じく
 import './veteran.js'; // はじまり特典の記録（vet＝プロフィールの「初代」の印）も同じく
+import './mail.js';    // メール・コードの受け取った印（mailgot・codegot）も同じく
 import { toast } from '../ui/toast.js';
 import { fmt } from '../ui/dom.js';
 import * as swc from './swc.js';

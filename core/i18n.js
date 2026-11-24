@@ -62,6 +62,16 @@ const ja = {
   'vet.nopin': 'その初代のアカウントには、4桁の PIN が決まっていません（初代で PIN を決めてから、もう一度ためしてください）',
   'vet.badpin': 'PIN がちがいます',
   'vet.taken': 'この初代のアカウントは、ほかの XEVARION II のアカウントで受け取りずみです',
+  // メール（portal/mail.js・core/mail.js）・コード入力＝2026-11-24 段階2（管理画面 portal/admin.js の言葉は、運営だけが見るので admin.js の中）
+  'ml.title': 'メール', 'ml.recv': '受け取る', 'ml.got': '受け取りずみ', 'ml.recvAll': 'まとめて受け取る（{n}）',
+  'ml.empty': 'いまはメールはありません', 'ml.note': '受け取り期限を過ぎたメールは消えます。',
+  'ml.left': 'あと{n}日', 'ml.leftH': 'あと{n}時間', 'ml.noLimit': '期限なし', 'ml.toYou': 'あなたへ',
+  'ml.gone': '受け取れませんでした（受け取りずみか、期限が過ぎています）',
+  'ml.homeN': '受け取れるもの {n}件', 'ml.homeNone': 'いまはありません',
+  'code.title': 'コード入力', 'code.lead': '運営からお知らせしたコードを入れると、プレゼントを受け取れます（1つのアカウントで1回）。',
+  'code.label': 'コード', 'code.go': '受け取る', 'code.busy': '確かめています…',
+  'code.errFormat': 'コードは英字と数字の4〜16文字です', 'code.done': 'このコードは、もう受け取っています',
+  'code.notfound': 'そのコードは見つかりません', 'code.expired': 'このコードは期限が過ぎています',
 
   'apps.title': 'APPS', 'apps.games': 'アプリ', 'apps.sitesTitle': '公式サイト', 'apps.soon': '準備中', 'apps.play': 'あそぶ', 'apps.site': 'ひらく ↗',
   'party.got': '賞金 +{n} XEVA が届きました（{apps}）',
@@ -116,7 +126,10 @@ const ja = {
   'menu.account': 'アカウント', 'menu.signout': 'サインアウト', 'menu.signoutAsk': 'サインアウトしますか？ この端末に残ったデータは、次にサインインしたときに使われます。',
   'menu.wallet': 'お財布', 'menu.exchange': '両替・今日のチケット',
   'menu.daily': '毎日', 'menu.open': 'ひらく', 'menu.msNote': '今日の3つ・今週の3つ', 'menu.lbNote': '7日で1周（休んでもつづきから）',
-  'menu.newsNote': 'お知らせ・更新内容・デベロッパーノート',
+  'menu.newsNote': 'お知らせ・更新内容・デベロッパーノート', 'menu.newsCard': 'お知らせ・メール',
+  'menu.code': 'コード入力', 'menu.codeNote': 'コードを入れてプレゼントを受け取る', 'menu.codeGo': '入れる',
+  'menu.admin': '運営', 'menu.adminRow': '管理画面', 'menu.adminNote': 'お知らせ・メール・コード・合言葉の再設定',
+  'menu.devAdmin': 'このアカウントを運営にする', 'menu.devAdminOff': '運営をやめる',
   'menu.vetNote': '初代 XEVARION のアカウントをお持ちの方へ', 'menu.vetDone': '初代のアカウント「{name}」', 'menu.vetGo': '受け取る', 'menu.vetSee': '見る',
   // ログインボーナス（portal/logbo.js）・ミッション（portal/missions.js）・ショップの今日のチケット（portal/wallet-sheet.js）＝2026-11-24 第5回
   'logbo.title': 'ログインボーナス', 'logbo.day': '{n}日目', 'logbo.gem': '×{n}', 'logbo.ticket': '×{n}', 'logbo.recv': '受け取る',

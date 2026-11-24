@@ -1,6 +1,6 @@
 /* XEVARION II — ポータルの画面（クラスは画面ごとの2文字＋「-」で始める：au アカウント・fs 最初の10連・
    hm ホーム・ap アプリ・ah アプリの窓・gc ガチャ・ch キャラ・lb ロビー・mn メニュー・wl お財布・lg ログボ・ms ミッション・
-   nw お知らせ・vr はじまり特典・p 共通） */
+   nw お知らせ・vr はじまり特典・ml メール・cd コード入力・ad 管理画面・p 共通） */
 @layer portal {
   .x-page { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); color: var(--text); animation: p-in var(--dur) var(--ease); }
   @keyframes p-in { from { opacity: 0; transform: translateY(6px); } }
@@ -221,7 +221,7 @@
   .hm-nw span small:empty { display: none; }
   .hm-badge { flex: none; min-width: 22px; height: 22px; padding: 0 7px; border-radius: 99px; background: var(--flare); color: #fff; font: 900 12px/22px var(--font-en); font-style: normal; text-align: center; }
   .hm-badge[hidden] { display: none; }
-  .hm-ms + .hm-news { margin-top: 8px; }
+  .hm-ms + .hm-news, .hm-news + .hm-news { margin-top: 8px; }
 
   .lg-p { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
   .lg-p img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2px var(--g3); }
@@ -304,6 +304,35 @@
     :root:not([data-theme="light"]) .vr-gifts > div { background: linear-gradient(180deg, #3a2a14, #3a1f3d); border-color: #5a4630; color: var(--text); }
     :root:not([data-theme="light"]) .vr-gifts small { color: var(--text-3); }
   }
+
+  /* ===== メール・コード入力（2026-11-24 段階2・portal/mail.js） ===== */
+  .ml-all { margin-bottom: 12px; }
+  .ml-i { padding: 12px 14px 12px; margin-bottom: 10px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); }
+  .ml-i.got { opacity: .6; }
+  .ml-h { display: flex; align-items: flex-start; gap: 10px; }
+  .ml-h > div { flex: 1; min-width: 0; }
+  .ml-ic { flex: none; width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; color: #7a4dff; background: linear-gradient(135deg, #efeaff, #ffeefe); }
+  .ml-ic svg.x-i { width: 20px; height: 20px; }
+  .ml-h b { display: block; font-size: 14.5px; line-height: 1.4; }
+  .ml-h small { display: block; margin-top: 2px; font-size: 11.5px; font-weight: 700; color: var(--text-3); }
+  .ml-you { font-style: normal; color: var(--g2); }
+  .ml-soon { color: var(--flare); }
+  .ml-i p { margin: 8px 0 0; font-size: 13px; line-height: 1.7; color: var(--text-2); overflow-wrap: anywhere; }
+  .ml-f { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+  .ml-rws { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; gap: 6px 12px; }
+  .ml-rw { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .ml-rw img { width: 20px; height: 20px; object-fit: contain; }
+  .ml-rw img.ticket { width: 28px; }
+  .ml-st { font-size: 12px; font-weight: 800; color: var(--terra); white-space: nowrap; }
+  .ml-empty { padding: 26px 0; text-align: center; font-size: 13px; color: var(--text-3); }
+  .ml-note { margin: 4px 2px 0; font-size: 11.5px; color: var(--text-3); }
+  .cd-lead { margin: 0 2px 12px; font-size: 13.5px; font-weight: 700; line-height: 1.7; }
+  .cd input[data-cd] { text-transform: uppercase; letter-spacing: .12em; font-variant-numeric: tabular-nums; }
+  .cd-err { min-height: 20px; margin: -4px 2px 0; font-size: 13px; font-weight: 800; line-height: 1.5; color: #ff4f7b; }
+  :root[data-theme="dark"] .ml-ic { background: linear-gradient(135deg, #2a2350, #3a1f3d); color: #b9a2ff; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .ml-ic { background: linear-gradient(135deg, #2a2350, #3a1f3d); color: #b9a2ff; } }
+
+  /* 運営の管理画面（ad-）の見た目は portal/admin.css（運営だけが開くので、開いたときに読む） */
 
   /* アプリの窓（#/app/<id>）：iframe を全面に。地の色はアプリの色（html[data-app] の --app-bg） */
   .x-page.ah { background: var(--app-bg, var(--night-1)); animation: none; }

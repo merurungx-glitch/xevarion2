@@ -9,6 +9,7 @@ export const ROUTES = {
   chara: { tab: 'chara', load: () => import('./chara.js') },
   menu: { tab: 'menu', load: () => import('./menu.js') },
   lobby: { load: () => import('./lobby.js') },
+  admin: { load: () => import('./admin.js') }, // 運営の管理画面（運営のアカウントだけ・メニューの「運営」から）
   app: { app: true, load: () => import('./app-host.js') }, // #/app/<id>（アプリの窓）
 };
 

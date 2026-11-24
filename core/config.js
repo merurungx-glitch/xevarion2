@@ -2,7 +2,7 @@
 
 export const VERSION = '0.1.0';
 /** 配った版（tools/release.py が release/ に書き出すときに入れる）。src のままは 'dev'＝Service Worker を使わない（直したものがいつもそのまま出る） */
-export const BUILD = '2026-11-24-4';
+export const BUILD = '2026-11-24-5';
 
 const host = location.hostname;
 /** 手元（localhost）で動いているか。★ 手元では本物のデータに書かない（試験用の置き場を使う） */

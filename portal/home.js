@@ -13,6 +13,7 @@ import { onSign, leftStr } from './derby-sign.js';
 import * as daily from '../core/daily.js';
 import { openLogbo } from './logbo.js';
 import { openMissions } from './missions.js';
+import * as mail from '../core/mail.js';
 
 export async function mount(el, { go }) {
   el.classList.add('hm');
@@ -29,6 +30,7 @@ export async function mount(el, { go }) {
         <button type="button" class="hm-app" data-act="sites"><span class="hm-fold"><img src="assets/apps/ngx-96.webp" alt=""><img src="assets/apps/ishida-96.webp" alt=""></span><small>${t('home.sites')}</small></button>
       </div>
       <button type="button" class="hm-news hm-ms" data-act="missions">${ico('mission', 'grad')}<span><b>${t('ms.title')}</b><small data-ms></small></span><em class="hm-badge" data-msn hidden></em>${ico('next')}</button>
+      <button type="button" class="hm-news hm-nw" data-act="mail">${ico('mail', 'grad')}<span><b>${t('ml.title')}</b><small data-ml></small></span><em class="hm-badge" data-mln hidden></em>${ico('next')}</button>
       <button type="button" class="hm-news hm-nw" data-act="news">${ico('bell', 'grad')}<span><b>${t('news.title')}</b><small data-nw></small></span><em class="hm-badge" data-nwn hidden>${t('news.new')}</em>${ico('next')}</button>
     </div>`;
 
@@ -82,6 +84,18 @@ export async function mount(el, { go }) {
   };
   paintMs();
 
+  // メール（受け取れる数）。一覧は core/mail.js（5分に1回まで読む）
+  const mlText = el.querySelector('[data-ml]');
+  const mlBadge = el.querySelector('[data-mln]');
+  const paintMail = () => {
+    const n = mail.ready();
+    mlText.textContent = n ? t('ml.homeN', { n }) : t('ml.homeNone');
+    mlBadge.hidden = !n;
+    mlBadge.textContent = n;
+  };
+  paintMail();
+  mail.refresh();
+
   // お知らせ（いちばん新しいお知らせの題と NEW の印）。中身は portal/news.js（ホームが出てから読む）
   const nwText = el.querySelector('[data-nw]');
   const nwNew = el.querySelector('[data-nwn]');
@@ -108,6 +122,7 @@ export async function mount(el, { go }) {
     chara.onChange(paint),
     onSign(paintDerby),
     daily.onChange(paintMs),
+    mail.onChange(paintMail),
     bindActs(el, {
       talk() {
         const p = chara.partner();
@@ -125,6 +140,7 @@ export async function mount(el, { go }) {
       },
       sites() { go('apps'); },
       news() { import('./news.js').then((N) => N.openNews()); },
+      mail() { import('./mail.js').then((m) => m.openMail()); },
       lobby() { go('lobby'); },
       lobbyLock() { const p = chara.partner(); toast(t('chara.toMax', { n: chara.MAX_COPIES - chara.copies(p.id) })); },
     }),

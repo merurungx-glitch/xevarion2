@@ -7,6 +7,7 @@ import * as account from '../core/account.js';
 import * as sync from '../core/sync.js';
 import * as wallet from '../core/wallet.js';
 import * as vet from '../core/veteran.js';
+import * as mail from '../core/mail.js';
 import { ico } from '../ui/icons.js';
 import { esc, fmt, bindActs } from '../ui/dom.js';
 import { openSheet, ask } from '../ui/sheet.js';
@@ -38,11 +39,13 @@ export async function mount(el, { go }) {
   const body = el.querySelector('.mn-body');
   let fpsText = '—';
   let news = null; // portal/news.js（あとから読む：NEW の印に使う）
+  let admin = false; // 運営のアカウントか（core/admin.js であとから聞く）
 
   function paint() {
     const u = account.current();
     const vm = vet.mark();
     const newsN = news ? news.unread().length : 0;
+    const mlN = mail.ready();
     const modeNames = { high: t('menu.power.high'), balanced: t('menu.power.balanced'), saver: t('menu.power.saver') };
     const syncText = account.backendName() === 'local' ? t('menu.sync.local') : t('menu.sync.' + sync.getStatus());
     body.innerHTML = `
@@ -53,10 +56,17 @@ export async function mount(el, { go }) {
         <div class="x-row">${ico('out')}<div><b>${t('menu.signout')}</b></div><button type="button" class="x-btn secondary small" data-act="signout">${t('menu.signout')}</button></div>
       </div>
 
-      <div class="mn-h">${t('news.title')}</div>
+      <div class="mn-h">${t('menu.newsCard')}</div>
       <div class="x-card">
         <div class="x-row">${ico('bell')}<div><b>${t('news.title')}</b><small>${t('menu.newsNote')}</small></div>${newsN ? `<em class="p-new">${t('news.new')}</em>` : ''}<button type="button" class="x-btn secondary small" data-act="news">${t('menu.open')}</button></div>
+        <div class="x-row">${ico('mail')}<div><b>${t('ml.title')}</b><small>${mlN ? t('ml.homeN', { n: mlN }) : t('ml.homeNone')}</small></div>${mlN ? `<em class="p-new">${mlN}</em>` : ''}<button type="button" class="x-btn secondary small" data-act="mail">${t('menu.open')}</button></div>
+        <div class="x-row">${ico('key')}<div><b>${t('menu.code')}</b><small>${t('menu.codeNote')}</small></div><button type="button" class="x-btn secondary small" data-act="code">${t('menu.codeGo')}</button></div>
       </div>
+      ${admin ? `
+      <div class="mn-h">${t('menu.admin')}</div>
+      <div class="x-card">
+        <div class="x-row">${ico('gear')}<div><b>${t('menu.adminRow')}</b><small>${t('menu.adminNote')}</small></div><button type="button" class="x-btn primary small" data-act="admin">${t('menu.open')}</button></div>
+      </div>` : ''}
 
       <div class="mn-h">${t('menu.wallet')}</div>
       <div class="x-card">${balancesHTML()}<button type="button" class="x-btn secondary block small" data-act="exchange">${ico('swap')}${t('menu.exchange')}</button></div>
@@ -94,6 +104,7 @@ export async function mount(el, { go }) {
       <div class="mn-h">${t('menu.dev')}</div>
       <div class="x-card mn-dev">
         <button type="button" class="x-btn secondary block small" data-act="devGive">${t('menu.devGive')}</button>
+        <button type="button" class="x-btn secondary block small" style="margin-top:8px" data-act="devAdmin">${admin ? t('menu.devAdminOff') : t('menu.devAdmin')}</button>
         <button type="button" class="x-btn secondary block small" style="margin-top:8px" data-act="devReset">${t('menu.devReset')}</button>
       </div>` : ''}`;
   }
@@ -121,6 +132,16 @@ export async function mount(el, { go }) {
     logbo() { import('./logbo.js').then((m) => m.openLogbo()); },
     news() { import('./news.js').then((N) => N.openNews()); },
     veteran() { import('./veteran.js').then((m) => m.openVeteran()); },
+    mail() { import('./mail.js').then((m) => m.openMail()); },
+    code() { import('./mail.js').then((m) => m.openCode()); },
+    admin() { go('admin'); },
+    async devAdmin() {
+      const A = await import('../core/admin.js');
+      await A.devSetAdmin(!admin);
+      admin = await A.isAdmin();
+      toast(admin ? '運営にしました（試験用）' : '運営をやめました（試験用）');
+      paint();
+    },
     shortFx() { power.setShortFx(!store.get('shortFx')); paint(); },
     analytics() {
       const on = !store.get('analytics');
@@ -162,8 +183,10 @@ export async function mount(el, { go }) {
     paint();
   };
   el.addEventListener('click', onSeg);
-  const offs = [bindActs(el, acts), wallet.on(paint), power.onChange(paint), sync.onStatus(paint), store.on('profile', paint), vet.onMark(paint)];
+  const offs = [bindActs(el, acts), wallet.on(paint), power.onChange(paint), sync.onStatus(paint), store.on('profile', paint), vet.onMark(paint), mail.onChange(paint)];
   let gone = false;
+  mail.refresh();
+  import('../core/admin.js').then((A) => A.isAdmin()).then((v) => { if (!gone && v !== admin) { admin = v; paint(); } }).catch(() => {});
   import('./news.js').then((N) => {
     if (gone) return;
     news = N;

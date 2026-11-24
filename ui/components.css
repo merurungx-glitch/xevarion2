@@ -73,6 +73,15 @@
     transition: border-color var(--dur);
   }
   .x-field input:focus { border-color: var(--g2); }
+  .x-field textarea, .x-field select {
+    width: 100%; padding: 12px 14px; border-radius: var(--r-m);
+    border: 1.5px solid var(--line); background: var(--surface); color: var(--text); font: inherit; font-size: 16px; outline: none;
+    transition: border-color var(--dur);
+  }
+  .x-field textarea { min-height: 96px; resize: vertical; line-height: 1.6; }
+  .x-field select { height: 48px; padding: 0 12px; }
+  .x-field textarea:focus, .x-field select:focus { border-color: var(--g2); }
+  .x-field[hidden] { display: none; }
   .x-field small { display: block; margin-top: 5px; font-size: 12px; color: var(--text-3); }
   .x-field.err input { border-color: #ff4f7b; }
   .x-field.err small { color: #ff4f7b; }

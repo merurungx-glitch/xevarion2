@@ -1,0 +1,36 @@
+/* XEVARION II — 運営の管理画面（#/admin・portal/admin.js が開いたときに読む＝起動では読まない）。クラスは ad- */
+@layer portal {
+  .ad { padding: 14px 16px 30px; display: flex; flex-direction: column; gap: 12px; }
+  .ad-back { flex: none; width: 34px; height: 34px; margin: -6px 0; border-radius: 50%; display: grid; place-items: center; color: inherit; background: rgba(255, 255, 255, .08); }
+  .ad-body { display: flex; flex-direction: column; gap: 10px; }
+  .ad-wait, .ad-empty { padding: 20px 0; text-align: center; font-size: 13px; color: var(--text-3); }
+  .ad-note { margin: 0 2px; font-size: 12px; line-height: 1.6; color: var(--text-3); }
+  .ad :is(.ad-note, .ad-no, .ad-ol) code, .ad-f code { padding: 1px 5px; border-radius: 5px; background: var(--surface-2); font: 600 12px/1.4 ui-monospace, Menlo, Consolas, monospace; }
+  .ad-i { padding: 12px 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); }
+  .ad-i.old { opacity: .55; }
+  .ad-m { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; }
+  .ad-m small { font-size: 11.5px; font-weight: 700; color: var(--text-3); }
+  .ad-i > b { display: block; margin-top: 6px; font-size: 14.5px; line-height: 1.45; }
+  .ad-i > p { margin: 4px 0 0; font-size: 12.5px; line-height: 1.6; color: var(--text-2); overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .ad-i > p.ad-it { font-weight: 800; color: var(--text); }
+  .ad-b { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
+  .ad-code { font: 800 15px/1 ui-monospace, Menlo, Consolas, monospace; letter-spacing: .12em; }
+  .ad-copy { display: flex; align-items: center; gap: 8px; }
+  .ad-copy code { flex: 1; min-width: 0; padding: 10px 12px; border-radius: 10px; background: var(--surface-2); font: 600 12.5px/1.45 ui-monospace, Menlo, Consolas, monospace; overflow-wrap: anywhere; }
+  .ad-no { padding: 16px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); }
+  .ad-no > b { font-size: 15px; }
+  .ad-no p { font-size: 13px; line-height: 1.7; color: var(--text-2); }
+  .ad-ol { margin: 0; padding-left: 20px; font-size: 12.5px; line-height: 1.7; color: var(--text-2); }
+  .ad-ol li { margin-bottom: 6px; }
+  .ad-l { display: block; margin: 2px 0 6px; font-size: 13px; font-weight: 800; }
+  .ad-f .ad-seg { margin-bottom: 14px; }
+  .ad-f [hidden] { display: none !important; }
+  .ad-items { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .ad-items .x-field { margin-bottom: 10px; }
+  .ad-items .x-field > span { font-size: 11.5px; white-space: nowrap; }
+  .ad-items input { padding: 0 10px; font-variant-numeric: tabular-nums; }
+  .ad-row { display: flex; align-items: center; gap: 8px; }
+  .ad-row input { flex: 1; min-width: 0; font-family: ui-monospace, Menlo, Consolas, monospace; letter-spacing: .1em; text-transform: uppercase; }
+  .ad-err { min-height: 18px; margin: 0 2px; font-size: 13px; font-weight: 800; line-height: 1.5; color: #ff4f7b; }
+  .ad-pass { display: flex; flex-direction: column; gap: 10px; }
+}
