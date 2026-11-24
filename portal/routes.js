@@ -27,7 +27,9 @@ export const APPS = [
   { id: 'yacht', name: 'MagiYacht', path: 'apps/yacht/index.html', bg: '#0c2c8c' },
 ];
 export const appById = (id) => APPS.find((a) => a.id === id) || null;
+/** 公式サイト（src/sites/<id>/・2026-11-24）。II からは新しいタブで開く（ご回答）。サイトはサインインなしでも見られるふつうのページ */
 export const SITES = [
-  { id: 'ngx', name: 'NGX' },
-  { id: 'ishida', name: 'ISHIDA Production' },
+  { id: 'ngx', name: 'NGX', url: 'sites/ngx/' },
+  { id: 'ishida', name: 'ISHIDA Production', url: 'sites/ishida/' },
 ];
+export const siteById = (id) => SITES.find((s) => s.id === id) || null;

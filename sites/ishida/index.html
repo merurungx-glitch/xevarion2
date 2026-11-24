@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ISHIDA Production — 製作パートナー | XEVARION II・ORDYXIS・MagiOneX</title>
+<meta name="description" content="ISHIDA Production は、企画・デザイン・開発・演出をワンチームで手がける制作スタジオ。NGX とともに XEVARION II を運営・製作し、MagiLex をはじめとするアプリ群と ORDYXIS の製作パートナーを務めています。">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="../../assets/apps/ishida-96.webp" type="image/webp">
+<link rel="apple-touch-icon" href="../../assets/apps/ishida-192.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<!-- ★★ 2026-10-30 作り直し（ご指定「最新の情報に更新し、1から作り直す」「NGX と分けて、Apple 以外の Samsung などの別のものをベースに」「配色は現在とあまり変わらないように」）。
+     見た目は css/style.css、動き（切りかわるヒーロー・札の切りかえ・メニュー）は js/main.js。お問い合わせの入力欄はやめた（個人の情報を集めない）。
+     ★★ 2026-10-30（2回目）ご指定「開発アプリ一覧に MagiLex をはじめとするほとんどのアプリ」「制作過程などの内容も最新のものに」「オフラインで開けるように」
+       → 実績を<b>開発アプリ一覧</b>（28本・札で絞りこみ）に・制作の流れを今のやりかた（6ステップ）に・<b>制作の歩み</b>（年表）を追加・
+         sw.js（このフォルダ）でオフラインでも開ける。
+     ★ 2026-11-24 XEVARION II の src/sites/ishida へ移した（ご回答「初代は残し、II を主役に」「初代だけのアプリはリンクを外す」「II からは新しいタブで開く」）。
+       ・ヒーローの1枚目と、すぐ下の節に XEVARION II（3人・7本のアプリ）。初代の開発アプリ一覧・6社・歩み・ニュースは「これまで」として残した
+       ・II にあるアプリ（MagiChemLex は II の MagiLex）は ../../index.html#/app/<id> へ。初代だけのアプリ・初代のページへのリンクは外した
+       ・絵：II のアプリは assets/apps/、初代だけのアプリのアイコンと6社のロゴは assets/sites/（tools/build_assets.py が art/sites/ から作る）。オフラインは II の SW -->
+<link rel="stylesheet" href="css/style.css?v=1">
+</head>
+<body>
+
+<!-- ===== 上のバー ===== -->
+<header class="hd" id="hd">
+  <div class="wrap hd-in">
+    <a class="brand" href="#top" aria-label="ISHIDA Production トップへ">
+      <img src="../../assets/sites/brand/ishida-540.webp" alt="ISHIDA Production">
+    </a>
+    <nav class="gnav" aria-label="サイト内">
+      <a href="#works">開発アプリ</a>
+      <a href="#xevarion2">XEVARION II</a>
+      <a href="#process">制作の流れ</a>
+      <a href="#history">制作の歩み</a>
+      <a href="#news">ニュース</a>
+      <a href="#contact">お問い合わせ</a>
+    </nav>
+    <div class="hd-util">
+      <a class="pill sm fill" href="../../index.html">XEVARION II</a>
+      <button class="hamb" id="hamb" aria-label="メニュー" aria-expanded="false"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</header>
+<div class="drawer" id="drawer" aria-hidden="true">
+  <div class="drawer-in">
+    <a href="#works">開発アプリ</a>
+    <a href="#xevarion2">XEVARION II</a>
+    <a href="#strength">強み</a>
+    <a href="#process">制作の流れ</a>
+    <a href="#history">制作の歩み</a>
+    <a href="#news">ニュース</a>
+    <a href="#contact">お問い合わせ</a>
+    <a class="pill fill" href="../../index.html">XEVARION II を開く</a>
+  </div>
+</div>
+
+<main id="top">
+
+  <!-- ===== ヒーロー（切りかわるスライド） ===== -->
+  <section class="kv" id="kv" aria-roledescription="carousel" aria-label="ISHIDA Production のご紹介">
+    <div class="kv-track">
+      <article class="kv-slide s0 on" aria-roledescription="slide" aria-label="1 / 5">
+        <div class="wrap kv-in">
+          <div class="kv-txt">
+            <span class="kv-eye">XEVARION II ・ 2026.11</span>
+            <h2>XEVARION、<br><span class="g">つぎの章へ。</span></h2>
+            <p>XEVARION を1からつくり直した新しいポータル XEVARION II を、NGX とともに運営・製作しています。柚葉・水瀬・美月の3人と、7本のアプリから。</p>
+            <div class="btns"><a class="pill fill" href="../../index.html">XEVARION II をはじめる</a><a class="pill line" href="#xevarion2">くわしく</a></div>
+          </div>
+          <div class="kv-art x2" aria-hidden="true">
+            <img class="l" src="../../assets/chara/yuzuha/banner-470.webp" alt="">
+            <img class="c" src="../../assets/chara/miduki/banner-470.webp" alt="">
+            <img class="r" src="../../assets/chara/minase/banner-470.webp" alt="">
+          </div>
+        </div>
+      </article>
+      <article class="kv-slide s1" aria-roledescription="slide" aria-label="2 / 5">
+        <div class="wrap kv-in">
+          <div class="kv-txt">
+            <span class="kv-eye">INNOVATE TODAY, REALIZE TOMORROW.</span>
+            <h1>つくるを、<br><span class="g">最後までいっしょに。</span></h1>
+            <p>企画・デザイン・開発・演出をワンチームで。ISHIDA Production は、アイデアを「動くプロダクト」まで丁寧に育てる制作スタジオです。</p>
+            <div class="btns"><a class="pill fill" href="#works">開発アプリを見る</a><a class="pill line" href="#contact">お問い合わせ</a></div>
+          </div>
+          <div class="kv-art" aria-hidden="true">
+            <div class="orb"></div>
+            <img class="kv-logo" src="../../assets/sites/brand/ishida-540.webp" alt="">
+          </div>
+        </div>
+      </article>
+      <article class="kv-slide s4" aria-roledescription="slide" aria-label="3 / 5">
+        <div class="wrap kv-in">
+          <div class="kv-txt">
+            <span class="kv-eye">28 APPS ・ ONE ACCOUNT</span>
+            <h2>MagiLex から<br><span class="g">MagiBattle まで。</span></h2>
+            <p>学ぶ・あそぶ・みんなで囲む・つながる。XEVARION のひとつのアカウントで使える 28本のアプリを、企画から演出まで手がけています。</p>
+            <div class="btns"><a class="pill fill" href="#works">一覧を見る</a><a class="pill line" href="../../index.html">XEVARION II を開く</a></div>
+          </div>
+          <div class="kv-art icons" aria-hidden="true">
+            <img src="../../assets/apps/lex-192.webp" alt=""><img src="../../assets/sites/apps/magibattle-192.webp" alt=""><img src="../../assets/sites/apps/magichemlex-192.webp" alt="">
+            <img src="../../assets/sites/apps/magiabyss-192.webp" alt=""><img src="../../assets/sites/apps/magiburst-192.webp" alt=""><img src="../../assets/apps/derby-192.webp" alt="">
+            <img src="../../assets/apps/shift-192.webp" alt=""><img src="../../assets/apps/chain-192.webp" alt=""><img src="../../assets/apps/quiz-192.webp" alt="">
+          </div>
+        </div>
+      </article>
+      <article class="kv-slide s2" aria-roledescription="slide" aria-label="4 / 5">
+        <div class="wrap kv-in">
+          <div class="kv-txt">
+            <span class="kv-eye">XEVARION ・ 2026.10</span>
+            <h2>6社で、<br><span class="g">XEVARION を。</span></h2>
+            <p>NGX・Magical Future・ISHIDA Production・YRA、そして運営協力に参入した Kawagani と STUDIO DOGA。起動の画面に並ぶ6社のロゴとともに、毎日の体験をお届けします。</p>
+            <div class="btns"><a class="pill fill" href="#xevarion">体制を見る</a><a class="pill line" href="../../index.html">XEVARION II を開く</a></div>
+          </div>
+          <div class="kv-art grid4" aria-hidden="true">
+            <span><img src="../../assets/sites/brand/ngx-540.webp" alt=""></span>
+            <span><img src="../../assets/sites/brand/magicalfuture-540.webp" alt=""></span>
+            <span><img src="../../assets/sites/brand/ishida-540.webp" alt=""></span>
+            <span><img src="../../assets/sites/brand/yra-540.webp" alt=""></span>
+            <span><img src="../../assets/sites/brand/kawagani-540.webp" alt=""></span>
+            <span><img src="../../assets/sites/brand/studiodoga-540.webp" alt=""></span>
+          </div>
+        </div>
+      </article>
+      <article class="kv-slide s3" aria-roledescription="slide" aria-label="5 / 5">
+        <div class="wrap kv-in">
+          <div class="kv-txt">
+            <span class="kv-eye">ONLINE ORDER SYSTEM</span>
+            <h2>お店の注文を、<br><span class="g">スマホから。</span></h2>
+            <p>ORDYXIS は、お客様の端末で注文し、番号でお呼び出しする店頭オンラインオーダーシステム。ISHIDA Production が製作パートナーを務めています。</p>
+            <div class="btns"><a class="pill fill" href="#works">そのほかの開発アプリ</a></div>
+          </div>
+          <div class="kv-art app" aria-hidden="true">
+            <img src="../../assets/sites/apps/ordyxis-512.webp" alt="">
+          </div>
+        </div>
+      </article>
+    </div>
+    <div class="kv-ctl">
+      <button class="kv-arrow prev" id="kvPrev" aria-label="前へ"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="kv-dots" id="kvDots" role="tablist"></div>
+      <button class="kv-play" id="kvPlay" aria-label="一時停止"><svg class="ps" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg><svg class="pl" viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z" fill="currentColor"/></svg></button>
+      <button class="kv-arrow next" id="kvNext" aria-label="次へ"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    </div>
+  </section>
+
+  <!-- ===== XEVARION II（2026-11-24・主役） ===== -->
+  <section class="sec x2" id="xevarion2">
+    <div class="wrap">
+      <div class="sec-hd rv">
+        <img class="x2-mark" src="../../assets/brand/mark-512.webp" alt=""><img class="x2-word" src="../../assets/brand/wordmark-navy-560.webp" alt="XEVARION II">
+        <p>XEVARION を1からつくり直した新しいポータル。NGX とともに運営・製作しています。ひとつのアカウントで、7本のアプリと XEVA・ジェム・ガチャがつながります。はじめての10連で、柚葉・水瀬・美月の3人のうち1人があなたのパートナーに。</p>
+      </div>
+      <div class="x2-chars rv">
+        <span style="--c:#ff5b4a"><img src="../../assets/chara/yuzuha/face-256.webp" alt="" loading="lazy"><b>柚葉</b><small>FLARE</small></span>
+        <span style="--c:#2e9bff"><img src="../../assets/chara/minase/face-256.webp" alt="" loading="lazy"><b>水瀬</b><small>TIDE</small></span>
+        <span style="--c:#25b871"><img src="../../assets/chara/miduki/face-256.webp" alt="" loading="lazy"><b>美月</b><small>TERRA</small></span>
+      </div>
+      <div class="apps">
+        <a class="app rv" data-c="learn" href="../../index.html#/app/lex"><img src="../../assets/apps/lex-192.webp" alt="" loading="lazy"><span><small>化学の問題集</small><b>MagiLex</b><i>1,569問の化学の問題集。忘れるころに出し直す復習、ケミカル・ルート、ビンゴ。</i></span></a>
+        <a class="app rv d1" data-c="party" href="../../index.html#/app/quiz"><img src="../../assets/apps/quiz-192.webp" alt="" loading="lazy"><span><small>化学クイズ対戦</small><b>MagiQuiz</b><i>1台を囲んで、見えない爆弾・早押しバトルなど4つの遊び方。2台で対戦も。</i></span></a>
+        <a class="app rv d2" data-c="game" href="../../index.html#/app/derby"><img src="../../assets/apps/derby-192.webp" alt="" loading="lazy"><span><small>競馬 GⅠ</small><b>MagiDerby</b><i>実際の JRA 平地 GⅠ に XEVA で。出馬表・オッズ・結果・払戻金はすべて本物。</i></span></a>
+        <a class="app rv d3" data-c="party" href="../../index.html#/app/shift"><img src="../../assets/apps/shift-192.webp" alt="" loading="lazy"><span><small>対戦ボードゲーム</small><b>MagiShift</b><i>置いた駒をあとから動かせる、2〜8人の対戦ボードゲーム。CPU つき。</i></span></a>
+        <a class="app rv" data-c="party" href="../../index.html#/app/chain"><img src="../../assets/apps/chain-192.webp" alt="" loading="lazy"><span><small>連鎖陣取り</small><b>MagiChainParty</b><i>マスをタップするだけ、運の要素ゼロの頭脳戦。部屋番号でオンライン対戦も。</i></span></a>
+        <a class="app rv d1" data-c="party" href="../../index.html#/app/gura"><img src="../../assets/apps/gura-192.webp" alt="" loading="lazy"><span><small>パーティーゲーム</small><b>MagiGuraPlate</b><i>1台を囲んで2〜8人で遊ぶ、バランス皿のパーティーゲーム。順位で XEVA。</i></span></a>
+        <a class="app rv d2" data-c="game" href="../../index.html#/app/yacht"><img src="../../assets/apps/yacht-192.webp" alt="" loading="lazy"><span><small>サイコロゲーム</small><b>MagiYacht</b><i>カップでサイコロをふって役をそろえる。1台を囲んでみんなで。</i></span></a>
+      </div>
+      <div class="btns x2-btns rv"><a class="pill fill" href="../../index.html">XEVARION II をはじめる</a><a class="pill line" href="../ngx/">NGX 公式サイト</a></div>
+    </div>
+  </section>
+
+  <!-- ===== 開発アプリ一覧（札で絞りこむ） ===== -->
+  <section class="sec" id="works">
+    <div class="wrap">
+      <div class="sec-hd rv">
+        <h2>開発アプリ一覧（初代 XEVARION）</h2>
+        <p>MagiLex をはじめ、初代 XEVARION のアプリ 27本と、店舗の注文システム ORDYXIS。XEVARION II にあるアプリは、押すと II で開きます。</p>
+      </div>
+      <div class="tabs rv" role="tablist" aria-label="アプリの種類">
+        <button class="tab on" data-f="all" role="tab" aria-selected="true">すべて<em>28</em></button>
+        <button class="tab" data-f="learn" role="tab" aria-selected="false">学ぶ<em>4</em></button>
+        <button class="tab" data-f="game" role="tab" aria-selected="false">あそぶ<em>10</em></button>
+        <button class="tab" data-f="party" role="tab" aria-selected="false">みんなで囲む<em>6</em></button>
+        <button class="tab" data-f="info" role="tab" aria-selected="false">つながる・情報<em>7</em></button>
+        <button class="tab" data-f="store" role="tab" aria-selected="false">店舗<em>1</em></button>
+      </div>
+      <div class="apps" id="cards">
+        <!-- 学ぶ -->
+        <a class="app card rv" data-c="learn" href="../../index.html#/app/lex"><img src="../../assets/apps/lex-192.webp" alt="" loading="lazy"><span><small>学びの入口</small><b>MagiLex</b><i>MagiChemLex と旧MagiLex（英単語〈発音つき〉・化学・古文）から選んで学ぶ入口。オフライン学習OK。</i></span></a>
+        <a class="app card rv d1" data-c="learn" href="../../index.html#/app/lex"><img src="../../assets/sites/apps/magichemlex-192.webp" alt="" loading="lazy"><span><small>化学の問題集</small><b>MagiChemLex</b><i>入試問題の改題・基礎セット・単元別の関連問題。間隔反復の復習、模試の冊子、フラッシュカード、毎月のビンゴ。</i></span></a>
+        <div class="app card rv d2" data-c="learn"><img src="../../assets/sites/apps/xevynar-192.webp" alt="" loading="lazy"><span><small>学習AI</small><b>XEVYNAR</b><i>XEVARION の学習AI。勉強のプラン・タイマー・記録に加えて、わからない問題のくわしい解説や苦手問題づくりも。</i></span></div>
+        <div class="app card rv d3" data-c="learn"><img src="../../assets/sites/apps/magifocus-192.webp" alt="" loading="lazy"><span><small>学習管理</small><b>MagiFocus</b><i>手とスマホを見張る AI で勉強を守る学習管理。タイムライン・予定カレンダー・実績つき。</i></span></div>
+        <!-- あそぶ -->
+        <div class="app card rv" data-c="game"><img src="../../assets/sites/apps/magibattle-192.webp" alt="" loading="lazy"><span><small>シューティングRPG・NEW</small><b>MagiBattle</b><i>2026年10月に1から作り直し。後ろから見たドット絵の5人で撃つ遮蔽物シューティングと、ほかのプレイヤーと競うアリーナ。</i></span></div>
+        <div class="app card rv d1" data-c="game"><img src="../../assets/sites/apps/magiburst-192.webp" alt="" loading="lazy"><span><small>爽快アクション</small><b>MagiBurst</b><i>引っぱって、はなして、ぶっとばせ。最大4人マルチの引っぱりハンティング。</i></span></div>
+        <div class="app card rv d2" data-c="game"><img src="../../assets/sites/apps/magiabyss-192.webp" alt="" loading="lazy"><span><small>ドットアクションRPG</small><b>MagiAbyss</b><i>広大な迷宮を探索し、大量の敵をなぎ払う見下ろし型の RPG。武器・魔法・装備の組み合わせで自分だけのビルドを。</i></span></div>
+        <a class="app card rv d3" data-c="game" href="../../index.html#/app/derby"><img src="../../assets/apps/derby-192.webp" alt="" loading="lazy"><span><small>競馬 GⅠ</small><b>MagiDerby</b><i>実際の JRA 平地 GⅠ に XEVA で賭ける。出馬表・オッズ・結果・払戻金はすべて本物を自動取得。</i></span></a>
+        <div class="app card rv" data-c="game"><img src="../../assets/sites/apps/magibocciarush-192.webp" alt="" loading="lazy"><span><small>ボッチャ対戦</small><b>MagiBocciaRush</b><i>本格ボッチャ × 引っぱりショット × キャラクターの固有能力。3人の編成で投げる戦略スポーツ。</i></span></div>
+        <div class="app card rv d1" data-c="game"><img src="../../assets/sites/apps/magirail-192.webp" alt="" loading="lazy"><span><small>鉄道経営シム</small><b>MagiRail</b><i>街の需要を読み、本数・編成・車両を調整して利益と輸送効率の両立をめざす。</i></span></div>
+        <div class="app card rv d2" data-c="game"><img src="../../assets/sites/apps/magicraft-192.webp" alt="" loading="lazy"><span><small>3Dクラフト</small><b>MagiCraft</b><i>3D のボクセルワールドで掘って・作って・育てて、次元魔神を討つ探索アドベンチャー。</i></span></div>
+        <div class="app card rv d3" data-c="game"><img src="../../assets/sites/apps/magimanor-192.webp" alt="" loading="lazy"><span><small>探索ホラー</small><b>MagiManor</b><i>不気味な洋館からの脱出を目指す 2D 探索ホラー。謎解き・追跡者・6種類の結末、最大4人の共鳴探索も。</i></span></div>
+        <div class="app card rv" data-c="party"><img src="../../assets/sites/apps/magiempire-192.webp" alt="" loading="lazy"><span><small>国盗り対戦</small><b>MagiEmpire</b><i>1台で 2〜4人の国盗り対戦。アクション版とじっくり陣取りの2つを収録。</i></span></div>
+        <div class="app card rv d1" data-c="party"><img src="../../assets/sites/apps/magiarena-192.webp" alt="" loading="lazy"><span><small>対戦の闘技場</small><b>MagiArena</b><i>1台でみんなと対戦する闘技場。オリジナルの陣取りに、オセロ・五目並べ・神経衰弱も。2〜6人。</i></span></div>
+        <div class="app card rv d2" data-c="game"><img src="../../assets/sites/apps/magijackpot-192.webp" alt="" loading="lazy"><span><small>カジノ・パーティー</small><b>MagiJackpot</b><i>XEVA とジェムで遊ぶカジノ＆パーティー。スロット・ブラックジャック・パチンコに、パーティーとオンライン対戦も。</i></span></div>
+        <div class="app card rv d3" data-c="game"><img src="../../assets/sites/apps/magilotto-192.webp" alt="" loading="lazy"><span><small>デジタル宝くじ</small><b>Magi Lotto</b><i>ジェムで買って XEVA で受け取るデジタル宝くじ。スクラッチ・ナンバーズ・ロトなど5本柱。</i></span></div>
+        <!-- みんなで囲む -->
+        <a class="app card rv" data-c="party" href="../../index.html#/app/chain"><img src="../../assets/apps/chain-192.webp" alt="" loading="lazy"><span><small>連鎖陣取り</small><b>MagiChainParty</b><i>iPad を囲んで遊ぶ、連鎖バクハツの陣取り頭脳戦。運の要素ゼロ・2〜6人・CPU・オンライン。</i></span></a>
+        <div class="app card rv d1" data-c="party"><img src="../../assets/sites/apps/magidominiongrid-192.webp" alt="" loading="lazy"><span><small>思考の陣取り</small><b>Magi Dominion Grid</b><i>2〜10人が同時に行動をえらぶリアルタイム陣取り。勝ち負けは盤面の読みだけで決まる。</i></span></div>
+        <a class="app card rv d2" data-c="party" href="../../index.html#/app/shift"><img src="../../assets/apps/shift-192.webp" alt="" loading="lazy"><span><small>対戦ボードゲーム</small><b>MagiShift</b><i>置いた駒をあとから動かせる、マルバツを発展させた2〜8人の対戦ボードゲーム。</i></span></a>
+        <a class="app card rv d3" data-c="party" href="../../index.html#/app/quiz"><img src="../../assets/apps/quiz-192.webp" alt="" loading="lazy"><span><small>化学クイズ対戦</small><b>MagiQuiz</b><i>1台を囲んで化学の基礎でクイズバトル。見えない爆弾・早押しバトルなど4つの遊び方。</i></span></a>
+        <!-- つながる・情報 -->
+        <div class="app card rv" data-c="info"><img src="../../assets/sites/apps/magilink-192.webp" alt="" loading="lazy"><span><small>つながり・交流</small><b>MagiLink</b><i>友達やグループとつながるメッセージアプリ。コレクションの共有にも対応。</i></span></div>
+        <div class="app card rv d1" data-c="info"><img src="../../assets/sites/apps/magiranking-192.webp" alt="" loading="lazy"><span><small>月間ランキング</small><b>MagiRanking</b><i>獲得 XEVA の合計を毎月集計して順位を競う月間ランキング。</i></span></div>
+        <div class="app card rv d2" data-c="info"><img src="../../assets/sites/apps/magiscope-192.webp" alt="" loading="lazy"><span><small>エンタメランキング</small><b>MagiScope</b><i>アニメ・カラオケなどの実際のランキングを、1時間ごとに自動で更新。</i></span></div>
+        <div class="app card rv d3" data-c="info"><img src="../../assets/sites/apps/magimusic-192.webp" alt="" loading="lazy"><span><small>音楽プレイヤー</small><b>MagiMusic</b><i>XEVARION の音楽をいつでもどこでも。回転ディスクとビート連動の演出、バックグラウンド再生。</i></span></div>
+        <div class="app card rv" data-c="info"><img src="../../assets/sites/apps/magiportfolio-192.webp" alt="" loading="lazy"><span><small>持ち株管理</small><b>MagiPortfolio</b><i>買った株を登録するだけの持ち株マネージャー。伸び率・評価損益・資産配分を一覧で。</i></span></div>
+        <div class="app card rv d1" data-c="info"><img src="../../assets/sites/apps/magicounter-192.webp" alt="" loading="lazy"><span><small>対戦支援・編成分析</small><b>MagiCounter</b><i>対戦ゲームの対策・分析ツール。相手を分析して、最適な3体の選出と編成の改善までをスマホで。</i></span></div>
+        <div class="app card rv d2" data-c="info"><img src="../../assets/sites/apps/magitier-192.webp" alt="" loading="lazy"><span><small>Tier表作成</small><b>MagiTier</b><i>Tier 表の作成からプレゼンまで。カードを並べ替えて、自分のランキングを発信。</i></span></div>
+        <!-- 店舗 -->
+        <div class="app card rv d3" data-c="store"><img src="../../assets/sites/apps/ordyxis-192.webp" alt="" loading="lazy"><span><small>店頭オーダー</small><b>ORDYXIS</b><i>お客様の端末で注文、店舗で受付、番号でお呼び出し。店頭モニターでのご案内まで。</i></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== XEVARION の6社 ===== -->
+  <section class="sec gray" id="xevarion">
+    <div class="wrap">
+      <div class="sec-hd rv">
+        <h2>初代 XEVARION を支えた6社</h2>
+        <p>2026年10月に YRA、11月に Kawagani と STUDIO DOGA が運営協力に参入。初代 XEVARION の起動の画面には、6社のロゴが並びました。XEVARION II は NGX と ISHIDA Production の2社でお届けします。</p>
+      </div>
+      <div class="co4">
+        <div class="co rv"><span class="lg"><img src="../../assets/sites/brand/ngx-540.webp" alt="NGX" loading="lazy"></span><b>NGX</b><small>開発・運営</small><a class="lk" href="../ngx/">公式サイト</a></div>
+        <div class="co rv d1"><span class="lg"><img src="../../assets/sites/brand/magicalfuture-540.webp" alt="Magical Future" loading="lazy"></span><b>Magical Future</b><small>技術提携</small><span class="lk off">初代 XEVARION</span></div>
+        <div class="co me rv d2"><span class="lg"><img src="../../assets/sites/brand/ishida-540.webp" alt="ISHIDA Production" loading="lazy"></span><b>ISHIDA Production</b><small>製作パートナー</small><span class="lk here">このサイト</span></div>
+        <div class="co rv d3"><span class="lg"><img src="../../assets/sites/brand/yra-540.webp" alt="YRA" loading="lazy"></span><b>YRA</b><small>運営協力</small><span class="lk off">初代 XEVARION</span></div>
+        <div class="co rv"><span class="lg"><img src="../../assets/sites/brand/kawagani-540.webp" alt="Kawagani" loading="lazy"></span><b>Kawagani</b><small>運営協力</small><span class="lk off">初代 XEVARION</span></div>
+        <div class="co rv d1"><span class="lg"><img src="../../assets/sites/brand/studiodoga-540.webp" alt="STUDIO DOGA" loading="lazy"></span><b>STUDIO DOGA</b><small>運営協力</small><span class="lk off">初代 XEVARION</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 強み ===== -->
+  <section class="sec" id="strength">
+    <div class="wrap">
+      <div class="sec-hd rv">
+        <h2>私たちの強み</h2>
+        <p>小さく速く、しかし妥協しない。ISHIDA Production が大切にしていること。</p>
+      </div>
+      <div class="feats">
+        <div class="feat b rv">
+          <span class="fi"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="13" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="14" y="9" width="7" height="11" rx="1.6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M6 19h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+          <h3>マルチデバイス</h3>
+          <p>iPad を囲む対戦から、お店の業務端末、スマホのホーム画面アプリまで。どの画面でも快適に動き、電波の無いところでも開けるように作ります。</p>
+        </div>
+        <div class="feat t rv d1">
+          <span class="fi"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="10" r="1.4" fill="currentColor"/><circle cx="15" cy="10" r="1.4" fill="currentColor"/><path d="M8.5 14.5c1.9 2 5.1 2 7 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+          <h3>明るく、迷わないデザイン</h3>
+          <p>親しみやすく、ひと目で分かる。ドット絵・カットイン・ガチャの演出まで、遊び心のある表現を自分たちで描き起こします。</p>
+        </div>
+        <div class="feat o rv d2">
+          <span class="fi"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5.5c0 4.4-3 8.2-7 9.5-4-1.3-7-5.1-7-9.5V6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M8.6 12.2l2.3 2.3 4.5-4.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <h3>堅牢な実装</h3>
+          <p>途中保存・やり直し・オフラインでも動くしくみ・端末をまたぐ同期。毎日使っても壊れない細部まで作り込みます。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 制作の流れ（いまのやりかた） ===== -->
+  <section class="sec gray" id="process">
+    <div class="wrap">
+      <div class="sec-hd rv">
+        <h2>制作の流れ</h2>
+        <p>ご要望をいただいてから配信まで。週に何度も届けるアップデートを、6つのステップで回しています。</p>
+      </div>
+      <ol class="steps six">
+        <li class="rv"><span class="n">01</span><b>ご要望の整理</b><p>届いたご要望をひとつずつ一覧に。後回しにするものも記録して、取りこぼしません。</p></li>
+        <li class="rv d1"><span class="n">02</span><b>設計と相談</b><p>見え方・性能・遊び方など大きな分かれ道は、選択肢と見本をそえてご相談します。</p></li>
+        <li class="rv d2"><span class="n">03</span><b>開発・演出</b><p>実装とアートを同時に。ドット絵やカットインまで、その場で描き起こします。</p></li>
+        <li class="rv d3"><span class="n">04</span><b>検証</b><p>実際のブラウザで操作・同期・オフラインを確かめ、データの不具合は元の情報までさかのぼって直します。</p></li>
+        <li class="rv"><span class="n">05</span><b>配信</b><p>版ごとにまとめてお届け。更新画面のダウンロード量・お知らせ・デベロッパーノートまでそろえます。</p></li>
+        <li class="rv d1"><span class="n">06</span><b>改善</b><p>使われかたとご報告を見ながら、次の版へ。ご報告は真因を見つけてから直します。</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ===== 制作の歩み（年表） ===== -->
+  <section class="sec" id="history">
+    <div class="wrap">
+      <div class="sec-hd rv">
+        <h2>制作の歩み</h2>
+        <p>2026年、XEVARION とともに増えてきたアプリと大きな更新。そして XEVARION II へ。</p>
+      </div>
+      <ol class="tl">
+        <li class="rv"><time>2026.07</time><b>MagiBurst のフェスが開幕</b><p>最初のフェスガチャ。キャラクターとガチャは、のちに XEVARION 全体で共通に。</p></li>
+        <li class="rv"><time>2026.08</time><b>XEVARION のガチャ・図鑑を一本化／Xevion OS</b><p>ガチャと図鑑をポータルへ集約。設定と見た目をまとめる Xevion OS、オフラインの自動更新。</p></li>
+        <li class="rv"><time>2026.09.03</time><b>Magi Dominion Grid</b><p>1台を 2〜10人で囲む、運の要素ゼロの陣取り。</p></li>
+        <li class="rv"><time>2026.09.08</time><b>MagiBocciaRush</b><p>本格ボッチャと引っぱりアクションの対戦スポーツ。</p></li>
+        <li class="rv"><time>2026.09.18 — 09.21</time><b>MagiRail・MagiScope・MagiShift</b><p>鉄道経営シム、実際のランキングを届けるエンタメ情報、2〜8人の対戦ボードゲーム。</p></li>
+        <li class="rv"><time>2026.10.05</time><b>MagiAbyss</b><p>見下ろし型のドットアクション RPG。のちに 2.5D の町と HD ドットへ。</p></li>
+        <li class="rv"><time>2026.10.06</time><b>MagiChemLex</b><p>化学の問題集。改題・基礎・単元別・模試の冊子・ビンゴ。</p></li>
+        <li class="rv"><time>2026.10.21 — 10.24</time><b>MagiDerby・MagiQuiz／MagiLex の入口</b><p>実際の JRA GⅠ の競馬、1台で遊ぶ化学クイズ。MagiLex は MagiChemLex と旧MagiLex の入口に。デベロッパーノートを開始。</p></li>
+        <li class="rv"><time>2026.11.02</time><b>6社体制</b><p>Kawagani と STUDIO DOGA が運営協力に参入。起動の画面に6社のロゴ。</p></li>
+        <li class="rv"><time>2026.10.28</time><b>4社体制</b><p>YRA が運営協力に参入。起動の画面に4社のロゴ。</p></li>
+        <li class="rv"><time>2026.10.30</time><b>MagiBattle を1から作り直し／XEVARION の機能紹介</b><p>後ろから見たドット絵の5人で戦う遮蔽物シューティングとアリーナに。XEVARION の全機能を動きで紹介するガイドも。</p></li>
+        <li class="rv now"><time>2026.11.20 — 11.24</time><b>XEVARION II</b><p>XEVARION を1からつくり直し、NGX とともに運営・製作。柚葉・水瀬・美月の3人と、MagiYacht から MagiDerby までの7本を順に公開。</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ===== ニュース ===== -->
+  <section class="sec gray" id="news">
+    <div class="wrap">
+      <div class="sec-hd rv">
+        <h2>ニュース</h2>
+        <p>ISHIDA Production と、制作に関わるプロダクトの最新情報。</p>
+      </div>
+      <div class="news">
+        <a class="nw rv" href="#xevarion2"><time datetime="2026-11-24">2026.11.24</time><span class="chip t">XEVARION II</span><b>MagiDerby と、NGX・ISHIDA Production の公式サイトが XEVARION II に。7本のアプリがそろいました</b><i aria-hidden="true">›</i></a>
+        <a class="nw rv d1" href="../../index.html"><time datetime="2026-11-23">2026.11.23</time><span class="chip t">XEVARION II</span><b>XEVARION II（β版）を公開。XEVARION を1からつくり直した新しいポータル</b><i aria-hidden="true">›</i></a>
+        <div class="nw rv"><time datetime="2026-10-30">2026.10.30</time><span class="chip o">MagiBattle</span><b>MagiBattle を1から作り直し。後ろから見たドット絵の遮蔽物シューティングと、ほかのプレイヤーと競うアリーナ</b></div>
+        <div class="nw rv d1"><time datetime="2026-10-30">2026.10.30</time><span class="chip t">XEVARION</span><b>XEVARION の全機能を、動きとアニメーションで紹介するガイドを公開（設定からも）</b></div>
+        <a class="nw rv d2" href="#works"><time datetime="2026-10-30">2026.10.30</time><span class="chip b">お知らせ</span><b>このサイトと NGX 公式サイトが、オフラインでも開けるように。開発アプリ一覧を 28本に</b><i aria-hidden="true">›</i></a>
+        <a class="nw rv" href="../ngx/#news"><time datetime="2026-10-30">2026.10.30</time><span class="chip t">XEVARION</span><b>新しいガチャ「超極彩祭」、毎月のビンゴ、全ガチャ共通の天井を発表</b><i aria-hidden="true">›</i></a>
+        <div class="nw rv d1"><time datetime="2026-10-28">2026.10.28</time><span class="chip b">お知らせ</span><b>XEVARION の運営が4社体制に。起動の画面に4社のロゴ</b></div>
+        <div class="nw rv d2"><time datetime="2026-10-15">2026.10.15</time><span class="chip o">MagiChainParty</span><b>連鎖の数が見えるように・見た目を磨き直し</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== お問い合わせ（サポートの入口） ===== -->
+  <section class="sec" id="contact">
+    <div class="wrap">
+      <div class="sec-hd rv">
+        <h2>お問い合わせ・サポート</h2>
+        <p>制作のご相談・協業のお問い合わせは、XEVARION のアプリ内のサポートから受け付けています。</p>
+      </div>
+      <div class="sup">
+        <a class="su rv" href="../../index.html"><span class="si"><svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 016.5 3h11A2.5 2.5 0 0120 5.5v8a2.5 2.5 0 01-2.5 2.5H11l-4.5 4v-4h0A2.5 2.5 0 014 13.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></span><b>XEVARION II</b><small>NGX × ISHIDA Production のポータル</small></a>
+        <a class="su rv d1" href="../ngx/"><span class="si"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3.5 12h17M12 3.5c2.6 2.6 2.6 14.4 0 17M12 3.5c-2.6 2.6-2.6 14.4 0 17" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></span><b>NGX 公式サイト</b><small>XEVARION II の開発・運営</small></a>
+        <div class="su rv d2"><span class="si"><svg viewBox="0 0 24 24"><path d="M12 3l2.3 5.6 6 .5-4.6 3.9 1.4 5.9L12 15.8 6.9 18.9l1.4-5.9L3.7 9.1l6-.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></span><b>Magical Future</b><small>技術提携パートナー</small></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ===== フッター ===== -->
+<footer class="ft">
+  <div class="wrap">
+    <div class="ft-grid">
+      <div class="ft-brand">
+        <span class="lg"><img src="../../assets/sites/brand/ishida-540.webp" alt="ISHIDA Production"></span>
+        <p>NGX とともに XEVARION II を運営・製作。MagiLex をはじめとするアプリ群と ORDYXIS の製作パートナー。企画から演出まで、体験づくりをワンチームで。</p>
+      </div>
+      <div class="ft-col"><h4>開発アプリ</h4><a href="../../index.html#/app/lex">MagiLex</a><a href="../../index.html#/app/derby">MagiDerby</a><a href="../../index.html#/app/quiz">MagiQuiz</a><a href="#xevarion2">XEVARION II のアプリ</a><a href="#works">初代のアプリ</a></div>
+      <div class="ft-col"><h4>XEVARION II</h4><a href="../../index.html">XEVARION II を開く</a><a href="../ngx/">NGX</a></div>
+      <div class="ft-col"><h4>このサイト</h4><a href="#strength">強み</a><a href="#process">制作の流れ</a><a href="#history">制作の歩み</a><a href="#news">ニュース</a><a href="#contact">お問い合わせ</a></div>
+    </div>
+    <div class="ft-bot">
+      <span>© <span id="year">2026</span> ISHIDA Production. All rights reserved.</span>
+      <span>XEVARION II — NGX × ISHIDA Production</span>
+    </div>
+  </div>
+</footer>
+
+<script src="js/main.js?v=1"></script>
+</body>
+</html>

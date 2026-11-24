@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>NGX — Creating the Future Through Every Experience.</title>
+<meta name="description" content="NGX 公式サイト。XEVARION を1からつくり直した新しいポータル XEVARION II を、ISHIDA Production とともに開発・運営しています。プロダクト・最新情報・歩み・会社概要。">
+<meta name="theme-color" content="#000000">
+<link rel="icon" href="../../assets/apps/ngx-96.webp" type="image/webp">
+<link rel="apple-touch-icon" href="../../assets/apps/ngx-192.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<!-- ══════════════════════════════════════════════════════════════
+     ★★ 2026-10-30 NGX 公式サイトを作り直し（ご指定「最新の情報に更新し、1から作り直してデザインを Apple などのホームページのような形に」）
+     ・薄い上のバー（すりガラス）・大きな見出しと広い余白・白／うすい灰色／黒の面を交互に・角の丸いタイル・「詳しく見る ›」の青い文字リンク。
+     ・数字と並びは XEVARION の台帳（xevarion-home.js の XH_APPS・xeva.js の MB_CHAR_MASTER）に合わせて手で書いた（2026-10-30 時点）。
+     ・住所や個人の情報は載せない。MagiChemLex の問題の出どころ（学校名・年度など）も書かない。
+     ★ 2026-11-24 XEVARION II の src/sites/ngx へ移した（ご回答「初代は残し、II を主役に」「初代だけのアプリはリンクを外す」「II からは新しいタブで開く」）。
+       ・いちばん上に XEVARION II（3人・7本のアプリ・はじめる）。初代の XEVARION・作品・ニュース・歩み・6社はそのまま「これまで」として残した
+       ・初代のキャラの絵（MagiBurst の画面・超極彩祭のバナー・初代ホームの画面）は II のキャラの絵に差しかえた。超極彩祭の節は外した（ニュースには残る）
+       ・II にあるアプリ（MagiChemLex は II の MagiLex）は ../../index.html#/app/<id> へ。初代だけのアプリ・初代のページへのリンクは外した
+       ・絵：II のアプリは assets/apps/、初代だけのアプリのアイコンと6社のロゴは assets/sites/（tools/build_assets.py が art/sites/ から作る）
+     ══════════════════════════════════════════════════════════════ -->
+<style>
+  :root{
+    --ink:#1d1d1f; --ink2:#6e6e73; --ink3:#86868b; --line:#d2d2d7;
+    --bg:#ffffff; --bg2:#f5f5f7; --dark:#000000; --dark2:#161617;
+    --blue:#0071e3; --link:#0066cc; --linkd:#2997ff;
+    --grad:linear-gradient(90deg,#5b6bff 0%,#9c4dff 48%,#ff5da2 100%);
+    --gold:linear-gradient(180deg,#fff3c4 0%,#f2c14e 45%,#b8821c 100%);
+    --r:22px; --maxw:1024px;
+    --ease:cubic-bezier(.25,.8,.25,1);
+    --font:"Inter","SF Pro JP","SF Pro Text","Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",system-ui,-apple-system,sans-serif;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:17px;line-height:1.47;letter-spacing:-.01em;
+    -webkit-font-smoothing:antialiased;overflow-x:hidden}
+  a{color:inherit;text-decoration:none}
+  img{display:block;max-width:100%}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 22px}
+  .eyebrow{display:block;font-size:17px;font-weight:600;color:var(--ink2);margin:0 0 6px;letter-spacing:0}
+  .h1{font-size:clamp(31px,7.2vw,80px);line-height:1.08;font-weight:800;letter-spacing:-.025em;margin:0}
+  .h2{font-size:clamp(28px,5.2vw,56px);line-height:1.12;font-weight:800;letter-spacing:-.02em;margin:0}
+  .h1 span,.h2{word-break:keep-all;overflow-wrap:anywhere}
+  .h3{font-size:clamp(24px,3.4vw,32px);line-height:1.15;font-weight:800;letter-spacing:-.015em;margin:0}
+  .lead{font-size:clamp(19px,2.3vw,24px);line-height:1.42;font-weight:500;color:var(--ink2);margin:14px auto 0;max-width:700px}
+  .gtext{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .ctas{display:flex;gap:28px;justify-content:center;align-items:center;flex-wrap:wrap;margin-top:26px}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:12px 22px;border-radius:980px;background:var(--blue);color:#fff;font-size:17px;font-weight:500;
+    transition:background .2s}
+  .btn:hover{background:#0077ed}
+  .more{color:var(--link);font-size:17px;font-weight:500;display:inline-flex;align-items:center;gap:4px}
+  .more::after{content:"";width:7px;height:7px;border-right:2px solid currentColor;border-top:2px solid currentColor;transform:rotate(45deg);margin-left:2px}
+  .more:hover{text-decoration:underline}
+  .dk .more{color:var(--linkd)}
+  .sec{padding:clamp(72px,10vw,120px) 0;text-align:center}
+  .sec.g{background:var(--bg2)}
+  .sec.dk{background:var(--dark);color:#f5f5f7}
+  .sec.dk .eyebrow,.sec.dk .lead{color:#a1a1a6}
+
+  /* ── 上のバー（すりガラス・48px） ── */
+  .gn{position:sticky;top:0;z-index:100;height:48px;background:rgba(22,22,23,.8);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);
+    color:#e8e8ed;padding-top:env(safe-area-inset-top,0px);box-sizing:content-box}
+  .gn .in{max-width:var(--maxw);height:48px;margin:0 auto;padding:0 22px;display:flex;align-items:center;gap:8px}
+  .gn .logo{display:flex;align-items:center;gap:8px;margin-right:auto;font-weight:800;letter-spacing:.18em;font-size:15px}
+  .gn .logo b{background:var(--gold);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .gn .logo i{font-style:normal;font-size:11px;font-weight:500;letter-spacing:.04em;color:#a1a1a6}
+  .gn nav{display:flex;gap:4px}
+  .gn nav a{font-size:12.5px;padding:6px 10px;color:#d1d1d6;border-radius:8px;transition:color .2s}
+  .gn nav a:hover{color:#fff}
+  .gn .cta{font-size:12px;font-weight:600;color:#fff;background:var(--blue);border-radius:980px;padding:5px 12px;margin-left:6px}
+  .gn .burger{display:none;width:44px;height:44px;margin-right:-10px;border:0;background:none;cursor:pointer;color:#e8e8ed}
+  .gn .burger span{display:block;width:17px;height:1.5px;background:currentColor;margin:5px auto;transition:transform .3s var(--ease)}
+  .gn.open .burger span:first-child{transform:translateY(3.25px) rotate(45deg)}
+  .gn.open .burger span:last-child{transform:translateY(-3.25px) rotate(-45deg)}
+  .menu{display:none}
+  @media (max-width:820px){
+    .gn nav,.gn .cta{display:none}
+    .gn .burger{display:block}
+    .menu{display:block;position:fixed;left:0;right:0;top:calc(48px + env(safe-area-inset-top,0px));bottom:0;z-index:99;background:rgba(22,22,23,.97);
+      -webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);padding:18px 44px;opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s}
+    .gn.open + .menu{opacity:1;visibility:visible}
+    .menu a{display:block;color:#f5f5f7;font-size:28px;font-weight:700;padding:9px 0;letter-spacing:-.01em}
+    .menu a.small{font-size:15px;font-weight:500;color:#a1a1a6;margin-top:14px}
+  }
+
+  /* ── ヒーロー（黒） ── */
+  .hero{position:relative;background:#000;color:#f5f5f7;text-align:center;padding:clamp(64px,9vw,110px) 0 0;overflow:hidden}
+  .hero .eyebrow{color:#a1a1a6;letter-spacing:.24em;font-size:13px;font-weight:700}
+  .hero .h1 span{display:block}
+  .hero .lead{color:#a1a1a6}
+  .hero .glow{position:absolute;left:50%;top:58%;width:min(1100px,140vw);aspect-ratio:1.6;transform:translate(-50%,-50%);pointer-events:none;
+    background:radial-gradient(closest-side,rgba(124,77,255,.45),rgba(91,107,255,.22) 45%,transparent 72%);filter:blur(10px)}
+  .stage{position:relative;margin:56px auto 0;height:clamp(330px,46vw,520px);max-width:900px}
+  .phone{position:absolute;bottom:-40px;width:clamp(170px,22vw,250px);aspect-ratio:9/18.6;border-radius:clamp(26px,3.4vw,40px);padding:clamp(6px,.8vw,9px);
+    background:linear-gradient(145deg,#3a3a3c,#1c1c1e 40%,#2c2c2e);box-shadow:0 30px 80px rgba(0,0,0,.7),inset 0 0 0 1.5px rgba(255,255,255,.14)}
+  .phone .scr{width:100%;height:100%;border-radius:clamp(20px,2.8vw,32px);overflow:hidden;background:#111}
+  .phone .scr img{width:100%;height:100%;object-fit:cover}
+  .phone.c{left:50%;transform:translateX(-50%);z-index:3}
+  .phone.l{left:calc(50% - clamp(150px,21vw,240px));transform:translateX(-50%) rotate(-8deg) scale(.86);z-index:2;opacity:.92}
+  .phone.r{left:calc(50% + clamp(150px,21vw,240px));transform:translateX(-50%) rotate(8deg) scale(.86);z-index:2;opacity:.92}
+  .phone .notch{position:absolute;top:clamp(12px,1.5vw,17px);left:50%;transform:translateX(-50%);width:30%;height:clamp(14px,1.8vw,20px);border-radius:99px;background:#000;z-index:2}
+  @media (max-width:600px){ .phone.l,.phone.r{display:none} }
+
+  /* ── 数字 ── */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;max-width:900px;margin:48px auto 0}
+  .stat{padding:8px 4px}
+  .stat b{display:block;font-size:clamp(40px,5.6vw,60px);font-weight:800;letter-spacing:-.03em;line-height:1}
+  .stat > span{display:block;margin-top:8px;font-size:14px;color:var(--ink2);font-weight:500}
+  .stat b span{font:inherit}
+  @media (max-width:700px){ .stats{grid-template-columns:repeat(2,1fr);gap:28px 12px} }
+
+  /* ── 新しいリリース（黒・横長の絵） ── */
+  .feat{margin:42px auto 0;max-width:900px;border-radius:var(--r);overflow:hidden;box-shadow:0 24px 70px rgba(91,107,255,.28)}
+  .feat img{width:100%;aspect-ratio:900/482;object-fit:cover}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:22px}
+  .chips span{font-size:13px;font-weight:600;padding:6px 13px;border-radius:99px;background:rgba(255,255,255,.08);color:#d1d1d6;box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+
+  /* ── プロダクトのタイル（2列） ── */
+  .tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:44px;text-align:left}
+  .tile{position:relative;display:flex;flex-direction:column;min-height:340px;padding:34px 32px 28px;border-radius:var(--r);background:#fff;overflow:hidden;
+    transition:transform .45s var(--ease),box-shadow .45s var(--ease)}
+  .tile:hover{transform:translateY(-4px);box-shadow:0 18px 48px rgba(0,0,0,.08)}
+  .tile .ic{width:72px;height:72px;border-radius:18px;object-fit:cover;box-shadow:0 8px 22px rgba(0,0,0,.14);margin-bottom:22px}
+  .tile small{font-size:12px;font-weight:700;color:var(--ink3);letter-spacing:.04em}
+  .tile h3{font-size:clamp(24px,3vw,30px);font-weight:800;letter-spacing:-.015em;margin:4px 0 8px}
+  .tile p{margin:0 0 18px;color:var(--ink2);font-size:16px;line-height:1.55}
+  .tile .more{margin-top:auto}
+  .tile.wide{grid-column:span 2;flex-direction:row;align-items:center;gap:34px;min-height:0}
+  .tile.wide .ic{width:120px;height:120px;border-radius:28px;margin:0}
+  .tile.dark{background:#000;color:#f5f5f7}
+  .tile.dark p{color:#a1a1a6}
+  .tile.dark .more{color:var(--linkd)}
+  @media (max-width:760px){ .tiles{grid-template-columns:1fr} .tile.wide{grid-column:auto;flex-direction:column;align-items:flex-start;gap:0} .tile.wide .ic{width:72px;height:72px;border-radius:18px;margin-bottom:22px} .tile{min-height:0} }
+  .allapps{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:30px}
+  .allapps a{display:flex;align-items:center;gap:7px;padding:6px 12px 6px 6px;border-radius:99px;background:#fff;box-shadow:inset 0 0 0 1px var(--line);font-size:13px;font-weight:600;color:var(--ink)}
+  .allapps a img{width:24px;height:24px;border-radius:7px;object-fit:cover}
+  .allapps a:hover{box-shadow:inset 0 0 0 1px #a1a1a6}
+
+  /* ── ニュース ── */
+  .news{max-width:820px;margin:40px auto 0;text-align:left;border-top:1px solid var(--line)}
+  .nw{display:grid;grid-template-columns:120px 1fr;gap:6px 22px;padding:20px 4px;border-bottom:1px solid var(--line)}
+  .nw time{font-size:14px;font-weight:600;color:var(--ink3);padding-top:2px;font-variant-numeric:tabular-nums}
+  .nw h4{margin:0;font-size:19px;font-weight:700;letter-spacing:-.01em;line-height:1.4}
+  .nw p{grid-column:2;margin:0;font-size:15px;color:var(--ink2);line-height:1.6}
+  .nw em{font-style:normal;font-size:11px;font-weight:800;letter-spacing:.06em;padding:2px 8px;border-radius:99px;margin-right:8px;vertical-align:2px;color:#fff;background:var(--blue)}
+  .nw em.up{background:#86868b}
+  @media (max-width:600px){ .nw{grid-template-columns:1fr} .nw p{grid-column:1} }
+
+  /* ── 歩み ── */
+  .tl{max-width:820px;margin:44px auto 0;text-align:left;display:grid;gap:0}
+  .tl > div{display:grid;grid-template-columns:110px 1fr;gap:22px;padding:22px 0;border-top:1px solid rgba(255,255,255,.14)}
+  .tl b{font-size:22px;font-weight:800;letter-spacing:-.01em;color:#f5f5f7;font-variant-numeric:tabular-nums}
+  .tl h4{margin:0 0 4px;font-size:19px;font-weight:700;color:#f5f5f7}
+  .tl p{margin:0;font-size:15px;color:#a1a1a6;line-height:1.6}
+  .tl > div.now b{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  @media (max-width:600px){ .tl > div{grid-template-columns:1fr;gap:4px} }
+
+  /* ── パートナー ── */
+  .pts{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:44px;text-align:left}
+  .pt{background:#fff;border-radius:var(--r);padding:26px 26px 24px;display:flex;flex-direction:column}
+  .pt .lg{height:96px;border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center;margin:0 0 18px;overflow:hidden}
+  .pt .lg img{height:100%;width:auto;object-fit:contain}
+  .pt small{font-size:12px;font-weight:700;color:var(--ink3);letter-spacing:.04em}
+  .pt h3{margin:4px 0 8px;font-size:22px;font-weight:800}
+  .pt p{margin:0 0 16px;font-size:15px;color:var(--ink2);line-height:1.6}
+  .pt .more{margin-top:auto;font-size:15px}
+  @media (max-width:860px){ .pts{grid-template-columns:1fr} }
+
+  /* ── 会社概要 ── */
+  .co{max-width:720px;margin:36px auto 0;text-align:left;border-top:1px solid var(--line)}
+  .co div{display:grid;grid-template-columns:150px 1fr;gap:20px;padding:16px 4px;border-bottom:1px solid var(--line);font-size:16px}
+  .co dt{font-weight:700;color:var(--ink)}
+  .co dd{margin:0;color:var(--ink2)}
+  @media (max-width:600px){ .co div{grid-template-columns:1fr;gap:2px} }
+
+  /* ── フッター ── */
+  footer{background:var(--bg2);color:var(--ink2);font-size:12px;padding:34px 0 28px}
+  footer .note{padding-bottom:16px;border-bottom:1px solid var(--line);line-height:1.6}
+  .fcols{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;padding:20px 0;border-bottom:1px solid var(--line)}
+  .fcols h5{margin:0 0 10px;font-size:12px;font-weight:700;color:var(--ink)}
+  .fcols a{display:block;padding:3px 0;color:var(--ink2)}
+  .fcols a:hover{text-decoration:underline;color:var(--ink)}
+  .fbot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;padding-top:16px}
+  @media (max-width:700px){ .fcols{grid-template-columns:repeat(2,1fr)} }
+
+  /* ── スクロールで現れる ── */
+  .rv{opacity:0;transform:translateY(28px);transition:opacity .9s var(--ease),transform .9s var(--ease)}
+  .rv.in{opacity:1;transform:none}
+  .rv.d1{transition-delay:.08s}.rv.d2{transition-delay:.16s}.rv.d3{transition-delay:.24s}
+  @media (prefers-reduced-motion:reduce){ .rv{opacity:1;transform:none;transition:none} html{scroll-behavior:auto} }
+
+  /* ── XEVARION II（2026-11-24・主役）── */
+  .x2-logo{width:min(300px,68vw);margin:0 auto 22px}
+  .x2-chars{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:720px;margin:44px auto 0}
+  .x2-ch{border-radius:var(--r);padding:22px 10px 18px;background:#161617;box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)}
+  .x2-ch img{width:min(104px,22vw);aspect-ratio:1;border-radius:50%;object-fit:cover;margin:0 auto 12px;box-shadow:0 0 0 3px var(--c),0 10px 30px rgba(0,0,0,.5)}
+  .x2-ch b{display:block;font-size:clamp(19px,2.6vw,24px);font-weight:800;color:#f5f5f7}
+  .x2-ch small{display:block;margin-top:4px;font-size:12px;font-weight:800;letter-spacing:.22em;color:var(--c)}
+  .x2-sub{margin:18px auto 0;font-size:15px;color:#a1a1a6}
+  .sec.x2 .stat > span{color:#a1a1a6}
+  .x2-apps{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:48px;text-align:left}
+  .x2-app{display:flex;align-items:center;gap:14px;padding:14px;border-radius:18px;background:#161617;box-shadow:inset 0 0 0 1px rgba(255,255,255,.1);transition:transform .35s var(--ease),box-shadow .35s var(--ease)}
+  .x2-app:hover{transform:translateY(-3px);box-shadow:inset 0 0 0 1px rgba(255,255,255,.22)}
+  .x2-app img{width:56px;height:56px;border-radius:14px;flex:none;object-fit:cover}
+  .x2-app span{font-size:13px;color:#a1a1a6;line-height:1.45}
+  .x2-app b{display:block;font-size:16px;font-weight:700;color:#f5f5f7;margin-bottom:2px}
+  .sec.x2 .chips{margin-top:28px}
+  .note-s{max-width:640px;margin:30px auto 0;font-size:15px;color:var(--ink3)}
+  /* 初代だけのアプリ（リンクなし） */
+  div.tile:hover{transform:none;box-shadow:none}
+  .allapps span{display:flex;align-items:center;gap:7px;padding:6px 12px 6px 6px;border-radius:99px;background:#fff;box-shadow:inset 0 0 0 1px var(--line);font-size:13px;font-weight:600;color:var(--ink2)}
+  .allapps span img{width:24px;height:24px;border-radius:7px;object-fit:cover}
+  @media (max-width:420px){ .x2-chars{gap:8px} .x2-ch{padding:16px 6px 14px} }
+</style>
+</head>
+<body>
+
+<header class="gn" id="gn">
+  <div class="in">
+    <a class="logo" href="#top" aria-label="NGX トップへ"><b>NGX</b><i>Creating the Future</i></a>
+    <nav aria-label="サイト内">
+      <a href="#xevarion2">XEVARION II</a>
+      <a href="#products">プロダクト</a>
+      <a href="#news">ニュース</a>
+      <a href="#history">歩み</a>
+      <a href="#partners">パートナー</a>
+      <a href="#company">会社概要</a>
+    </nav>
+    <a class="cta" href="../../index.html">XEVARION II を開く</a>
+    <button class="burger" id="burger" aria-label="メニュー" aria-expanded="false"><span></span><span></span></button>
+  </div>
+</header>
+<div class="menu" id="menu">
+  <a href="#xevarion2">XEVARION II</a>
+  <a href="#products">プロダクト</a>
+  <a href="#news">ニュース</a>
+  <a href="#history">歩み</a>
+  <a href="#partners">パートナー</a>
+  <a href="#company">会社概要</a>
+  <a class="small" href="../../index.html">XEVARION II を開く ›</a>
+</div>
+
+<main id="top">
+
+  <!-- ヒーロー -->
+  <section class="hero">
+    <div class="glow" aria-hidden="true"></div>
+    <div class="wrap" style="position:relative">
+      <span class="eyebrow rv">N G X</span>
+      <h1 class="h1 rv d1"><span>すべての体験から、</span><span class="gtext">未来をつくる。</span></h1>
+      <p class="lead rv d2">Creating the Future Through Every Experience.<br>学びとエンターテインメントを、ひとつのアカウントで。</p>
+      <div class="ctas rv d3">
+        <a class="btn" href="../../index.html">XEVARION II をはじめる</a>
+        <a class="more" href="#xevarion2">XEVARION II を見る</a>
+      </div>
+    </div>
+    <div class="stage rv d2" aria-hidden="true">
+      <div class="phone l"><div class="notch"></div><div class="scr"><img src="../../assets/chara/yuzuha/banner-470.webp" alt="" loading="lazy"></div></div>
+      <div class="phone c"><div class="notch"></div><div class="scr"><img src="../../assets/chara/miduki/banner-470.webp" alt=""></div></div>
+      <div class="phone r"><div class="notch"></div><div class="scr"><img src="../../assets/chara/minase/banner-470.webp" alt="" loading="lazy"></div></div>
+    </div>
+  </section>
+
+  <!-- XEVARION II（2026-11-24・主役） -->
+  <section class="sec dk x2" id="xevarion2">
+    <div class="wrap">
+      <img class="x2-logo rv" src="../../assets/brand/logo-640.webp" alt="XEVARION II">
+      <span class="eyebrow rv">NEW ・ 2026.11</span>
+      <h2 class="h2 rv d1">XEVARION、<span class="gtext">つぎの章へ。</span></h2>
+      <p class="lead rv d2">XEVARION を1からつくり直した、新しいポータル。NGX と ISHIDA Production の2社でお届けします。ひとつのアカウントで、ゲームと学びのアプリがつながります。</p>
+      <div class="x2-chars">
+        <div class="x2-ch rv" style="--c:#ff5b4a"><img src="../../assets/chara/yuzuha/face-256.webp" alt="" loading="lazy"><b>柚葉</b><small>FLARE</small></div>
+        <div class="x2-ch rv d1" style="--c:#2e9bff"><img src="../../assets/chara/minase/face-256.webp" alt="" loading="lazy"><b>水瀬</b><small>TIDE</small></div>
+        <div class="x2-ch rv d2" style="--c:#25b871"><img src="../../assets/chara/miduki/face-256.webp" alt="" loading="lazy"><b>美月</b><small>TERRA</small></div>
+      </div>
+      <p class="x2-sub rv">はじめての10連で、3人のうち1人があなたのパートナーに。</p>
+      <div class="stats">
+        <div class="stat rv"><b><span class="count" data-to="7">7</span></b><span>アプリ</span></div>
+        <div class="stat rv d1"><b><span class="count" data-to="3">3</span></b><span>キャラクター</span></div>
+        <div class="stat rv d2"><b><span class="count" data-to="1569">1,569</span></b><span>化学の問題（MagiLex）</span></div>
+        <div class="stat rv d3"><b><span class="count" data-to="2">2</span></b><span>社で運営・製作</span></div>
+      </div>
+      <div class="x2-apps">
+        <a class="x2-app rv" href="../../index.html#/app/lex"><img src="../../assets/apps/lex-192.webp" alt="" loading="lazy"><span><b>MagiLex</b>化学の問題集</span></a>
+        <a class="x2-app rv d1" href="../../index.html#/app/quiz"><img src="../../assets/apps/quiz-192.webp" alt="" loading="lazy"><span><b>MagiQuiz</b>見えない爆弾・早押しバトルほか</span></a>
+        <a class="x2-app rv d2" href="../../index.html#/app/derby"><img src="../../assets/apps/derby-192.webp" alt="" loading="lazy"><span><b>MagiDerby</b>実際の GⅠ を XEVA で予想</span></a>
+        <a class="x2-app rv" href="../../index.html#/app/shift"><img src="../../assets/apps/shift-192.webp" alt="" loading="lazy"><span><b>MagiShift</b>コマを押し出す対戦ボードゲーム</span></a>
+        <a class="x2-app rv d1" href="../../index.html#/app/chain"><img src="../../assets/apps/chain-192.webp" alt="" loading="lazy"><span><b>MagiChainParty</b>2〜5人の連鎖の陣取り</span></a>
+        <a class="x2-app rv d2" href="../../index.html#/app/gura"><img src="../../assets/apps/gura-192.webp" alt="" loading="lazy"><span><b>MagiGuraPlate</b>1台を囲むパーティーゲーム</span></a>
+        <a class="x2-app rv" href="../../index.html#/app/yacht"><img src="../../assets/apps/yacht-192.webp" alt="" loading="lazy"><span><b>MagiYacht</b>サイコロで役をそろえる</span></a>
+      </div>
+      <div class="chips rv"><span>ID と合言葉だけではじめられる</span><span>記録は端末どうしで同期</span><span>多くのアプリはオフラインでも</span><span>インストールなし・ブラウザだけ</span></div>
+      <div class="ctas rv"><a class="btn" href="../../index.html">XEVARION II をはじめる</a></div>
+    </div>
+  </section>
+
+  <!-- XEVARION -->
+  <section class="sec" id="xevarion">
+    <div class="wrap">
+      <span class="eyebrow rv">XEVARION（初代）</span>
+      <h2 class="h2 rv d1">ひとつのアカウントで、<br>すべてがつながる。</h2>
+      <p class="lead rv d2">統合ポータル XEVARION は、ゲーム・学び・情報のアプリをひとつにまとめたプラットフォームです。共通の通貨 XEVA とジェム、ガチャ、ミッション、ランキングでアプリどうしがつながり、記録はどの端末でも同期されます。</p>
+      <div class="stats">
+        <div class="stat rv"><b><span class="count" data-to="27">27</span></b><span>アプリ</span></div>
+        <div class="stat rv d1"><b><span class="count" data-to="287">287</span></b><span>キャラクター</span></div>
+        <div class="stat rv d2"><b><span class="count" data-to="1500">1,500</span>+</b><span>化学の問題（MagiChemLex）</span></div>
+        <div class="stat rv d3"><b><span class="count" data-to="4">4</span></b><span>社で運営・制作</span></div>
+      </div>
+      <p class="note-s rv">ここからは、初代 XEVARION のこれまでの作品と歩みです。</p>
+    </div>
+  </section>
+
+  <!-- プロダクト -->
+  <section class="sec g" id="products">
+    <div class="wrap">
+      <span class="eyebrow rv">PRODUCTS</span>
+      <h2 class="h2 rv d1">あそぶ。まなぶ。つながる。</h2>
+      <p class="lead rv d2">初代 XEVARION でお届けしてきたアプリ。XEVARION II にあるものは、押すと II で開きます。</p>
+      <div class="tiles">
+        <div class="tile wide dark rv">
+          <img class="ic" src="../../assets/sites/apps/xevarion-192.webp" alt="">
+          <div>
+            <small>統合ポータル</small>
+            <h3>XEVARION</h3>
+            <p>アプリ・ガチャ・図鑑・ミッション・ショップが1つに。毎月のビンゴ、全ガチャ共通の天井（★星煌印）、動く立ち絵のロビーとパートナー。</p>
+          </div>
+        </div>
+        <div class="tile rv">
+          <img class="ic" src="../../assets/sites/apps/magiburst-192.webp" alt="" loading="lazy">
+          <small>引っぱりハンティング</small><h3>MagiBurst</h3>
+          <p>引っぱって放つだけの爽快アクション。フルバースト・リンクスキル・5体編成、マルチプレイにも。</p>
+        </div>
+        <div class="tile rv d1">
+          <img class="ic" src="../../assets/sites/apps/magiabyss-192.webp" alt="" loading="lazy">
+          <small>見下ろし型ドットアクション RPG</small><h3>MagiAbyss</h3>
+          <p>2.5D の迷宮でたくさんの敵をなぎ払う。武器と魔法を組み合わせるビルド、外伝クエストとストーリー。</p>
+        </div>
+        <a class="tile rv" href="../../index.html#/app/lex">
+          <img class="ic" src="../../assets/sites/apps/magichemlex-192.webp" alt="" loading="lazy">
+          <small>化学の問題集</small><h3>MagiChemLex</h3>
+          <p>基礎から難関まで、1,500問をこえる化学の問題。忘れるころに出し直す復習、模試の冊子、フラッシュカード、毎月のビンゴ。</p>
+          <span class="more">XEVARION II で開く</span>
+        </a>
+        <a class="tile rv d1" href="../../index.html#/app/derby">
+          <img class="ic" src="../../assets/apps/derby-192.webp" alt="" loading="lazy">
+          <small>競馬 GⅠ</small><h3>MagiDerby</h3>
+          <p>実際の JRA 平地 GⅠ に XEVA で。出馬表・オッズ・結果・払戻金はすべて本物、払い戻しは実際の払戻金どおり。</p>
+          <span class="more">XEVARION II で開く</span>
+        </a>
+        <a class="tile rv" href="../../index.html#/app/quiz">
+          <img class="ic" src="../../assets/apps/quiz-192.webp" alt="" loading="lazy">
+          <small>化学クイズ対戦</small><h3>MagiQuiz</h3>
+          <p>1台を囲んで、見えない爆弾・早押しバトル・クイズタワー・スコアアタック。図つきの問題、メモと電卓、答えたあとは時間を止めて解説。</p>
+          <span class="more">XEVARION II で開く</span>
+        </a>
+        <a class="tile rv d1" href="../../index.html#/app/shift">
+          <img class="ic" src="../../assets/apps/shift-192.webp" alt="" loading="lazy">
+          <small>対戦ボードゲーム</small><h3>MagiShift</h3>
+          <p>置いた駒をあとから動かせる、最後まで逆転のある並べ合い。2〜8人・CPU つき・押す／ブロックのタクティクス。</p>
+          <span class="more">XEVARION II で開く</span>
+        </a>
+        <div class="tile rv">
+          <img class="ic" src="../../assets/sites/apps/magiscope-192.webp" alt="" loading="lazy">
+          <small>エンタメランキング</small><h3>MagiScope</h3>
+          <p>アニメ・同人・カラオケの実際のランキングを、1時間ごとに自動で。順位の推移やお気に入りも。</p>
+        </div>
+        <a class="tile rv d1" href="../../index.html#/app/chain">
+          <img class="ic" src="../../assets/apps/chain-192.webp" alt="" loading="lazy">
+          <small>連鎖陣取り</small><h3>MagiChainParty</h3>
+          <p>マスをタップするだけ、運の要素ゼロの頭脳戦。2〜6人・CPU・部屋番号でオンライン対戦。</p>
+          <span class="more">XEVARION II で開く</span>
+        </a>
+        <div class="tile wide rv">
+          <img class="ic" src="../../assets/sites/apps/ordyxis-192.webp" alt="" loading="lazy">
+          <div>
+            <small>店舗 DX</small>
+            <h3>ORDYXIS</h3>
+            <p>お客様の端末から注文し、店舗で受付・番号でお呼び出しする店頭オンラインオーダーシステム。Magical Future 社と共同で開発し、ISHIDA Production が製作パートナーを務めています。</p>
+          </div>
+        </div>
+      </div>
+      <div class="allapps rv" aria-label="そのほかのアプリ">
+        <span><img src="../../assets/sites/apps/xevynar-192.webp" alt="" loading="lazy">XEVYNAR</span>
+        <a href="../../index.html#/app/lex"><img src="../../assets/apps/lex-96.webp" alt="" loading="lazy">MagiLex</a>
+        <span><img src="../../assets/sites/apps/magibattle-192.webp" alt="" loading="lazy">MagiBattle</span>
+        <span><img src="../../assets/sites/apps/magibocciarush-192.webp" alt="" loading="lazy">MagiBocciaRush</span>
+        <span><img src="../../assets/sites/apps/magidominiongrid-192.webp" alt="" loading="lazy">Dominion Grid</span>
+        <span><img src="../../assets/sites/apps/magilink-192.webp" alt="" loading="lazy">MagiLink</span>
+        <span><img src="../../assets/sites/apps/magirail-192.webp" alt="" loading="lazy">MagiRail</span>
+        <span><img src="../../assets/sites/apps/magijackpot-192.webp" alt="" loading="lazy">MagiJackpot</span>
+        <span><img src="../../assets/sites/apps/magilotto-192.webp" alt="" loading="lazy">Magi Lotto</span>
+        <span><img src="../../assets/sites/apps/magifocus-192.webp" alt="" loading="lazy">MagiFocus</span>
+        <span><img src="../../assets/sites/apps/magitier-192.webp" alt="" loading="lazy">MagiTier</span>
+        <span><img src="../../assets/sites/apps/magicounter-192.webp" alt="" loading="lazy">MagiCounter</span>
+        <span><img src="../../assets/sites/apps/magiranking-192.webp" alt="" loading="lazy">MagiRanking</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ニュース -->
+  <section class="sec" id="news">
+    <div class="wrap">
+      <span class="eyebrow rv">NEWS</span>
+      <h2 class="h2 rv d1">最新情報</h2>
+      <div class="news">
+        <article class="nw rv"><time datetime="2026-11-24">2026.11.24</time><h4><em>NEW</em>XEVARION II に MagiDerby・NGX と ISHIDA Production の公式サイト</h4><p>実際の JRA 平地 GⅠ に XEVA で賭ける MagiDerby を XEVARION II に。ホームとアプリの一覧には「発売中・締切間近・結果」の札が出ます。これで7本のアプリがそろいました。</p></article>
+        <article class="nw rv"><time datetime="2026-11-23">2026.11.23</time><h4><em>NEW</em>XEVARION II（β版）を公開</h4><p>XEVARION を1からつくり直した新しいポータル。柚葉・水瀬・美月の3人と、MagiYacht・MagiGuraPlate・MagiShift・MagiChainParty・MagiQuiz・MagiLex を順に公開しました。</p></article>
+        <article class="nw rv"><time datetime="2026-11-02">2026.11.02</time><h4><em>NEW</em>Kawagani・STUDIO DOGA が XEVARION の運営協力に参入</h4><p>起動の画面の企業ロゴは、NGX・Magical Future・ISHIDA Production・YRA・Kawagani・STUDIO DOGA の6社を縦3×横2で表示します。NGX のロゴも新しくなりました。</p></article>
+        <article class="nw rv"><time datetime="2026-10-30">2026.10.30</time><h4><em>NEW</em>新しいガチャ「超極彩祭」（UR ハル・チカ）を発表</h4><p>毎月 1〜10日に開催（初回は 11月1日）。2体とも完凸でホームのロビーに設定でき、MagiAbyss では UR の最上位の強さです。</p></article>
+        <article class="nw rv"><time datetime="2026-10-30">2026.10.30</time><h4><em>NEW</em>XEVA ミッションに「毎月のビンゴ」・天井の★星煌印を全ガチャ共通に</h4><p>毎月1日に新しいカード。★星煌印はどのガチャでもたまり、ショップの「★星煌印 交換所」で好きなガチャの好きなキャラと交換できます。タイトル画面も新しくなりました。</p></article>
+        <article class="nw rv"><time datetime="2026-10-28">2026.10.28</time><h4><em>NEW</em>YRA が XEVARION の運営協力に参入</h4><p>起動の画面は NGX・Magical Future・ISHIDA Production・YRA の4社のロゴに。あわせて MagiAbyss の画面と冒険の地図を作り直し、MagiChemLex にビンゴカードを追加しました。</p></article>
+        <article class="nw rv"><time datetime="2026-10-27">2026.10.27</time><h4><em class="up">UPDATE</em>MagiAbyss に外伝クエスト6つ・ストーリーを増量</h4><p>海の上の裂け目から行ける外伝クエスト、章ごとの物語、中ボス戦の演出を追加しました。</p></article>
+        <article class="nw rv"><time datetime="2026-10-24">2026.10.24</time><h4><em class="up">UPDATE</em>レベル・スタミナの廃止と、同期のしくみの作り直し</h4><p>XEVA とジェムの同期を端末ごとの増減を足し合わせる方式に。MagiLex と MagiChemLex の入口をひとつにし、デベロッパーノートを始めました。</p></article>
+        <article class="nw rv"><time datetime="2026-10-23">2026.10.23</time><h4><em>NEW</em>新作「MagiQuiz」（化学クイズ対戦）</h4><p>1台の iPad を囲んで遊ぶ、ミリオネアとばくだんの2つの遊び方。</p></article>
+        <article class="nw rv"><time datetime="2026-10-21">2026.10.21</time><h4><em>NEW</em>新作「MagiDerby」（競馬 GⅠ）</h4><p>実際の JRA 平地 GⅠ に XEVA で賭ける競馬アプリ。データはすべて本物を自動で取得しています。</p></article>
+        <article class="nw rv"><time datetime="2026-10-06">2026.10.06</time><h4><em>NEW</em>新作「MagiChemLex」・10.05 新作「MagiAbyss」</h4><p>化学の問題集と、見下ろし型のドットアクション RPG を公開しました。</p></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- 歩み -->
+  <section class="sec dk" id="history">
+    <div class="wrap">
+      <span class="eyebrow rv">HISTORY</span>
+      <h2 class="h2 rv d1">NGX の歩み</h2>
+      <div class="tl">
+        <div class="rv"><b>2021.11</b><div><h4>NGX 設立</h4><p>地域の街づくりプロジェクトの総括として活動を開始。コミュニティの成長支援からスタートしました。</p></div></div>
+        <div class="rv"><b>2025.12</b><div><h4>MeruHub シリーズ公開</h4><p>学習とゲームを融合した、次世代のユーティリティ群。</p></div></div>
+        <div class="rv"><b>2026.02</b><div><h4>Magical Future 社と提携を強化</h4><p>技術提携を深め、AI × 教育 × エンターテインメントの共同開発を加速。</p></div></div>
+        <div class="rv"><b>2026.04</b><div><h4>MagiOne シリーズ公開</h4><p>魔法のような体験のコミュニケーション＆ゲーム群。</p></div></div>
+        <div class="rv"><b>2026.06</b><div><h4>統合ポータル XEVARION を刷新</h4><p>ひとつのアカウントで全アプリがつながる統合ポータルへ。</p></div></div>
+        <div class="rv"><b>2026.07</b><div><h4>パブリック版「XEVARIX」公開</h4><p>MagiLex・MagiBurst をだれでも楽しめるパブリック版ポータル。</p></div></div>
+        <div class="rv"><b>2026.08</b><div><h4>ガチャを XEVARION に統合</h4><p>キャラクターとガチャを XEVARION 共通に。図鑑・コレクション・ショップを整え、オフラインでも動く形に。</p></div></div>
+        <div class="rv"><b>2026.09</b><div><h4>新作ラッシュ</h4><p>Magi Dominion Grid・MagiCounter・MagiBocciaRush・MagiRail・MagiScope・MagiShift を公開。ホームは動く立ち絵のロビーに。</p></div></div>
+        <div class="rv"><b>2026.10</b><div><h4>MagiAbyss・MagiChemLex・MagiDerby・MagiQuiz、そして4社体制へ</h4><p>4本の新作を公開し、YRA が運営協力に参入。NGX・Magical Future・ISHIDA Production・YRA の4社で XEVARION をお届けします。</p></div></div>
+        <div class="rv"><b>2026.11</b><div><h4>6社体制へ・NGX の新しいロゴ</h4><p>Kawagani と STUDIO DOGA が運営協力に参入。6社で XEVARION をお届けします。</p></div></div>
+        <div class="rv now"><b>2026.11</b><div><h4>XEVARION II を公開</h4><p>XEVARION を1からつくり直し、ISHIDA Production との2社で。柚葉・水瀬・美月の3人と7本のアプリから始まります。</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- パートナー -->
+  <section class="sec g" id="partners">
+    <div class="wrap">
+      <span class="eyebrow rv">PARTNERS</span>
+      <h2 class="h2 rv d1">ともに、つくる。</h2>
+      <p class="lead rv d2">初代 XEVARION は6つの会社で運営・制作しました。XEVARION II は NGX と ISHIDA Production の2社でお届けします。</p>
+      <div class="pts">
+        <div class="pt rv">
+          <div class="lg"><img src="../../assets/sites/brand/magicalfuture-540.webp" alt="Magical Future" loading="lazy"></div>
+          <small>技術提携</small><h3>Magical Future</h3>
+          <p>AI × 教育 × エンターテインメントの次世代プロダクトを共同開発。ORDYXIS・MeruHub シリーズの提携パートナーです。</p>
+        </div>
+        <div class="pt rv d1">
+          <div class="lg"><img src="../../assets/sites/brand/ishida-540.webp" alt="ISHIDA Production" loading="lazy"></div>
+          <small>製作パートナー</small><h3>ISHIDA Production</h3>
+          <p>企画・デザイン・開発・演出をワンチームで手がける制作スタジオ。ORDYXIS と MagiOneX シリーズの製作パートナー。XEVARION II を NGX とともに運営・製作しています。</p>
+          <a class="more" href="../ishida/">公式サイト</a>
+        </div>
+        <div class="pt rv d2">
+          <div class="lg"><img src="../../assets/sites/brand/yra-540.webp" alt="YRA" loading="lazy"></div>
+          <small>運営協力</small><h3>YRA</h3>
+          <p>2026年10月に XEVARION の運営協力に参入。起動の画面の企業ロゴにも加わりました。</p>
+        </div>
+        <div class="pt rv">
+          <div class="lg"><img src="../../assets/sites/brand/kawagani-540.webp" alt="Kawagani" loading="lazy"></div>
+          <small>運営協力</small><h3>Kawagani</h3>
+          <p>2026年11月に XEVARION の運営協力に参入。起動の画面の企業ロゴにも加わりました。</p>
+        </div>
+        <div class="pt rv d1">
+          <div class="lg"><img src="../../assets/sites/brand/studiodoga-540.webp" alt="STUDIO DOGA" loading="lazy"></div>
+          <small>運営協力</small><h3>STUDIO DOGA</h3>
+          <p>2026年11月に XEVARION の運営協力に参入。起動の画面の企業ロゴにも加わりました。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 会社概要 -->
+  <section class="sec" id="company">
+    <div class="wrap">
+      <span class="eyebrow rv">COMPANY</span>
+      <h2 class="h2 rv d1">会社概要</h2>
+      <dl class="co rv d2">
+        <div><dt>名称</dt><dd>NGX</dd></div>
+        <div><dt>活動開始</dt><dd>2021年11月</dd></div>
+        <div><dt>事業内容</dt><dd>学習・エンターテインメント・コミュニケーションアプリの開発と運営、店舗 DX ソリューション</dd></div>
+        <div><dt>主なサービス</dt><dd>XEVARION II ／ 統合ポータル XEVARION（初代）／ パブリック版 XEVARIX</dd></div>
+        <div><dt>パートナー</dt><dd>ISHIDA Production（製作パートナー・XEVARION II をともに運営）・Magical Future（技術提携）・YRA（運営協力）</dd></div>
+        <div><dt>お問い合わせ</dt><dd>XEVARION ポータルおよび各アプリ内のサポートより受け付けています</dd></div>
+      </dl>
+      <div class="ctas rv"><a class="btn" href="../../index.html">XEVARION II をはじめる</a></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+    <div class="wrap">
+      <p class="note">XEVARION II のアプリはブラウザで動きます。ホーム画面に追加すると、多くのアプリをオフラインでも利用できます。記録はアカウントで同期されます。</p>
+      <div class="fcols">
+        <div><h5>XEVARION II</h5><a href="../../index.html#/home">ホーム</a><a href="../../index.html#/apps">アプリ</a><a href="../../index.html#/gacha">ガチャ</a><a href="../../index.html#/chara">キャラ</a></div>
+        <div><h5>あそぶ</h5><a href="../../index.html#/app/derby">MagiDerby</a><a href="../../index.html#/app/shift">MagiShift</a><a href="../../index.html#/app/chain">MagiChainParty</a><a href="../../index.html#/app/gura">MagiGuraPlate</a><a href="../../index.html#/app/yacht">MagiYacht</a></div>
+        <div><h5>まなぶ</h5><a href="../../index.html#/app/lex">MagiLex</a><a href="../../index.html#/app/quiz">MagiQuiz</a></div>
+        <div><h5>NGX について</h5><a href="#news">ニュース</a><a href="#history">歩み</a><a href="#partners">パートナー</a><a href="#company">会社概要</a><a href="../ishida/">ISHIDA Production</a></div>
+      </div>
+      <div class="fbot"><span>© 2021–2026 NGX. All rights reserved.</span><span>XEVARION II — NGX × ISHIDA Production</span></div>
+    </div>
+  </footer>
+
+<script>
+(function () {
+  "use strict";
+  /* メニュー（せまい画面） */
+  var gn = document.getElementById("gn"), bt = document.getElementById("burger"), mn = document.getElementById("menu");
+  function setOpen(on) { gn.classList.toggle("open", on); bt.setAttribute("aria-expanded", on ? "true" : "false"); document.body.style.overflow = on ? "hidden" : ""; }
+  bt.addEventListener("click", function () { setOpen(!gn.classList.contains("open")); });
+  mn.addEventListener("click", function (e) { if (e.target.tagName === "A") setOpen(false); });
+  /* スクロールで現れる */
+  var els = document.querySelectorAll(".rv");
+  if ("IntersectionObserver" in window) {
+    var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }); }, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
+    els.forEach(function (el) { io.observe(el); });
+  } else { els.forEach(function (el) { el.classList.add("in"); }); }
+  /* 数字のカウントアップ（見えたときに1回） */
+  var reduce = false; try { reduce = matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
+  var cs = document.querySelectorAll(".count");
+  if (!reduce && "IntersectionObserver" in window) {
+    var cio = new IntersectionObserver(function (es) { es.forEach(function (e) {
+      if (!e.isIntersecting) return; cio.unobserve(e.target);
+      var to = +e.target.getAttribute("data-to"), t0 = performance.now(), dur = 1300;
+      (function step(t) { var p = Math.min(1, (t - t0) / dur); e.target.textContent = Math.round(to * (1 - Math.pow(1 - p, 3))).toLocaleString(); if (p < 1) requestAnimationFrame(step); })(t0);
+    }); }, { threshold: 0.6 });
+    cs.forEach(function (el) { el.textContent = "0"; cio.observe(el); });
+  }
+})();
+</script>
+</body>
+</html>

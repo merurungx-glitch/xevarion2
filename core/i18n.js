@@ -46,7 +46,7 @@ const ja = {
   'home.news': 'GRAND DEBUT GACHA 開催中！',
   'home.noPartner': 'ガチャでパートナーを迎えよう',
 
-  'apps.title': 'APPS', 'apps.games': 'アプリ', 'apps.sitesTitle': '公式サイト', 'apps.soon': '準備中', 'apps.play': 'あそぶ',
+  'apps.title': 'APPS', 'apps.games': 'アプリ', 'apps.sitesTitle': '公式サイト', 'apps.soon': '準備中', 'apps.play': 'あそぶ', 'apps.site': 'ひらく ↗',
   'party.got': '賞金 +{n} XEVA が届きました（{apps}）',
   'upd.title': '新しい版があります', 'upd.body': '更新すると、最新の XEVARION II になります（数秒で終わります）。',
   'upd.go': '更新する', 'upd.later': 'あとで',
