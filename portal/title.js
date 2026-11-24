@@ -1,84 +1,85 @@
-// XEVARION II — タイトル（第3回で決定：B　1人ずつ主役）
-// まん中に1人を大きく・7秒ごとに次の子へ（属性の色の光も変わる）・名前を左下に
-// ★ 画面が見えていないときは次の子へ進めない。省電力・「演出を短く」では切りかえを短く・ロゴの光なし
+// XEVARION II — タイトル（2026-11-24 第6回で決定：T1 ひかりの中から）
+// ・いただいた絵（art/title/title-miduki.webp・ロゴ入り）をそのまま使う。ロゴは絵の中にあるので、ロゴを別に動かさない
+//   （前の「輪がロゴになる」動きは、描く輪とロゴの絵の形が合っておらずズレて見えた）
+// ・iPhone など縦長：絵を横いっぱい（白い飾り枠もロゴも切れない）・上（時計のところ）は空の色・下の帯に TAP TO START
+//   iPad 縦：絵をまん中に・左右は同じ絵をぼかしたもの／PC・iPad 横：絵をまん中に大きく・左右はぼかした絵・TAP は右下
+//   （ぼかしは tools/build_assets.py で先に絵にしてある＝画面で計算しない）
+// ・演出：白い光から絵がふわっと出て少しだけ引く → ロゴに光が1回走る → 花びらが少し舞う（約2.5秒）。タップでとばせる
+//   省電力・「演出を短く」では短い版（ふわっと出るだけ）
 import { t } from '../core/i18n.js';
 import { VERSION } from '../core/config.js';
 import * as account from '../core/account.js';
 import * as router from '../core/router.js';
+import * as viewport from '../core/viewport.js';
 import { firstTenDone } from '../core/gacha.js';
-import { CHARS, ELEMENTS, art, partner } from '../core/chara.js';
-import { anim, orbitSVG, shineHTML, sweep, short } from '../ui/fx.js';
-import { esc } from '../ui/dom.js';
+import { short } from '../ui/fx.js';
 import { showLoading } from '../ui/loading.js';
 import { playIntro, introPlayed } from './intro.js';
 
-const EL_COLOR = { flare: '#ff5b4a', tide: '#2e9bff', terra: '#25b871', nova: '#f0a91c', void: '#8e5cff' };
-const CYCLE = 7000;
+const PIC = 'assets/title/miduki-940.webp';
+const RATIO = 1672 / 940;   // 絵の 縦 ÷ 横
+const PETALS = [[12, 0], [30, 1.4], [52, 2.6], [70, 0.7], [88, 3.6], [42, 4.6], [62, 5.6]];
 
 export async function mount(el, { go }) {
   el.classList.add('tt');
   el.innerHTML = `
-    <div class="tt-stars x-fx"></div>
-    <div class="tt-glow"></div>
-    <div class="tt-orbit x-fx">${orbitSVG({ w: 780, stroke: 1.2 })}</div>
-    <div class="tt-stage"></div>
-    <div class="tt-fade"></div>
-    <div class="tt-logo">${shineHTML('assets/brand/logo-640.webp', 'XEVARION II')}</div>
-    <div class="tt-name"></div>
-    <div class="tt-wait"><div class="x-spin"></div>${t('title.loading')}</div>
-    <div class="tt-tap" hidden>${t('title.tap')}</div>
-    <div class="tt-cred">${t('title.credit')}<br>VER ${VERSION}</div>`;
+    <div class="tt-bg"></div>
+    <div class="tt-card"><img class="tt-pic" src="${PIC}" alt="XEVARION II" decoding="async"><i class="tt-shine"></i></div>
+    <div class="tt-pts x-fx" aria-hidden="true">${PETALS.map(([x, d]) => `<i style="left:${x}%;animation-delay:${d}s"></i>`).join('')}</div>
+    <div class="tt-foot">
+      <div class="tt-wait"><div class="x-spin"></div>${t('title.loading')}</div>
+      <div class="tt-tap" hidden>${t('title.tap')}</div>
+      <div class="tt-cred">${t('title.credit')}<span>VER ${VERSION}</span></div>
+    </div>
+    <div class="tt-white"></div>`;
 
-  const stageEl = el.querySelector('.tt-stage');
-  const nameEl = el.querySelector('.tt-name');
-  const logoEl = el.querySelector('.tt-logo');
+  const card = el.querySelector('.tt-card');
+  const pic = el.querySelector('.tt-pic');
   const wait = el.querySelector('.tt-wait');
   const tap = el.querySelector('.tt-tap');
   let alive = true;
   let busy = false;
-  let idx = Math.floor(Math.random() * CHARS.length);
-  let cycleT = 0;
-  let sweepT = 0;
 
-  function show(first) {
-    const c = CHARS[idx % CHARS.length];
-    el.style.setProperty('--c', EL_COLOR[c.el]);
-    const img = new Image();
-    img.src = art(c.id, 'full-1024');
-    img.alt = c.name;
-    img.decoding = 'async';
-    const olds = [...stageEl.querySelectorAll('img')];
-    stageEl.appendChild(img);
-    if (first || short()) {
-      olds.forEach((o) => o.remove());
-      anim(img, [{ opacity: 0, transform: 'translateY(20px)' }, { opacity: 1, transform: 'none' }], { d: short() ? 150 : 650 });
+  /** 絵の大きさと置き場所：縦長＝横いっぱい（下に帯を残す）／横長＝高さいっぱいでまん中 */
+  function layout() {
+    const W = el.clientWidth, H = el.clientHeight;
+    if (!W || !H) return;
+    const ins = viewport.insets();
+    const st = ins.t || 0, sb = ins.b || 0;
+    const wide = W / H > 0.8;
+    let w, h, top;
+    if (!wide) {
+      const band = 84;                                  // 下の帯（TAP TO START と運営の名前）
+      w = Math.min(W, (H - st - sb - band) / RATIO);
+      h = w * RATIO;
+      top = st;
     } else {
-      anim(img, [{ opacity: 0, transform: 'translateX(24px)' }, { opacity: 1, transform: 'none' }], { d: 700 });
-      olds.forEach((o) => anim(o, [{ opacity: 1 }, { opacity: 0, transform: 'translateX(-24px)' }], { d: 600 }).then(() => o.remove()));
+      const pad = Math.max(16, Math.round(H * 0.035));
+      h = H - st - sb - pad * 2;
+      w = h / RATIO;
+      top = st + pad;
     }
-    nameEl.innerHTML = `<small>${c.en}</small><b>${esc(c.name)}</b><span>${ELEMENTS[c.el].en}</span>`;
-    anim(nameEl, [{ opacity: 0, transform: 'translateX(-12px)' }, { opacity: 1, transform: 'none' }], { d: short() ? 120 : 500 });
+    el.classList.toggle('wide', wide);
+    card.style.cssText = `width:${Math.round(w)}px;height:${Math.round(h)}px;top:${Math.round(top)}px;left:${Math.round((W - w) / 2)}px`;
   }
+  layout();
+  const offVp = viewport.onChange(layout);
+  addEventListener('resize', layout);
 
-  // アプリを開いたときだけ、先に起動ロゴ
+  // アプリを開いたときだけ、先に起動ロゴ（NGX → ISHIDA Production → 白い光 → この画面の白から絵へ）
   if (!introPlayed()) await playIntro();
   if (!alive) return;
-
-  const p = account.current() && partner();
-  if (p) idx = CHARS.findIndex((c) => c.id === p.id);
-  show(true);
-  anim(logoEl, [{ opacity: 0, scale: 1.05 }, { opacity: 1, scale: 1 }], { d: short() ? 150 : 650 });
-  cycleT = setInterval(() => { if (!document.hidden) { idx++; show(false); } }, CYCLE);
-  const loopSweep = () => {
-    if (!alive) return;
-    if (!short() && !document.hidden) sweep(logoEl);
-    sweepT = setTimeout(loopSweep, 5000);
-  };
-  sweepT = setTimeout(loopSweep, 1400);
+  // 絵が読めてから始める（白から出るので、途中で絵が抜けて見えないように）。遅いときも 1.5 秒で始める
+  await Promise.race([pic.decode().catch(() => {}), new Promise((r) => setTimeout(r, 1500))]);
+  if (!alive) return;
+  el.classList.add(short() ? 'go-short' : 'go');
+  const t0 = performance.now();
 
   account.whenReady().then(() => {
     if (!alive) return;
     wait.hidden = true;
+    // TAP TO START は絵が出きったころ（1.9秒）に出す。準備がそれより遅ければ、すぐ出す
+    tap.style.setProperty('--td', Math.max(0, 1.9 - (performance.now() - t0) / 1000).toFixed(2) + 's');
     tap.hidden = false;
     if (!window.__x2ready) window.__x2ready = performance.now(); // 起動の読み込み量をはかる区切り
   });
@@ -96,7 +97,7 @@ export async function mount(el, { go }) {
 
   return () => {
     alive = false;
-    clearInterval(cycleT);
-    clearTimeout(sweepT);
+    offVp();
+    removeEventListener('resize', layout);
   };
 }

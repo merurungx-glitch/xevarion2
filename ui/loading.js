@@ -1,4 +1,4 @@
-// XEVARION II — ロード画面（第3回で決定：C　全身＋ヒント）
+// XEVARION II — ロード画面（第3回で決定：C　全身＋ヒント・★ 第6回の刷新で明るい地に＝fx.css の .fx-load）
 // ・delay（既定 300ms）より早く終われば出さない（ちらつかせない）
 // ・set(0〜1) を呼ぶと進みぐあいの線、呼ばなければ流れる線
 import { t } from '../core/i18n.js';
@@ -17,7 +17,7 @@ export function showLoading({ delay = 300 } = {}) {
     el = document.createElement('div');
     el.className = 'fx-load';
     el.setAttribute('role', 'status');
-    el.innerHTML = `<div class="p-stars"></div><img class="ch" src="${art(c.id, 'full-1024')}" alt="" decoding="async">
+    el.innerHTML = `<img class="ch" src="${art(c.id, 'full-1024')}" alt="" decoding="async">
       <div class="tip"><b>TIPS</b>${t(pick(TIPS))}</div><div class="bar ind"><i></i></div>`;
     bar = el.querySelector('.bar');
     document.body.appendChild(el);

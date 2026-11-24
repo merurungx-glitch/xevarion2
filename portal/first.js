@@ -6,6 +6,7 @@ import { toast } from '../ui/toast.js';
 import { esc } from '../ui/dom.js';
 import { earnCard } from '../ui/earn.js';
 import { showResult } from './gacha-result.js';
+import { decoHTML } from './shell.js';
 
 export async function mount(el, { go }) {
   el.classList.add('fs');
@@ -13,7 +14,7 @@ export async function mount(el, { go }) {
   gacha.grantWelcome(); // 受け取っていなければ（1回だけ）
 
   el.innerHTML = `
-    <div class="p-stars"></div>
+    ${decoHTML()}
     <div class="fs-in x-scroll">
       <div class="fs-kick">${t('first.kick')}</div>
       <h1>${t('first.title')}</h1>
@@ -48,7 +49,7 @@ export async function mount(el, { go }) {
     await showResult(res);
     const p = partner();
     el.innerHTML = `
-      <div class="p-stars"></div>
+      ${decoHTML()}
       <div class="fs-in">
         <div class="fs-kick">PARTNER</div>
         <h1>${esc(t('first.partner', { name: p ? p.name : '' }))}</h1>

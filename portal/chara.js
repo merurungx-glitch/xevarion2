@@ -4,6 +4,7 @@ import * as chara from '../core/chara.js';
 import { ico } from '../ui/icons.js';
 import { esc, bindActs } from '../ui/dom.js';
 import { toast } from '../ui/toast.js';
+import { headHTML, decoHTML } from './shell.js';
 
 const pips = (n) => `<span class="x-pips">${[1, 2, 3, 4].map((i) => `<i class="${i <= n ? 'on' : ''}"></i>`).join('')}</span>`;
 const elChip = (c) => `<span class="x-chip x-el ${c.el}">${ico(c.el)}${chara.ELEMENTS[c.el].en}</span>`;
@@ -14,7 +15,7 @@ export async function mount(el, { params, go }) {
 }
 
 function list(el, go) {
-  el.innerHTML = `<header class="x-head"><h1>${t('chara.title')}</h1></header><div class="p-body x-scroll"><div class="ch-list"></div></div>`;
+  el.innerHTML = `${decoHTML()}${headHTML('chara')}<div class="p-body x-scroll"><div class="ch-list"></div></div>`;
   const box = el.querySelector('.ch-list');
   const paint = () => {
     const P = chara.partner();
@@ -22,7 +23,7 @@ function list(el, go) {
       const own = chara.owned(c.id);
       const awk = chara.awk(c.id);
       const state = !own ? t('chara.notOwned') : chara.isMax(c.id) ? t('chara.max') : t('chara.awk', { n: awk });
-      return `<button type="button" class="ch-card ${own ? '' : 'no'}" data-act="open" data-id="${c.id}">
+      return `<button type="button" class="ch-card ${c.el} ${own ? '' : 'no'}" data-act="open" data-id="${c.id}">
         <div class="pic"><img src="${chara.art(c.id, 'full-512')}" alt="" decoding="async"></div>
         <div class="inf"><small>${c.en}</small><b>${esc(c.name)}</b><div>${elChip(c)}</div>
           <div class="row">${own ? pips(awk) : ''}<span class="x-chip">${state}</span>${P && P.id === c.id ? `<span class="ch-badge">${t('chara.partner')}</span>` : ''}</div></div>
@@ -38,7 +39,7 @@ function detail(el, id, go) {
   const c = chara.byId(id);
   el.innerHTML = `
     <button type="button" class="ch-back" data-act="back" aria-label="${t('btn.back')}">${ico('back')}</button>
-    <div class="p-body x-scroll"><div class="ch-det-art"></div><div class="ch-det"></div></div>`;
+    <div class="p-body x-scroll"><div class="ch-det-art ${c.el}"></div><div class="ch-det"></div></div>`;
   const artEl = el.querySelector('.ch-det-art');
   const det = el.querySelector('.ch-det');
   const paint = () => {

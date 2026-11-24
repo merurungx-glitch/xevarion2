@@ -13,24 +13,29 @@
   const X2 = window.X2;
   const R = X2.rooms;
   const MAX_PLAYERS = R.MAX_PLAYERS || 6;
-  /* オンライン対戦の順位賞金（XEVA）。ローカルより高め（初代と同じ額） */
-  const ONLINE_PRIZES = [300, 200, 150, 100, 50, 25];
+  /* オンライン対戦の順位賞金（XEVA）。★ 2026-11-24 第6回：1台のときと同じ II の共通の表（X2.party.PRIZES＝1位 500〜8位 40）。
+     前はオンラインだけ初代の別の表（1位 300・200・150・100・50・6位 25）だった */
+  const ONLINE_PRIZES = X2.party.PRIZES;
 
   /* 部屋をつくる（ホスト＝0番の席）。profile は使わない（II のアカウントで入る） */
   function createRoom(profile, opts) { return R.create({ size: (opts && opts.size) || 8, roundLimit: (opts && opts.roundLimit) || 0 }); }
   /* 部屋に入る（4桁） */
   function joinRoom(code, profile) { return R.join(code); }
 
-  /* ホストが順位賞金を1回だけ配る。ranked＝順位順の {uid,name}。戻り値 [{rank,name,amount,kind}]
-     key は「部屋番号＋配った時刻＋順位」：部屋番号は使い回されるので、番号と順位だけだと前の試合の賞金（未受取）と同じ印になる */
+  /* ホストが順位賞金を1回だけ配る。ranked＝順位順の {uid,name,rank}（rank＝同じ成績なら同じ順位・無ければ並び順）。戻り値 [{rank,name,amount,kind}]
+     key は「部屋番号＋配った時刻＋並び順」：部屋番号は使い回されるので、番号と順位だけだと前の試合の賞金（未受取）と同じ印になる。
+     ★ 同じ順位の人がいるので、印は順位ではなく並び順（順位だと2人目が同じ印になり、送り待ちで1人分にまとめられてしまう） */
   async function awardOnce(ranked) {
     if (!(await R.awardOnce())) return [];
-    const list = ranked.slice(0, ONLINE_PRIZES.length).map((r, i) => (r && r.uid ? { uid: r.uid, name: r.name, rank: i + 1, amt: ONLINE_PRIZES[i] } : null)).filter(Boolean);
+    const list = ranked.map((r, i) => {
+      const rank = r && r.rank ? r.rank : i + 1;
+      return r && r.uid && ONLINE_PRIZES[rank - 1] ? { uid: r.uid, name: r.name, rank, pos: i, amt: ONLINE_PRIZES[rank - 1] } : null;
+    }).filter(Boolean);
     if (!list.length) return [];
     const stamp = Date.now().toString(36);
     let res = [];
     try {
-      res = await X2.party.award(list.map((x) => ({ uid: x.uid, amt: x.amt, why: x.rank + "位 賞金（MagiChainParty オンライン）", key: (R.code() || "room") + "_" + stamp + "_" + x.rank })));
+      res = await X2.party.award(list.map((x) => ({ uid: x.uid, amt: x.amt, why: x.rank + "位 賞金（MagiChainParty オンライン）", key: (R.code() || "room") + "_" + stamp + "_" + x.pos })));
     } catch (e) { res = []; }
     return list.map((x) => {
       const r = res.find((z) => z.uid === x.uid);

@@ -736,26 +736,44 @@ function endGame(winner) {
   const stats = $("#win-stats"); stats.innerHTML = "";
   // 順位＝生き残り順。優勝者(未脱落)が1位、あとは脱落が遅いほど上位。
   const rankKey = (p) => p.dead ? p.deadAt : Infinity;
-  const medal = ["🥇", "🥈", "🥉"];
   const ranked = [...S.players].sort((a, b) => rankKey(b) - rankKey(a));
+  const ranks = rankList(ranked, "last");
   ranked.forEach((p, i) => {
     const row = document.createElement("div");
     row.className = "win-row"; row.style.setProperty("--c", p.color);
-    const badge = medal[i] || (i + 1) + "位";
+    const badge = rankBadge(ranks[i]);
     const right = p.dead ? `${p.deadAt}番目に脱落` : `${gemCount(p.id)}個で制覇 🏆`;
-    row.innerHTML = `<span class="pdot"></span>${olAvatarHTML(p.chara, "sm")}<span class="nm">${badge} ${escapeHtml(p.name)}${i === 0 ? "（優勝）" : ""}${p.xvUid ? " 🔗" : ""}</span><span>${right}</span>`;
+    row.innerHTML = `<span class="pdot"></span>${olAvatarHTML(p.chara, "sm")}<span class="nm">${badge} ${escapeHtml(p.name)}${ranks[i] === 1 ? "（優勝）" : ""}${p.xvUid ? " 🔗" : ""}</span><span>${right}</span>`;
     stats.appendChild(row);
   });
-  awardChainPrizes(ranked);
+  awardChainPrizes(ranked, ranks);
   setTimeout(() => toggleModal("#win", true), 750);
 }
 
-// ★ II：この端末の本人と連携した人へ、順位の賞金（II の共通表 250・200・150・100・50）。本人はお財布へ・連携した人は受け取り箱へ
-function awardChainPrizes(ranked) {
+/* ★ II（2026-11-24 第6回）：同じ成績は同じ順位・同じ賞金。ranked＝順位順の席 → 順位（1から）の配列（例：1位・2位・2位・4位）
+   同じになりうるのは領土で決めたときだけ（マス数も宝石の数も同じ）。最後の1色まで遊んだときは脱落した順なので同じにならない */
+function rankList(ranked, kind) {
+  if (kind !== "territory") return ranked.map((p, i) => i + 1);
+  const key = (p) => ownedCount(S.board, S.size, p.id) + ":" + gemCount(p.id);
+  const out = [];
+  ranked.forEach((p, i) => out.push(i > 0 && key(p) === key(ranked[i - 1]) ? out[i - 1] : i + 1));
+  return out;
+}
+const rankBadge = (r) => ["🥇", "🥈", "🥉"][r - 1] || r + "位";
+/* 1位が2人以上なら「A・B が同点で1位！」 */
+function winTitle(ranked, ranks) {
+  const tops = ranked.filter((p, i) => ranks[i] === 1);
+  return tops.length > 1 ? `${tops.map((p) => p.name).join("・")} が同点で1位！` : `${ranked[0].name} の勝ち！`;
+}
+
+// ★ II：この端末の本人と連携した人へ、順位の賞金（II の共通表 X2.party.PRIZES＝第6回で 1位 500〜8位 40）。本人はお財布へ・連携した人は受け取り箱へ
+//   同じ順位は同じ額（ranks＝rankList）
+function awardChainPrizes(ranked, ranks) {
   if (!S || S.chainRewarded) return; S.chainRewarded = true;
   if (!window.X2) return;
   const P = X2.party.PRIZES;
-  const list = ranked.slice(0, P.length).map((p, i) => (p.xvUid ? { uid: p.xvUid, name: p.name, amt: P[i], why: (i + 1) + "位 賞金（MagiChainParty）", key: (S.gid || Date.now()) + "_" + p.id } : null)).filter(Boolean);
+  const rk = ranks || ranked.map((p, i) => i + 1);
+  const list = ranked.map((p, i) => (p.xvUid && P[rk[i] - 1] ? { uid: p.xvUid, name: p.name, amt: P[rk[i] - 1], why: rk[i] + "位 賞金（MagiChainParty）", key: (S.gid || Date.now()) + "_" + p.id } : null)).filter(Boolean);
   if (!list.length) return;
   X2.party.award(list).then((res) => {
     list.forEach((x, i) => {
@@ -772,21 +790,21 @@ function endByTerritory() {
   updatePanels(); setBoardFrame(); winChime(); fxConfetti(S.players.map((p) => p.color));
   const terr = (p) => ownedCount(S.board, S.size, p.id);
   const ranked = [...S.players].sort((a, b) => (terr(b) - terr(a)) || (gemCount(b.id) - gemCount(a.id)));
+  const ranks = rankList(ranked, "territory");
   const win = ranked[0];
   $("#win-emoji").textContent = win.face;
-  $("#win-title").textContent = `${win.name} の勝ち！`;
+  $("#win-title").textContent = winTitle(ranked, ranks);
   $("#win-title").style.color = win.color;
   $("#win-sub").textContent = `${S.roundLimit}ラウンド終了！ 領土（マス数）の多い順で順位を決定`;
   const stats = $("#win-stats"); stats.innerHTML = "";
-  const medal = ["🥇", "🥈", "🥉"];
   ranked.forEach((p, i) => {
     const row = document.createElement("div");
     row.className = "win-row"; row.style.setProperty("--c", p.color);
-    const badge = medal[i] || (i + 1) + "位";
-    row.innerHTML = `<span class="pdot"></span>${olAvatarHTML(p.chara, "sm")}<span class="nm">${badge} ${escapeHtml(p.name)}${i === 0 ? "（優勝）" : ""}${p.dead ? "・脱落" : ""}${p.xvUid ? " 🔗" : ""}</span><span>${terr(p)} マス</span>`;
+    const badge = rankBadge(ranks[i]);
+    row.innerHTML = `<span class="pdot"></span>${olAvatarHTML(p.chara, "sm")}<span class="nm">${badge} ${escapeHtml(p.name)}${ranks[i] === 1 ? "（優勝）" : ""}${p.dead ? "・脱落" : ""}${p.xvUid ? " 🔗" : ""}</span><span>${terr(p)} マス</span>`;
     stats.appendChild(row);
   });
-  awardChainPrizes(ranked);
+  awardChainPrizes(ranked, ranks);
   setTimeout(() => toggleModal("#win", true), 750);
 }
 
@@ -1572,35 +1590,35 @@ function showOnlineWin(state) {
   winChime(); fxConfetti(S.players.map((p) => p.color));
   const result = (state && state.result) || { kind: "last", rankedSlots: S.players.map((p) => p.id) };
   const ranked = result.rankedSlots.map((slot) => S.players[slot]).filter(Boolean);
+  const ranks = rankList(ranked, result.kind);   // ★ II（第6回）：同じ成績は同じ順位（どの端末も同じ最後の盤面から数える）
   const win = ranked[0];
   $("#win-emoji").textContent = win.face;
-  $("#win-title").textContent = `${win.name} の勝ち！`;
+  $("#win-title").textContent = winTitle(ranked, ranks);
   $("#win-title").style.color = win.color;
   $("#win-sub").textContent = result.kind === "territory"
     ? `${S.roundLimit}ラウンド終了！ 領土（マス数）の多い順で順位を決定`
     : "ほかの色をすべて消しました 🎉 順位は『長く生き残った順』！";
   const stats = $("#win-stats"); stats.innerHTML = "";
-  const medal = ["🥇", "🥈", "🥉"];
   ranked.forEach((p, i) => {
     const row = document.createElement("div");
     row.className = "win-row"; row.style.setProperty("--c", p.color);
-    const badge = medal[i] || (i + 1) + "位";
+    const badge = rankBadge(ranks[i]);
     const right = result.kind === "territory"
       ? `${ownedCount(S.board, S.size, p.id)} マス`
       : (p.dead ? `${p.deadAt}番目に脱落` : `${gemCount(p.id)}個で制覇 🏆`);
-    row.innerHTML = `<span class="pdot"></span><span class="nm">${badge} ${escapeHtml(p.name)}${i === 0 ? "（優勝）" : ""} 🔗</span><span>${right}</span>`;
+    row.innerHTML = `<span class="pdot"></span><span class="nm">${badge} ${escapeHtml(p.name)}${ranks[i] === 1 ? "（優勝）" : ""} 🔗</span><span>${right}</span>`;
     stats.appendChild(row);
   });
-  awardOnlinePrizes(ranked);
+  awardOnlinePrizes(ranked, ranks);
   $("#play-again") && ($("#play-again").textContent = "ロビーにもどる");
   setTimeout(() => toggleModal("#win", true), 700);
 }
 
-/* ホストのみ順位賞金を配布（awardOnce 内でも二重防止） */
-function awardOnlinePrizes(ranked) {
+/* ホストのみ順位賞金を配布（awardOnce 内でも二重防止）。ranks＝rankList（同じ順位は同じ額） */
+function awardOnlinePrizes(ranked, ranks) {
   if (!ONLINE || !ONLINE.isHost || !window.MCPOnline) return;
   if (MCPOnline.finish) MCPOnline.finish();   // ★ II：部屋に「終わり」の印（このあとホストが出ると部屋ごと消える）
-  const top = ranked.map((p) => ({ uid: p.uid, name: p.name }));
+  const top = ranked.map((p, i) => ({ uid: p.uid, name: p.name, rank: ranks ? ranks[i] : i + 1 }));
   MCPOnline.awardOnce(top).then((list) => {
     if (list && list.length) list.forEach((r, i) => setTimeout(() => toast(`🏆 ${r.name} に賞金 ${r.amount} XEVA！${r.kind === "wait" ? "（あとで送ります）" : ""}`, "#f0c040"), 1200 + i * 1200));
   });

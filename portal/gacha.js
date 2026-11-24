@@ -8,6 +8,7 @@ import { fmt, esc, bindActs } from '../ui/dom.js';
 import { openSheet, ask } from '../ui/sheet.js';
 import { toast } from '../ui/toast.js';
 import { showResult } from './gacha-result.js';
+import { headHTML, decoHTML } from './shell.js';
 
 const G = gacha.GRAND_DEBUT;
 const pct = (p) => (Math.round(p * 10000) / 100).toFixed(2).replace(/\.?0+$/, '') + '%';
@@ -15,12 +16,10 @@ const when = (at) => new Date(at).toLocaleString('ja-JP', { month: 'numeric', da
 
 export async function mount(el) {
   el.classList.add('gc');
-  el.innerHTML = `
-    <div class="p-stars"></div>
-    <header class="x-head"><h1>${t('gacha.title')}</h1>
+  el.innerHTML = `${decoHTML()}
+    ${headHTML('gacha', `
       <button type="button" class="x-pill" data-act="wallet" data-earn="gem" aria-label="${t('cur.gem')}"><i class="x-cur gem"></i><span data-v="gem" data-num></span></button>
-      <button type="button" class="x-pill" data-act="wallet" data-earn="ticket" aria-label="${t('cur.ticket')}"><i class="x-cur ticket"></i><span data-v="ticket" data-num></span></button>
-    </header>
+      <button type="button" class="x-pill" data-act="wallet" data-earn="ticket" aria-label="${t('cur.ticket')}"><i class="x-cur ticket"></i><span data-v="ticket" data-num></span></button>`)}
     <div class="p-body x-scroll"><div class="gc-body">
       <div class="gc-ban"><img src="${G.banner}" alt="${G.name}"></div>
       <div class="gc-name"><b>${G.name}</b><small>${t('gacha.always')}</small></div>

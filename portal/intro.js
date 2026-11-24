@@ -1,13 +1,14 @@
-// XEVARION II — 起動ロゴ（第3回で決定：A　NGX → ISHIDA Production → 軌道が描かれて XEVARION II のロゴ・約3.4秒）
+// XEVARION II — 起動ロゴ（第3回で決定：A　NGX → ISHIDA Production → …）
+// ★ 2026-11-24 第6回で変更：2社のあとの「軌道の輪が描かれてロゴになる」部分はやめた
+//   （描く輪の線と、そのあと出るロゴの絵の輪の大きさ・かたむきが合っておらず、ずれて見えていた）。
+//   2社のあとは白い光がひらいて、タイトルの絵（ロゴ入り）へつながる（タイトルは白から始まる＝つなぎ目が見えない）
 // ・アプリを開いたときだけ（このページの読みこみで1回）。裏から戻ったときは出さない
 // ・タップでとばせる。省電力・「演出を短く」では約半分の時間
-import { anim, orbitSVG, shineHTML, sweep, runner, preloadAll, short, SKIP, STOP } from '../ui/fx.js';
+import { anim, shineHTML, sweep, runner, preloadAll, short, SKIP, STOP } from '../ui/fx.js';
 
 const SRC = {
   ngx: 'assets/brand/ngx-on-dark-480.webp',
   ishida: 'assets/brand/ishida-on-dark-480.webp',
-  mark: 'assets/brand/mark-512.webp',
-  word: 'assets/brand/wordmark-white-560.webp',
 };
 let played = false;
 export const introPlayed = () => played;
@@ -16,15 +17,6 @@ function add(host, cls, html = '') {
   const e = document.createElement('div');
   e.className = cls;
   e.innerHTML = html;
-  host.appendChild(e);
-  return e;
-}
-function addImg(host, cls, src) {
-  const e = new Image();
-  e.className = cls;
-  e.src = src;
-  e.alt = '';
-  e.decoding = 'async';
   host.appendChild(e);
   return e;
 }
@@ -44,11 +36,13 @@ export async function playIntro() {
     await R.wait(200 * k);
     await company(el, R, SRC.ngx, k);
     await company(el, R, SRC.ishida, k);
-    await reveal(el, R, k);
+    await light(el, R, k);
   } catch (e) {
     if (e !== SKIP && e !== STOP) console.error(e);
   }
-  await anim(el, [{ opacity: 1 }, { opacity: 0 }], { d: 320 });
+  // とばしたときも、最後は白にしてからタイトルへ（タイトルは白から始まる）
+  el.style.background = '#fff';
+  await anim(el, [{ opacity: 1 }, { opacity: 0 }], { d: 160 });
   el.remove();
 }
 
@@ -62,20 +56,10 @@ async function company(host, R, src, k) {
   b.remove();
 }
 
-/** 軌道の輪が描かれて、XEVARION II のロゴに */
-async function reveal(host, R, k) {
-  const glow = add(host, 'glow');
-  const orb = add(host, 'orb', orbitSVG({ w: 330, stroke: 5, draw: true }));
-  anim(glow, [{ opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1 }], { d: 700 * k });
-  const [e1, e2] = orb.querySelectorAll('ellipse');
-  anim(e1, [{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { d: 650 * k, ease: 'cubic-bezier(.6,0,.3,1)' });
-  await anim(e2, [{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { d: 650 * k, delay: 120 * k, ease: 'cubic-bezier(.6,0,.3,1)' });
-  await R.wait(0);
-  const mark = addImg(host, 'mark', SRC.mark);
-  anim(mark, [{ opacity: 0, scale: 0.94 }, { opacity: 1, scale: 1 }], { d: 320 * k });
-  anim(orb, [{ opacity: 1 }, { opacity: 0 }], { d: 320 * k });
-  const word = addImg(host, 'word', SRC.word);
-  await anim(word, [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { d: 420 * k, delay: 120 * k });
-  anim(glow, [{ opacity: 1, scale: 1 }, { opacity: 0, scale: 1.5 }], { d: 700 * k });
-  await R.wait(700 * k);
+/** 白い光がまん中からひらいて、画面が白になる（このあとタイトルの絵が白から出る） */
+async function light(host, R, k) {
+  const g = add(host, 'burst');
+  await anim(g, [{ opacity: 0, transform: 'translate(-50%, -50%) scale(.1)' }, { opacity: 1, transform: 'translate(-50%, -50%) scale(1)' }], { d: 520 * k, ease: 'cubic-bezier(.3,0,.2,1)' });
+  host.style.background = '#fff';
+  await R.wait(60 * k);
 }

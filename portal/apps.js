@@ -5,6 +5,7 @@ import { esc, bindActs } from '../ui/dom.js';
 import { toast } from '../ui/toast.js';
 import { APPS, SITES, appById, siteById } from './routes.js';
 import { onSign, leftStr } from './derby-sign.js';
+import { headHTML, decoHTML } from './shell.js';
 
 const chip = (a) => (a.path ? `<span class="x-chip play">${t('apps.play')}</span>`
   : a.url ? `<span class="x-chip site">${t('apps.site')}</span>`
@@ -25,8 +26,8 @@ export function openSite(id) {
 }
 
 export async function mount(el, { go }) {
-  el.innerHTML = `
-    <header class="x-head"><h1>${t('apps.title')}</h1></header>
+  el.innerHTML = `${decoHTML()}
+    ${headHTML('apps')}
     <div class="p-body x-scroll"><div class="ap-list">
       <div class="ap-h">${t('apps.games')}</div>${APPS.map(row).join('')}
       <div class="ap-h">${t('apps.sitesTitle')}</div>${SITES.map(row).join('')}

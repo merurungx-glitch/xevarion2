@@ -18,8 +18,10 @@ import { ID_RULE } from './config.js';
 store.define('partyQ', { scope: 'device', def: [] }); // 送り待ちの賞金
 store.define('partyRecent', { scope: 'device', def: [] }); // この端末で連携したことのある人
 
-/** 1台を囲むゲームの共通の賞金（順位ごと・初代と同じ額）。お金の数字の相談で見直す */
-export const PRIZES = [250, 200, 150, 100, 50];
+/** 対戦アプリの共通の賞金（順位ごと・1位〜8位）。Shift・ChainParty（1台とオンライン）・GuraPlate・Yacht がこれだけを読む。
+ *  ★ 2026-11-24 第6回：1位 500・8位まで（ご指定）＝MagiQuiz（1,000〜80）のちょうど半分。前は初代と同じ 250・200・150・100・50（6位から0）。
+ *  同じ成績は同じ順位＝同じ額（各アプリが順位を決める）。MagiQuiz は自分の表（quiz-data.js の RULE.PRIZES）のまま */
+export const PRIZES = [500, 350, 250, 175, 125, 90, 60, 40];
 /** 1回に送れる額の上限（MagiQuiz の1位 1,000）。ルールの上限と同じ */
 export const MAX_AMT = 1000;
 

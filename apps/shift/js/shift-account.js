@@ -6,7 +6,7 @@
      ① この端末の本人（チェックだけ）… II でサインインしている人。XEVA はこの端末のお財布へ直接（オフラインでも入る）。
      ② アカウント連携（その人の II の ID と合言葉）… まわりの人の賞金。その人の受け取り箱へ送る。
         送れなかったら II が送り待ちに入れて、通信が戻ったときに送る。★ 合言葉は保存しない（II も覚えない）
-   ・賞金は順位そのまま（II の共通表 X2.party.PRIZES＝1位 250・2位 200・3位 150・4位 100・5位 50）。
+   ・賞金は順位そのまま（II の共通表 X2.party.PRIZES＝★ 2026-11-24 第6回で 1位 500・350・250・175・125・90・60・8位 40）。
      同じ順位＝同じ額。CPU（途中から CPU にした席も）・連携なし・引き分けはなし。
    ・アイコン：II のキャラ（柚葉・水瀬・美月）の顔。本人と連携した人は、その人のパートナーの顔。
    ・戦績はこの端末に（本人と連携した人は "u:<uid>"・ほかは名前ごと・CPU はためない）。
@@ -32,7 +32,7 @@
   function faces() { try { return X2.faces(); } catch (e) { return []; } }
   /* 連携（ID と合言葉）：{ acc } か { error: format|self|bad|net|many } */
   function verify(id, pass) { return X2.party.verify(id, pass).catch(() => ({ error: "net" })); }
-  const PRIZES = () => (X2 && X2.party.PRIZES) || [250, 200, 150, 100, 50];
+  const PRIZES = () => (X2 && X2.party.PRIZES) || [500, 350, 250, 175, 125, 90, 60, 40];
 
   /* 試合の結果：戦績をためて、賞金を配る。
      standings＝shift-core の standings（順位つきの席）。戻り値＝{ prizes:[{ rank, name, amount, kind:"me"|"cloud"|"wait" }] } */

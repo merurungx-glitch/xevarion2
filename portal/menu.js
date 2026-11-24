@@ -13,6 +13,7 @@ import { esc, fmt, bindActs } from '../ui/dom.js';
 import { openSheet, ask } from '../ui/sheet.js';
 import { toast } from '../ui/toast.js';
 import { balancesHTML, openWallet } from './wallet-sheet.js';
+import { headHTML, decoHTML } from './shell.js';
 
 const kb = (n) => (n >= 1024 * 1024 ? (n / 1048576).toFixed(1) + 'MB' : Math.round(n / 1024) + 'KB');
 
@@ -35,7 +36,7 @@ function startupBytes() {
 const seg = (key, cur, opts) => `<div class="x-seg" data-seg="${key}">${opts.map(([v, label, sub]) => `<button type="button" data-v="${v}" class="${v === cur ? 'on' : ''}">${label}${sub ? `<small>${sub}</small>` : ''}</button>`).join('')}</div>`;
 
 export async function mount(el, { go }) {
-  el.innerHTML = `<header class="x-head"><h1>${t('menu.title')}</h1></header><div class="p-body x-scroll"><div class="mn-body"></div></div>`;
+  el.innerHTML = `${decoHTML()}${headHTML('menu')}<div class="p-body x-scroll"><div class="mn-body"></div></div>`;
   const body = el.querySelector('.mn-body');
   let fpsText = '—';
   let news = null; // portal/news.js（あとから読む：NEW の印に使う）

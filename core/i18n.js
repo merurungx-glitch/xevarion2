@@ -44,6 +44,9 @@ const ja = {
   'home.lobby': 'ロビーへ', 'home.lobbyLock': '完凸でロビー',
   'home.partner': 'PARTNER', 'home.maxBanner': 'MAX BANNER',
   'home.noPartner': 'ガチャでパートナーを迎えよう',
+  // 第6回の刷新（2026-11-24）：日本語が先
+  'home.play': 'あそぶ', 'home.partnerJa': 'パートナー', 'home.notYet': 'まだ', 'home.sitesSub': 'NGX・ISHIDA',
+  'home.evOn': '開催中', 'home.evSub': '柚葉・水瀬・美月が3人そろって登場', 'home.talk': '{name} と話す',
 
   // お知らせ（portal/news.js）・はじまり特典（portal/veteran.js・core/veteran.js）＝2026-11-24
   'news.title': 'お知らせ', 'news.tab.news': 'お知らせ', 'news.tab.update': '更新内容', 'news.tab.dev': 'デベロッパーノート',
@@ -73,7 +76,7 @@ const ja = {
   'code.errFormat': 'コードは英字と数字の4〜16文字です', 'code.done': 'このコードは、もう受け取っています',
   'code.notfound': 'そのコードは見つかりません', 'code.expired': 'このコードは期限が過ぎています',
 
-  'apps.title': 'APPS', 'apps.games': 'アプリ', 'apps.sitesTitle': '公式サイト', 'apps.soon': '準備中', 'apps.play': 'あそぶ', 'apps.site': 'ひらく ↗',
+  'apps.title': 'APPS', 'apps.games': 'あそぶ', 'apps.sitesTitle': '公式サイト', 'apps.soon': '準備中', 'apps.play': 'あそぶ', 'apps.site': 'ひらく ↗',
   'party.got': '賞金 +{n} XEVA が届きました（{apps}）',
   'upd.title': '新しい版があります', 'upd.body': '更新すると、最新の XEVARION II になります（数秒で終わります）。',
   'upd.go': '更新する', 'upd.later': 'あとで',

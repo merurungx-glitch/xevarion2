@@ -1,126 +1,219 @@
 /* XEVARION II — ポータルの画面（クラスは画面ごとの2文字＋「-」で始める：au アカウント・fs 最初の10連・
    hm ホーム・ap アプリ・ah アプリの窓・gc ガチャ・ch キャラ・lb ロビー・mn メニュー・wl お財布・lg ログボ・ms ミッション・
-   nw お知らせ・vr はじまり特典・ml メール・cd コード入力・ad 管理画面・p 共通） */
+   nw お知らせ・vr はじまり特典・ml メール・cd コード入力・ad 管理画面・p 共通）
+   ★ 2026-11-24 第6回の刷新（E2 BLOOM POSTER・D1）：地は明るい空のグラデーション（--page）・板は白くすけた形（--glass）。
+     夜空の色はガチャの演出・ロビー・起動ロゴだけ。幅の決まり：700px 以上＝iPad 縦の形／1024px 以上の横向き・1200px 以上＝左のメニュー（D1） */
 @layer portal {
-  .x-page { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); color: var(--text); animation: p-in var(--dur) var(--ease); }
+  .x-page { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; background: var(--page); color: var(--text); animation: p-in var(--dur) var(--ease); }
   @keyframes p-in { from { opacity: 0; transform: translateY(6px); } }
   .p-night { background: var(--twilight); color: var(--on-night); }
   .p-stars { position: absolute; inset: 0; background: var(--stars); pointer-events: none; }
-  .p-body { flex: 1; min-height: 0; }
+  .p-body { flex: 1; min-height: 0; position: relative; z-index: 1; }   /* 飾り（.p-deco）より上に */
+  /* 明るい画面のうしろの飾り：ななめの色の帯・花びら・きらきら（止まっている＝電池を使わない） */
+  .p-deco { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+  .p-deco .band { position: absolute; left: -40%; right: -40%; top: calc(var(--st) + 150px); height: 210px; background: var(--band); opacity: .55; transform: rotate(-12deg); }
+  .p-deco .pt { position: absolute; width: 14px; height: 9px; border-radius: 9px 1px 9px 1px; background: linear-gradient(135deg, #ffb3dc, #c9b6ff); opacity: .75; }
+  .p-deco .sp { position: absolute; width: 12px; height: 12px; background: #fff; clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%); }
+  :root[data-theme="dark"] .p-deco .sp { opacity: .6; }
 
-  /* 上のバー */
-  .p-topbar { display: flex; align-items: center; gap: 8px; color: #fff; }
-  .p-ava { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 2px solid var(--g3); flex: none; background: var(--night-2); }
-  .p-who { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-shadow: 0 1px 4px rgba(0, 0, 0, .4); line-height: 1.25; }
-  .p-who b { display: block; font-size: 13px; overflow: hidden; text-overflow: ellipsis; }
-  .p-who small { font: 600 9.5px/1 var(--font-en); letter-spacing: .08em; opacity: .8; }
+  /* 上のバー（プロフィールの札＋お金の札） */
+  .p-topbar { display: flex; align-items: center; gap: 6px; color: var(--text); }
+  .p-me { display: flex; align-items: center; gap: 8px; min-width: 0; max-width: 56%; background: var(--glass); border: 1px solid var(--glass-line); border-radius: 99px; padding: 4px 12px 4px 4px; box-shadow: var(--shadow-s); }
+  .p-ava { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; flex: none; background: var(--surface-2); box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px #9fe0c2; }
+  .p-who { min-width: 0; white-space: nowrap; overflow: hidden; line-height: 1.25; }
+  .p-who b { display: block; font-size: 13.5px; font-weight: 900; overflow: hidden; text-overflow: ellipsis; }
+  .p-who small { display: block; font: 700 10.5px/1.25 var(--font-en); letter-spacing: .02em; color: var(--text-3); }
+  .p-gap { flex: 1; }
 
   /* ===== アカウント ===== */
-  .au { background: var(--twilight); color: var(--on-night); }
+  .au { background: var(--page); color: var(--text); }
   .au-scroll { position: relative; z-index: 2; flex: 1; min-height: 0; padding: calc(var(--st) + 26px) 18px calc(var(--sb) + 24px); display: flex; flex-direction: column; align-items: center; }
-  .au-logo { width: min(46vw, 210px); margin: 4px auto 18px; }
-  .au-card { width: 100%; max-width: 420px; background: var(--bg); color: var(--text); border-radius: 24px; padding: 16px 16px 6px; box-shadow: 0 20px 50px rgba(5, 6, 26, .45); }
+  .au-logo { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 6px auto 20px; }
+  .au-logo .mk { width: min(30vw, 132px); filter: drop-shadow(0 8px 18px rgba(90, 80, 220, .3)); }
+  .au-logo .wm { width: min(58vw, 250px); }
+  .au-card { width: 100%; max-width: 420px; background: var(--glass); border: 1px solid var(--glass-line); color: var(--text); border-radius: 26px; padding: 16px 16px 6px; box-shadow: var(--shadow); }
   .au-card .x-seg { margin-bottom: 16px; }
   .au-err { min-height: 20px; margin: -4px 2px 10px; font-size: 13px; font-weight: 700; color: #ff4f7b; }
   .au-note { margin: 12px 2px 10px; font-size: 12px; color: var(--text-3); line-height: 1.6; }
-  .au-back { position: absolute; top: calc(var(--st) + 10px); left: 10px; z-index: 3; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: rgba(255, 255, 255, .08); }
+  .au-back { position: absolute; top: calc(var(--st) + 10px); left: 10px; z-index: 3; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; color: var(--text); background: var(--glass); box-shadow: var(--shadow-s); }
 
   /* ===== 最初の10連 ===== */
-  .fs { background: var(--twilight); color: var(--on-night); }
+  .fs { background: var(--page); color: var(--text); }
   .fs-in { position: relative; z-index: 2; flex: 1; min-height: 0; padding: calc(var(--st) + 30px) 22px calc(var(--sb) + 28px); display: flex; flex-direction: column; align-items: center; text-align: center; }
-  .fs-kick { font: 700 12px/1 var(--font-en); letter-spacing: .5em; color: #9fe9ff; margin-top: 4vh; }
-  .fs h1 { margin: 12px 0 6px; font-size: 24px; font-weight: 900; text-wrap: balance; }
-  .fs-gift { margin: 18px 0 8px; width: 100%; max-width: 360px; border-radius: 22px; padding: 18px; background: rgba(255, 255, 255, .07); border: 1px solid rgba(255, 255, 255, .14); }
+  .fs-kick { font: 800 16px/1 var(--font-disp); font-stretch: condensed; letter-spacing: .36em; color: #fff; text-shadow: 0 2px 10px rgba(60, 60, 200, .35); margin-top: 3vh; }
+  .fs h1 { margin: 12px 0 6px; font-size: 25px; font-weight: 900; text-wrap: balance; }
+  .fs-gift { margin: 18px 0 8px; width: 100%; max-width: 380px; border-radius: 24px; padding: 18px; background: var(--glass); border: 1px solid var(--glass-line); box-shadow: var(--shadow); }
   .fs-tix { display: grid; grid-template-columns: repeat(5, auto); justify-content: center; gap: 6px 8px; margin-bottom: 12px; }
   .fs-tix .x-cur.ticket { width: 42px; height: 28px; }
   .fs-gift p { margin: 0; font-weight: 800; font-size: 15px; text-wrap: balance; }
-  .fs-lead { margin: 10px 0 0; max-width: 340px; font-size: 13.5px; color: var(--on-night-2); line-height: 1.75; }
-  .fs-go { margin-top: auto; width: 100%; max-width: 360px; height: 56px; font-size: 17px; }
-  .fs-chars { display: flex; justify-content: center; gap: 10px; margin: 18px 0 4px; }
-  .fs-chars img { width: 62px; height: 62px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .7); object-fit: cover; }
+  .fs-lead { margin: 10px 0 0; max-width: 360px; font-size: 13.5px; color: var(--text-2); line-height: 1.75; font-weight: 700; }
+  .fs-go { margin-top: auto; width: 100%; max-width: 380px; height: 56px; font-size: 17px; }
+  .fs-chars { display: flex; justify-content: center; gap: 12px; margin: 18px 0 4px; }
+  .fs-chars img { width: 66px; height: 66px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 3px #fff, 0 8px 18px rgba(110, 100, 220, .3); }
   .fs-partner { position: relative; width: 100%; max-width: 360px; flex: 1; min-height: 0; margin: 10px 0 14px; }
   .fs-partner img { position: absolute; left: 50%; bottom: 0; translate: -50% 0; height: 100%; width: auto; max-width: none; }
 
-  /* ===== ホーム（H2 バナー型） ===== */
-  .hm { background: var(--bg); }
-  .hm-art { position: absolute; left: 0; right: 0; top: 0; height: 60%; overflow: hidden; background: var(--twilight); cursor: pointer; }
-  .hm-art > img.ban { width: 100%; height: 100%; object-fit: cover; object-position: 50% 14%; }
-  .hm-art > img.full { position: absolute; left: 50%; bottom: -14%; translate: -50% 0; height: 112%; width: auto; max-width: none; }
-  .hm-art .p-stars { opacity: .9; }
-  .hm-art::before { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(rgba(8, 10, 28, .66), transparent 24%); pointer-events: none; }
-  .hm-art::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 90px; z-index: 1; background: linear-gradient(transparent, var(--bg)); pointer-events: none; }
-  .hm-top { position: absolute; left: 0; right: 0; top: 0; z-index: 6; padding: calc(var(--st) + 8px) 12px 0; }
-  .hm-feat { position: absolute; left: 16px; bottom: calc(40% + 40px); z-index: 5; color: #fff; text-shadow: 0 1px 12px rgba(10, 14, 40, .6), 0 0 2px rgba(10, 14, 40, .4); pointer-events: none; }
-  .hm-feat small { display: block; font: 700 9.5px/1 var(--font-en); letter-spacing: .3em; opacity: .9; }
-  .hm-feat b { display: block; font-size: 30px; font-weight: 900; letter-spacing: .08em; line-height: 1.25; margin-top: 4px; }
-  .hm-feat em { font: 600 10.5px/1 var(--font-en); font-style: normal; letter-spacing: .34em; }
-  .hm-feat .x-el { margin-top: 8px; text-shadow: none; background: rgba(255, 255, 255, .9); }
-  .hm-lobby { position: absolute; right: 14px; bottom: calc(40% + 44px); z-index: 6; }
-  .hm-lobby .x-btn { background: rgba(11, 14, 31, .72); color: #fff; border: 1px solid rgba(255, 255, 255, .25); }
-  .hm-lobby .x-btn.locked { color: var(--on-night-2); }
-  .hm-bubble { position: absolute; left: 16px; right: 30%; top: calc(var(--st) + 66px); z-index: 6; background: #fff; color: #151a33; font-size: 13px; font-weight: 700; padding: 9px 12px; border-radius: 14px 14px 14px 4px; box-shadow: 0 4px 14px rgba(0, 0, 0, .2); opacity: 0; transform: translateY(6px); transition: opacity var(--dur), transform var(--dur) var(--ease); pointer-events: none; width: fit-content; max-width: 70%; }
+  /* ===== ホーム（第6回 E2 BLOOM POSTER・D1 幅で組みかえる） =====
+     iPhone：上のバー → 3人の絵を重ねたポスター＋大きな英字の名前 → パートナーの板（ロビーへ）→ イベントのカード → あそぶ（アプリ8つ）→ ミッション・メール・お知らせ
+     iPad 縦（700px〜）：同じ並びを大きく／PC・iPad 横：左のメニュー・まん中に絵・右に今日のこと・アプリは横並び（.hm-wrap を grid に）
+     ★ 絵の決まり：パートナーは完凸なら完凸バナー・その前は全身（完凸バナーはごほうびなので見せない）。ほかの2人も全身。絵は止まっている */
+  .hm { background: var(--page); }
+  .hm-scroll { position: absolute; left: 0; right: 0; top: var(--st); bottom: 0; }
+  .hm-wrap { position: relative; display: flex; flex-direction: column; padding: 8px 0 22px; }
+  .hm-top { order: 0; padding: 0 14px; position: relative; z-index: 6; }
+  .hm-hero { order: 1; position: relative; height: clamp(266px, 77vw, 330px); margin-top: 8px; z-index: 3; }
+  .hm-pans { position: absolute; inset: 0; }
+  .hm-pan { position: absolute; padding: 0; border: 5px solid #fff; overflow: hidden; --c: var(--accent);
+    background: linear-gradient(165deg, color-mix(in srgb, var(--c) 26%, #fff), #e3e3ff 56%, #ffe4f1); box-shadow: var(--shadow-pan); }
+  .hm-pan::after { content: ""; position: absolute; inset: 5px; z-index: 1; border: 1.5px solid rgba(255, 255, 255, .95); pointer-events: none; }
+  .hm-pan.flare { --c: var(--flare); } .hm-pan.tide { --c: var(--tide); } .hm-pan.terra { --c: var(--terra); }
+  .hm-pan img { position: absolute; max-width: none; }
+  .hm-pan img.ban { inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 12%; }
+  .hm-pan img.full { left: 50%; top: 3%; width: 132%; height: auto; translate: -50% 0; }
+  .hm-pan.m { left: 4%; top: 2%; width: 57%; height: 94%; transform: rotate(-2.5deg); z-index: 2; cursor: pointer; }
+  .hm-pan.s1 { right: 4%; top: 0; width: 33%; height: 48%; transform: rotate(4deg); }
+  .hm-pan.s2 { right: 7%; top: 51%; width: 30.5%; height: 43%; transform: rotate(-3deg); }
+  .hm-pan .nm { position: absolute; left: 0; bottom: 0; z-index: 2; background: rgba(255, 255, 255, .95); color: #4b3fb8; font-size: 12px; font-weight: 900; padding: 3px 9px; border-radius: 0 9px 0 0; }
+  .hm-pan .nw { position: absolute; right: 6px; top: 6px; z-index: 2; background: var(--grad-tag); color: #fff; font-size: 11px; font-weight: 900; padding: 2px 8px; border-radius: 99px; }
+  .hm-head { position: absolute; left: 10px; bottom: 9%; z-index: 4; line-height: .8; pointer-events: none; }
+  .hm-head small { display: inline-block; margin-left: 4px; padding: 4px 8px 3px; border-radius: 5px; background: rgba(255, 255, 255, .95); color: #6f5df0; font: 800 13px/1 var(--font-disp); font-stretch: condensed; letter-spacing: .16em; }
+  .hm-head b { display: block; font: 800 clamp(58px, 20vw, 78px)/.82 var(--font-disp); font-stretch: condensed; color: #fff; letter-spacing: .005em;
+    text-shadow: 2px 0 0 #6f62d8, -2px 0 0 #6f62d8, 0 2px 0 #6f62d8, 0 -2px 0 #6f62d8, 1.5px 1.5px 0 #6f62d8, -1.5px -1.5px 0 #6f62d8, 1.5px -1.5px 0 #6f62d8, -1.5px 1.5px 0 #6f62d8, 0 12px 26px rgba(80, 60, 200, .45); }
+  .hm-bubble { position: absolute; left: 8%; top: 5%; z-index: 6; width: fit-content; max-width: 62%; background: #fff; color: #26305c; font-size: 13px; font-weight: 800; padding: 9px 12px; border-radius: 14px 14px 14px 4px; box-shadow: var(--shadow); opacity: 0; transform: translateY(6px); transition: opacity var(--dur), transform var(--dur) var(--ease); pointer-events: none; }
   .hm-bubble.show { opacity: 1; transform: none; }
-  .hm-sheet { position: absolute; left: 0; right: 0; top: calc(60% - 34px); bottom: 0; z-index: 5; background: var(--bg); border-radius: 24px 24px 0 0; padding: 16px 16px 20px; }
-  .hm-sh { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
-  .hm-sh b { font: 800 12px/1 var(--font-en); letter-spacing: .3em; }
-  .hm-sh span { font-size: 11.5px; color: var(--text-3); }
-  .hm-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px 6px; max-width: 520px; }
-  .hm-app { display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 0; }
-  .hm-app small { font-size: 10.5px; font-weight: 800; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-  .hm-fold { width: 56px; height: 56px; border-radius: 16px; background: var(--surface-2); border: 1px solid var(--line); display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 9px; align-content: center; }
-  .hm-fold img { width: 100%; aspect-ratio: 1; border-radius: 5px; object-fit: cover; }
-  .hm-news { margin-top: 16px; display: flex; align-items: center; gap: 10px; width: 100%; max-width: 520px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; font-size: 13px; font-weight: 800; text-align: left; }
-  .hm-news span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .hm-news svg.x-i { width: 18px; height: 18px; }
+  .hm-info { order: 2; position: relative; z-index: 5; display: flex; align-items: center; gap: 10px; height: 54px; margin: 6px 14px 0; padding: 0 7px 0 16px; background: var(--glass); border: 1px solid var(--glass-line); border-radius: 20px; box-shadow: var(--shadow); }
+  .hm-info .who { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+  .hm-info .who small { font-size: 11.5px; font-weight: 800; color: var(--text-3); }
+  .hm-info .who b { font-size: 22px; font-weight: 900; line-height: 1; overflow: hidden; text-overflow: ellipsis; }
+  .hm-info .x-btn { height: 40px; padding: 0 14px 0 18px; font-size: 14px; }
+  .hm-info .x-btn svg.x-i { width: 15px; height: 15px; }
+  .hm-side { display: contents; }
+  .hm-ev { order: 3; display: flex; align-items: center; gap: 10px; margin: 10px 14px 0; padding: 6px 10px 6px 6px; background: var(--glass); border: 1px solid var(--glass-line); border-radius: 20px; box-shadow: var(--shadow); text-align: left; }
+  .hm-ev img { width: 88px; height: 48px; flex: none; object-fit: cover; border-radius: 13px; }
+  .hm-ev div { flex: 1; min-width: 0; line-height: 1.3; }
+  .hm-ev em { font-style: normal; font-size: 11px; font-weight: 900; color: #fff; background: var(--grad-tag); border-radius: 99px; padding: 2px 9px; }
+  .hm-ev b { display: block; margin-top: 3px; font-size: 14px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hm-ev small { display: none; }
+  .hm-ev > svg.x-i { width: 18px; height: 18px; color: var(--text-3); }
+  .hm-apps { order: 4; margin: 16px 14px 0; }
+  .hm-apps h2, .hm-h { margin: 0 0 10px; display: flex; align-items: center; gap: 8px; font-size: 19px; font-weight: 900; line-height: 1.3; }
+  .hm-apps h2 small, .hm-h small { font: 800 15px/1 var(--font-disp); font-stretch: condensed; letter-spacing: .16em; color: var(--accent); }
+  .hm-apps h2 i, .hm-h i { flex: 1; height: 5px; border-radius: 9px; background: var(--grad-soft); }
+  .hm-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px 6px; }
+  .hm-app { position: relative; display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 0; }
+  .hm-app .x-appic, .hm-fold { width: 60px; height: 60px; border-radius: 18px; }
+  .hm-app b { font-size: 12px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .hm-app small { display: none; }
+  .hm-fold { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 10px; align-content: center; background: #fff; box-shadow: 0 0 0 2px #fff, 0 8px 18px rgba(110, 100, 220, .24); }
+  .hm-fold img { width: 100%; aspect-ratio: 1; border-radius: 6px; object-fit: cover; }
+  .hm-rows { order: 5; display: flex; flex-direction: column; gap: 8px; margin: 16px 14px 0; }
+  .hm-row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 12px; background: var(--glass); border: 1px solid var(--glass-line); border-radius: 18px; box-shadow: var(--shadow-s); font-size: 13px; font-weight: 800; text-align: left; }
+  .hm-row > svg.x-i:first-child { width: 21px; height: 21px; color: var(--accent); }
+  .hm-row > span { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.3; }
+  .hm-row > span b { font-size: 13.5px; }
+  .hm-row > span small { font-size: 11.5px; font-weight: 700; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hm-row > span small:empty { display: none; }
+  .hm-row > svg.x-i:last-child { width: 16px; height: 16px; color: var(--text-3); }
+  .hm-badge { flex: none; min-width: 22px; height: 22px; padding: 0 7px; border-radius: 99px; background: var(--grad-tag); color: #fff; font: 900 12px/22px var(--font-en); font-style: normal; text-align: center; }
+  .hm-badge[hidden] { display: none; }
   /* MagiDerby の札（portal/derby-sign.js）：発売中＝金・締切間近＝赤（残り時間）・結果＝緑（まだ確かめていない馬券の数） */
-  .hm-app { position: relative; }
-  .hm-app.ds-sale .x-appic { box-shadow: 0 0 0 2px var(--xeva), 0 0 14px rgba(245, 181, 46, .65); }
-  .hm-app.ds-soon .x-appic { box-shadow: 0 0 0 2px var(--flare), 0 0 14px rgba(255, 91, 74, .6); }
-  .hm-app .ds-tag { position: absolute; top: 45px; left: 50%; transform: translateX(-50%); z-index: 1; font: 900 9.5px/1 var(--font); font-style: normal; letter-spacing: .02em; white-space: nowrap; padding: 3px 6px; border-radius: 99px; color: #3a2600; background: linear-gradient(180deg, #ffe7a1, var(--xeva)); box-shadow: 0 1px 4px rgba(20, 26, 51, .25); pointer-events: none; }
+  .hm-app.ds-sale .x-appic { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--xeva), 0 0 16px rgba(245, 181, 46, .6); }
+  .hm-app.ds-soon .x-appic { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--flare), 0 0 16px rgba(255, 91, 74, .55); }
+  .hm-app .ds-tag { position: absolute; top: 49px; left: 50%; transform: translateX(-50%); z-index: 1; font: 900 10px/1 var(--font); font-style: normal; letter-spacing: .02em; white-space: nowrap; padding: 3px 7px; border-radius: 99px; color: #3a2600; background: linear-gradient(180deg, #ffe7a1, var(--xeva)); box-shadow: 0 1px 4px rgba(20, 26, 51, .25); pointer-events: none; }
   .hm-app.ds-soon .ds-tag { color: #fff; background: var(--flare); }
-  .hm-app .ds-res { position: absolute; top: -6px; left: calc(50% + 14px); z-index: 1; font: 900 9.5px/1 var(--font); font-style: normal; white-space: nowrap; padding: 3px 6px; border-radius: 99px; color: #fff; background: var(--terra); box-shadow: 0 1px 4px rgba(20, 26, 51, .25); pointer-events: none; }
+  .hm-app .ds-res { position: absolute; top: -6px; left: calc(50% + 16px); z-index: 1; font: 900 10px/1 var(--font); font-style: normal; white-space: nowrap; padding: 3px 7px; border-radius: 99px; color: #fff; background: var(--terra); box-shadow: 0 1px 4px rgba(20, 26, 51, .25); pointer-events: none; }
 
-  /* ===== アプリ ===== */
-  .ap-list { padding: 14px 16px calc(24px); display: flex; flex-direction: column; gap: 10px; }
-  .ap-h { font: 800 11.5px/1 var(--font-en); letter-spacing: .28em; color: var(--text-3); margin: 10px 2px 2px; }
-  .ap-row { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 10px 12px; text-align: left; width: 100%; }
-  .ap-row .x-appic { width: 50px; height: 50px; border-radius: 14px; box-shadow: none; flex: none; }
+  /* iPad 縦など（700px〜）：同じ並びを大きく・アプリはアイコン＋名前＋ひとこと */
+  @media (min-width: 700px) {
+    .hm-wrap { max-width: 760px; margin: 0 auto; padding: 14px 10px 28px; }
+    .hm-hero { height: clamp(400px, 60vw, 560px); }
+    .hm-head b { font-size: clamp(96px, 15vw, 150px); }
+    .hm-head small { font-size: 17px; }
+    .hm-pan .nm { font-size: 14px; padding: 4px 11px; }
+    .hm-info { height: 62px; }
+    .hm-info .who b { font-size: 28px; }
+    .hm-ev img { width: 132px; height: 70px; }
+    .hm-ev b { font-size: 16px; }
+    .hm-ev small { display: block; font-size: 12px; font-weight: 700; color: var(--text-3); }
+    .hm-grid { gap: 12px; }
+    .hm-app { padding: 14px 4px 10px; background: var(--glass); border: 1px solid var(--glass-line); border-radius: 20px; box-shadow: var(--shadow); }
+    .hm-app .x-appic, .hm-fold { width: 76px; height: 76px; border-radius: 22px; }
+    .hm-app b { font-size: 13.5px; }
+    .hm-app small { display: block; max-width: 100%; padding: 0 4px; font-size: 11px; font-weight: 700; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .hm-app .ds-tag { top: 70px; }
+    .hm-rows { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+
+  /* PC・iPad 横（D1）：まん中に絵・右に今日のこと・アプリは横並び。プロフィールは左のメニューに */
+  @media (min-width: 1024px) and (orientation: landscape), (min-width: 1200px) {
+    .hm-wrap { display: grid; grid-template-columns: minmax(0, 1fr) clamp(262px, 26vw, 340px); grid-template-areas: "top top" "hero side" "info side" "apps apps"; align-items: start; gap: 12px 22px; max-width: 1320px; padding: 14px 24px 24px 22px; }
+    .hm-top { grid-area: top; padding: 0; }
+    .hm-top .p-me { display: none; }
+    .hm-hero { grid-area: hero; height: clamp(330px, 52vh, 470px); margin: 0; }
+    .hm-pan.s1 { left: 3%; right: auto; top: 9%; width: 28%; height: 58%; transform: rotate(-6deg); }
+    .hm-pan.m { left: 30%; top: 1%; width: 40%; height: 86%; transform: rotate(-2deg); }
+    .hm-pan.s2 { left: 69%; right: auto; top: 7%; width: 28%; height: 58%; transform: rotate(5deg); }
+    .hm-head { left: 1%; bottom: 5%; }
+    .hm-head b { font-size: clamp(88px, 9.4vw, 132px); }
+    .hm-info { grid-area: info; margin: 0; height: 58px; }
+    .hm-side { grid-area: side; display: flex; flex-direction: column; gap: 12px; }
+    .hm-ev { margin: 0; flex-direction: column; align-items: stretch; gap: 0; padding: 6px; }
+    .hm-ev img { width: 100%; height: auto; aspect-ratio: 1200 / 643; }
+    .hm-ev div { padding: 8px 8px 4px; }
+    .hm-ev > svg.x-i { display: none; }
+    .hm-rows { display: flex; margin: 0; }
+    .hm-apps { grid-area: apps; margin: 2px 0 0; }
+    .hm-grid { grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 10px; }
+    .hm-app .x-appic, .hm-fold { width: clamp(52px, 5.2vw, 76px); height: clamp(52px, 5.2vw, 76px); border-radius: 20px; }
+    .hm-fold { padding: clamp(8px, .8vw, 12px); }
+    .hm-app .ds-tag { top: calc(clamp(52px, 5.2vw, 76px) + 6px); }
+  }
+
+  /* ===== アプリ（第6回：白い板・iPad から2列） ===== */
+  .ap-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; max-width: 1040px; padding: 4px 16px 26px; }
+  .ap-h { display: flex; align-items: center; gap: 8px; margin: 10px 2px 2px; font-size: 16px; font-weight: 900; color: var(--text); }
+  .ap-h::after { content: ""; flex: 1; height: 4px; border-radius: 9px; background: var(--grad-soft); opacity: .8; }
+  .ap-row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 11px 12px; background: var(--glass); border: 1px solid var(--glass-line); border-radius: 20px; box-shadow: var(--shadow); text-align: left; }
+  .ap-row .x-appic { width: 54px; height: 54px; border-radius: 16px; flex: none; }
   .ap-row div { flex: 1; min-width: 0; }
-  .ap-row b { display: block; font-size: 15px; }
-  .ap-row small { display: block; font-size: 12px; color: var(--text-3); }
+  .ap-row b { display: block; font-size: 15.5px; font-weight: 900; }
+  .ap-row small { display: block; font-size: 12px; font-weight: 700; color: var(--text-3); }
   .ap-row .ds-chips { display: flex; flex-wrap: wrap; gap: 4px; }
   .ap-row .ds-chips:not(:empty) { margin-top: 5px; }
   .ap-row .ds-c { height: 20px; font-size: 10.5px; padding: 0 8px; }
   .ap-row .ds-c.sale { color: #3a2600; background: linear-gradient(180deg, #ffe7a1, var(--xeva)); }
   .ap-row .ds-c.soon { color: #fff; background: var(--flare); }
   .ap-row .ds-c.res { color: #fff; background: var(--terra); }
-  .ap-row .x-appic.ds-ring { box-shadow: 0 0 0 2px var(--xeva), 0 0 12px rgba(245, 181, 46, .6); }
-  .ap-row .x-appic.ds-ring-soon { box-shadow: 0 0 0 2px var(--flare), 0 0 12px rgba(255, 91, 74, .55); }
+  .ap-row .x-appic.ds-ring { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--xeva), 0 0 12px rgba(245, 181, 46, .6); }
+  .ap-row .x-appic.ds-ring-soon { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--flare), 0 0 12px rgba(255, 91, 74, .55); }
+  @media (min-width: 700px) {
+    .ap-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 0 auto; padding: 4px 22px 30px; }
+    .ap-h { grid-column: 1 / -1; }
+  }
 
-  /* ===== ガチャ ===== */
-  .gc { background: var(--twilight); color: var(--on-night); }
-  .gc .x-head { background: transparent; position: relative; z-index: 2; }
-  .gc .x-head .x-pill { --cur-hole: #191c3c; }
-  .gc-body { position: relative; z-index: 2; padding: 4px 14px 24px; }
-  .gc-ban { border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0, 0, 0, .45); border: 1px solid rgba(255, 255, 255, .22); aspect-ratio: 1713 / 918; background: var(--night-2); }
+  /* ===== ガチャ（第6回：明るい地・白い飾り枠のバナー。ひいたときの演出は夜空のまま＝fx.css の gx-） ===== */
+  .gc { background: var(--page); color: var(--text); }
+  .gc .p-stars { display: none; }
+  .gc-body { position: relative; z-index: 2; max-width: 760px; margin: 0 auto; padding: 4px 16px 26px; }
+  .gc-ban { position: relative; aspect-ratio: 1200 / 643; border: 5px solid #fff; background: #fff; box-shadow: var(--shadow-pan); }
+  .gc-ban::after { content: ""; position: absolute; inset: 5px; border: 1.5px solid rgba(255, 255, 255, .95); pointer-events: none; }
   .gc-ban img { width: 100%; height: 100%; object-fit: cover; }
-  .gc-name { display: flex; justify-content: space-between; align-items: baseline; margin: 12px 2px 8px; gap: 10px; }
-  .gc-name b { font-size: 15px; font-weight: 900; letter-spacing: .02em; }
-  .gc-name small { font-size: 11.5px; color: #c9b8e8; white-space: nowrap; }
+  .gc-name { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin: 14px 2px 8px; }
+  .gc-name b { font-size: 16px; font-weight: 900; letter-spacing: .02em; }
+  .gc-name small { font-size: 12px; font-weight: 700; color: var(--text-3); white-space: nowrap; }
   .gc-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
-  .gc-chips span { font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 99px; background: rgba(127, 240, 255, .12); color: #bff4ff; border: 1px solid rgba(127, 240, 255, .25); }
-  .gc-pity { background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .12); border-radius: 16px; padding: 12px 14px; margin-bottom: 14px; }
-  .gc-bar { height: 8px; border-radius: 99px; background: rgba(255, 255, 255, .12); overflow: hidden; }
-  .gc-bar i { display: block; height: 100%; width: 0; background: var(--grad); border-radius: 99px; transition: width .4s var(--ease); }
-  .gc-pity small { display: flex; justify-content: space-between; font-size: 11.5px; color: #c9b8e8; margin-top: 7px; }
+  .gc-chips span { font-size: 11.5px; font-weight: 800; padding: 4px 11px; border-radius: 99px; background: var(--glass); color: var(--accent); border: 1px solid var(--glass-line); box-shadow: var(--shadow-s); }
+  .gc-pity { margin-bottom: 14px; padding: 12px 14px; background: var(--glass); border: 1px solid var(--glass-line); border-radius: 18px; box-shadow: var(--shadow); }
+  .gc-bar { height: 9px; border-radius: 99px; background: var(--surface-2); overflow: hidden; }
+  .gc-bar i { display: block; height: 100%; width: 0; background: var(--grad-soft); border-radius: 99px; transition: width .4s var(--ease); }
+  .gc-pity small { display: flex; justify-content: space-between; margin-top: 7px; font-size: 12px; font-weight: 700; color: var(--text-3); }
   .gc-pity .x-btn { margin-top: 10px; }
   .gc-btns { display: grid; grid-template-columns: 1fr 1.25fr; gap: 10px; }
-  .gc-btns .x-btn { height: 62px; flex-direction: column; gap: 3px; font-size: 16px; border-radius: 18px; }
-  .gc-btns .x-btn small { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 800; opacity: .9; }
-  .gc-btns .white small { --cur-hole: #fff; }
-  .gc-btns .primary small { --cur-hole: #6a4ad8; }
+  .gc-btns .x-btn { height: 64px; flex-direction: column; gap: 3px; font-size: 16px; border-radius: 22px; }
+  .gc-btns .x-btn small { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 800; opacity: .95; }
+  .gc-btns .white { border: 1.5px solid var(--line); }
   .gc-links { display: flex; justify-content: center; gap: 4px 18px; flex-wrap: wrap; margin-top: 16px; }
-  .gc-links button { font-size: 12.5px; font-weight: 700; color: #c9b8e8; padding: 6px 2px; }
+  .gc-links button { padding: 6px 2px; font-size: 13px; font-weight: 800; color: var(--text-2); }
   .gc-tbl { width: 100%; border-collapse: collapse; font-size: 13.5px; }
   .gc-tbl th, .gc-tbl td { padding: 9px 4px; border-bottom: 1px solid var(--line); text-align: left; }
   .gc-tbl th { font-size: 11.5px; color: var(--text-3); font-weight: 800; }
@@ -128,7 +221,7 @@
   .gc-tbl td .who { display: flex; align-items: center; gap: 8px; font-weight: 800; }
   .gc-tbl td .who img { width: 28px; height: 28px; border-radius: 50%; }
   .gc-pick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-  .gc-pick button { border-radius: 16px; padding: 10px 6px; background: var(--surface); border: 2px solid var(--line); display: flex; flex-direction: column; align-items: center; gap: 6px; font-weight: 800; font-size: 13px; }
+  .gc-pick button { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 6px; border-radius: 18px; background: var(--surface); border: 2px solid var(--line); font-weight: 800; font-size: 13px; }
   .gc-pick button img { width: 64px; height: 64px; border-radius: 50%; }
   .gc-pick button:disabled { opacity: .45; }
   .gc-log { list-style: none; margin: 0; padding: 0; }
@@ -137,37 +230,42 @@
   .gc-log li span { flex: 1; }
   .gc-log li time { font-size: 11px; color: var(--text-3); }
 
-  /* ===== キャラ ===== */
-  .ch-list { padding: 14px 16px 24px; display: flex; flex-direction: column; gap: 12px; }
-  .ch-card { display: flex; align-items: stretch; gap: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; text-align: left; width: 100%; }
-  .ch-card .pic { width: 34%; max-width: 140px; aspect-ratio: 3 / 4; flex: none; background: var(--twilight); position: relative; overflow: hidden; }
+  /* ===== キャラ（第6回：パステルの地に全身・白い板。iPad から並べて） ===== */
+  .ch-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; max-width: 1080px; padding: 4px 16px 26px; }
+  .ch-card { --c: var(--accent); display: flex; align-items: stretch; width: 100%; overflow: hidden; text-align: left; background: var(--glass); border: 1px solid var(--glass-line); border-radius: 22px; box-shadow: var(--shadow); }
+  .ch-card.flare { --c: var(--flare); } .ch-card.tide { --c: var(--tide); } .ch-card.terra { --c: var(--terra); }
+  .ch-card .pic { position: relative; width: 34%; max-width: 150px; aspect-ratio: 3 / 4; flex: none; overflow: hidden; background: linear-gradient(165deg, color-mix(in srgb, var(--c) 26%, #fff), #e3e3ff 56%, #ffe4f1); }
   .ch-card .pic img { position: absolute; left: 50%; top: 4%; translate: -50% 0; height: 150%; width: auto; max-width: none; }
-  .ch-card.no .pic img { filter: brightness(0) invert(.25); opacity: .55; }
-  .ch-card .inf { flex: 1; min-width: 0; padding: 14px 14px 12px; display: flex; flex-direction: column; gap: 6px; }
-  .ch-card .inf b { font-size: 20px; font-weight: 900; letter-spacing: .04em; }
-  .ch-card .inf small { font: 600 10.5px/1 var(--font-en); letter-spacing: .26em; color: var(--text-3); }
+  .ch-card.no .pic img { filter: brightness(0) invert(1); opacity: .75; }
+  .ch-card .inf { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; padding: 14px 14px 12px; }
+  .ch-card .inf b { font-size: 21px; font-weight: 900; letter-spacing: .04em; }
+  .ch-card .inf small { font: 800 15px/1 var(--font-disp); font-stretch: condensed; letter-spacing: .18em; color: var(--accent); }
   .ch-card .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: auto; }
   .ch-card .x-pips { color: var(--text-3); }
-  .ch-badge { font-size: 11px; font-weight: 800; padding: 2px 9px; border-radius: 99px; background: var(--grad); color: #fff; }
-  .ch-det-art { position: relative; height: min(58vh, 640px); flex: none; background: var(--twilight); overflow: hidden; }
+  .ch-badge { font-size: 11px; font-weight: 900; padding: 3px 10px; border-radius: 99px; background: var(--grad-btn); color: #fff; }
+  @media (min-width: 700px) {
+    .ch-list { grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); margin: 0 auto; padding: 4px 22px 30px; }
+  }
+  .ch-det-art { --c: var(--accent); position: relative; height: min(58vh, 640px); flex: none; overflow: hidden; background: linear-gradient(165deg, color-mix(in srgb, var(--c) 26%, #fff), #e3e3ff 56%, #ffe4f1); }
+  .ch-det-art.flare { --c: var(--flare); } .ch-det-art.tide { --c: var(--tide); } .ch-det-art.terra { --c: var(--terra); }
   .ch-det-art img { position: absolute; left: 50%; bottom: -16%; translate: -50% 0; height: 118%; width: auto; max-width: none; }
-  .ch-det-art .no { filter: brightness(0) invert(.25); opacity: .6; }
-  .ch-det-art::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 80px; background: linear-gradient(transparent, var(--bg)); }
-  .ch-back { position: absolute; top: calc(var(--st) + 10px); left: 10px; z-index: 3; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: rgba(11, 14, 31, .55); }
-  .ch-det { position: relative; z-index: 2; margin-top: -40px; padding: 0 18px 24px; }
-  .ch-det h2 { margin: 0; font-size: 28px; font-weight: 900; letter-spacing: .06em; }
-  .ch-det .en { font: 600 11px/1 var(--font-en); letter-spacing: .32em; color: var(--text-3); }
+  .ch-det-art .no { filter: brightness(0) invert(1); opacity: .8; }
+  .ch-back { position: absolute; top: calc(var(--st) + 10px); left: 10px; z-index: 3; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; color: var(--text); background: var(--glass); box-shadow: var(--shadow-s); }
+  .ch-det { position: relative; z-index: 2; margin: -30px auto 0; max-width: 760px; padding: 18px 18px 26px; background: var(--bg); border-radius: 28px 28px 0 0; box-shadow: 0 -8px 24px rgba(110, 100, 220, .14); }
+  .ch-det h2 { margin: 0; font-size: 30px; font-weight: 900; letter-spacing: .06em; }
+  .ch-det .en { font: 800 15px/1 var(--font-disp); font-stretch: condensed; letter-spacing: .2em; color: var(--accent); }
   .ch-det .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 12px 0; }
   .ch-det .x-pips { color: var(--text-3); }
   .ch-det .acts { display: flex; gap: 10px; margin: 14px 0 18px; }
   .ch-det .acts .x-btn { flex: 1; }
-  .ch-ban { position: relative; border-radius: 18px; overflow: hidden; aspect-ratio: 941 / 1672; max-height: 60vh; background: var(--twilight); }
+  .ch-ban { position: relative; aspect-ratio: 941 / 1672; max-height: 60vh; overflow: hidden; border: 5px solid #fff; background: #fff; box-shadow: var(--shadow-pan); }
   .ch-ban img { width: 100%; height: 100%; object-fit: cover; }
-  .ch-ban.lock img { filter: brightness(.35) saturate(.4); }
-  .ch-ban .lk { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: #fff; font-weight: 800; }
+  .ch-ban.lock img { filter: brightness(.45) saturate(.5); }
+  .ch-ban .lk { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: #fff; font-weight: 800; text-shadow: 0 1px 6px rgba(0, 0, 0, .4); }
   .ch-lines { list-style: none; margin: 16px 0 0; padding: 0; }
-  .ch-lines li { padding: 10px 12px; margin-bottom: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px 14px 14px 4px; font-size: 13.5px; }
-  .ch-h { font: 800 11.5px/1 var(--font-en); letter-spacing: .28em; color: var(--text-3); margin: 22px 2px 10px; }
+  .ch-lines li { margin-bottom: 8px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px 16px 16px 4px; box-shadow: var(--shadow-s); font-size: 13.5px; }
+  .ch-h { display: flex; align-items: center; gap: 8px; margin: 22px 2px 10px; font: 800 15px/1 var(--font-disp); font-stretch: condensed; letter-spacing: .2em; color: var(--accent); }
+  .ch-h::after { content: ""; flex: 1; height: 4px; border-radius: 9px; background: var(--grad-soft); opacity: .8; }
 
   /* ===== ロビー ===== */
   .lb { background: #000; }
@@ -185,8 +283,9 @@
   .lb-hint { position: absolute; left: 0; right: 0; bottom: calc(var(--sb) + 22px); z-index: 3; text-align: center; font-size: 12px; font-weight: 800; color: #fff; text-shadow: 0 1px 6px rgba(0, 0, 0, .6); }
 
   /* ===== メニュー ===== */
-  .mn-body { padding: 14px 16px 30px; display: flex; flex-direction: column; gap: 14px; }
-  .mn-h { font: 800 11.5px/1 var(--font-en); letter-spacing: .28em; color: var(--text-3); margin: 8px 2px -4px; }
+  .mn-body { padding: 4px 16px 30px; display: flex; flex-direction: column; gap: 14px; max-width: 760px; margin: 0 auto; }
+  .mn-h { display: flex; align-items: center; gap: 8px; margin: 10px 4px -4px; font-size: 13.5px; font-weight: 900; letter-spacing: .06em; color: var(--text-2); }
+  .mn-h::after { content: ""; flex: 1; height: 3px; border-radius: 9px; background: var(--grad-soft); opacity: .6; }
   .mn-wal { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
   .mn-wal div { background: var(--surface-2); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 4px; }
   .mn-wal div span { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-3); font-weight: 800; --cur-hole: var(--surface-2); }
@@ -214,15 +313,6 @@
   :root[data-theme="dark"] .wl-dt { background: linear-gradient(90deg, #3a2a14, #3a1f3d); border-color: #5a4630; }
 
   /* ===== 毎日：ログインボーナス・ミッション（2026-11-24 第5回） ===== */
-  .hm-ms { margin-top: 12px; }
-  :is(.hm-ms, .hm-nw) span { display: flex; flex-direction: column; line-height: 1.3; }
-  :is(.hm-ms, .hm-nw) span b { font-size: 13px; }
-  :is(.hm-ms, .hm-nw) span small { font-size: 11px; font-weight: 700; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; }
-  .hm-nw span small:empty { display: none; }
-  .hm-badge { flex: none; min-width: 22px; height: 22px; padding: 0 7px; border-radius: 99px; background: var(--flare); color: #fff; font: 900 12px/22px var(--font-en); font-style: normal; text-align: center; }
-  .hm-badge[hidden] { display: none; }
-  .hm-ms + .hm-news, .hm-news + .hm-news { margin-top: 8px; }
-
   .lg-p { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
   .lg-p img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2px var(--g3); }
   .lg-p p { margin: 0; font-size: 13.5px; font-weight: 800; }
@@ -258,10 +348,7 @@
   .ms-all { display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin-bottom: 4px; border-radius: 14px; background: linear-gradient(90deg, #efeaff, #ffeefe); font-size: 12.5px; font-weight: 900; color: #1d1d1f; }
   .ms-all > span:first-child { flex: 1; }
   :root[data-theme="dark"] .ms-all { background: linear-gradient(90deg, #2a2350, #3a1f3d); color: var(--text); }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) .ms-all { background: linear-gradient(90deg, #2a2350, #3a1f3d); color: var(--text); }
-    :root:not([data-theme="light"]) .wl-dt { background: linear-gradient(90deg, #3a2a14, #3a1f3d); border-color: #5a4630; }
-  }
+  /* ★ 第6回の刷新から、端末のダークモードには合わせない（設定の「暗い」だけ）→ prefers-color-scheme の決まりは外した */
 
   /* ===== 共通の印：はじまり特典の「初代」（上のバー・メニュー・特典の板）と NEW（2026-11-24） ===== */
   .p-vet { display: inline-block; margin-right: 5px; padding: 2px 6px 1px; border-radius: 6px; font: 900 9.5px/1.25 var(--font); letter-spacing: .12em; font-style: normal; color: #3b2600; background: linear-gradient(135deg, #fff1b8, #f5c451 55%, #dc9a22); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .55); vertical-align: 1px; text-shadow: none; }
@@ -300,14 +387,10 @@
   .vr-done p { margin: 0; font-size: 14px; font-weight: 800; line-height: 1.5; }
   :root[data-theme="dark"] .vr-gifts > div { background: linear-gradient(180deg, #3a2a14, #3a1f3d); border-color: #5a4630; color: var(--text); }
   :root[data-theme="dark"] .vr-gifts small { color: var(--text-3); }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) .vr-gifts > div { background: linear-gradient(180deg, #3a2a14, #3a1f3d); border-color: #5a4630; color: var(--text); }
-    :root:not([data-theme="light"]) .vr-gifts small { color: var(--text-3); }
-  }
 
   /* ===== メール・コード入力（2026-11-24 段階2・portal/mail.js） ===== */
   .ml-all { margin-bottom: 12px; }
-  .ml-i { padding: 12px 14px 12px; margin-bottom: 10px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); }
+  .ml-i { padding: 12px 14px 12px; margin-bottom: 10px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-s); }
   .ml-i.got { opacity: .6; }
   .ml-h { display: flex; align-items: flex-start; gap: 10px; }
   .ml-h > div { flex: 1; min-width: 0; }
@@ -330,7 +413,6 @@
   .cd input[data-cd] { text-transform: uppercase; letter-spacing: .12em; font-variant-numeric: tabular-nums; }
   .cd-err { min-height: 20px; margin: -4px 2px 0; font-size: 13px; font-weight: 800; line-height: 1.5; color: #ff4f7b; }
   :root[data-theme="dark"] .ml-ic { background: linear-gradient(135deg, #2a2350, #3a1f3d); color: #b9a2ff; }
-  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .ml-ic { background: linear-gradient(135deg, #2a2350, #3a1f3d); color: #b9a2ff; } }
 
   /* 運営の管理画面（ad-）の見た目は portal/admin.css（運営だけが開くので、開いたときに読む） */
 

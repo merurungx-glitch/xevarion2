@@ -17,43 +17,57 @@
   /* ===== 起動ロゴ（A：NGX → ISHIDA Production → 軌道が描かれてロゴ） ===== */
   .fx-intro { position: fixed; inset: 0; z-index: 950; background: #000; cursor: pointer; overflow: hidden; }
   .fx-intro .co { position: absolute; left: 50%; top: 48%; translate: -50% -50%; width: min(64vw, 270px); }
-  .fx-intro .glow { position: absolute; left: 50%; top: 44%; width: min(100vw, 440px); aspect-ratio: 1; translate: -50% -50%; border-radius: 50%; background: radial-gradient(circle, rgba(58, 107, 255, .42), rgba(154, 61, 255, .18) 40%, transparent 66%); opacity: 0; }
-  .fx-intro .orb { position: absolute; left: 50%; top: 44%; translate: -50% -50%; width: min(78vw, 330px); }
-  .fx-intro .mark { position: absolute; left: 50%; top: 44%; translate: -50% -50%; width: min(72vw, 300px); opacity: 0; }
-  .fx-intro .word { position: absolute; left: 50%; top: calc(44% + min(36vw, 150px)); translate: -50% 0; width: min(66vw, 280px); opacity: 0; }
+  /* 2社のあとの白い光（第6回：輪がロゴになる動きはやめた）→ タイトルの白へ */
+  .fx-intro .burst { position: absolute; left: 50%; top: 48%; width: 260vmax; height: 260vmax; border-radius: 50%; opacity: 0; transform: translate(-50%, -50%) scale(.1); background: radial-gradient(circle, #fff 0, #fff 42%, rgba(255, 255, 255, .8) 52%, rgba(255, 255, 255, 0) 70%); }
 
-  /* ===== タイトル（B：1人ずつ主役） ===== */
-  .tt { background: var(--twilight); color: var(--on-night); cursor: pointer; user-select: none; -webkit-user-select: none; }
-  .tt-stars { position: absolute; inset: 0; background: var(--stars); animation: tt-tw 5s ease-in-out infinite alternate; }
-  @keyframes tt-tw { from { opacity: .55; } to { opacity: 1; } }
-  .tt-glow { position: absolute; left: 50%; top: 58%; width: min(150vw, 820px); aspect-ratio: 1; translate: -50% -50%; border-radius: 50%; opacity: .6; background: radial-gradient(circle, color-mix(in srgb, var(--c, #3a6bff) 60%, transparent), transparent 62%); transition: opacity .6s; }
-  .tt-orbit { position: absolute; left: 50%; top: 46%; translate: -50% -50%; width: min(150vw, 780px); opacity: .7; pointer-events: none; }
-  .tt-orbit .r1 { animation: tt-rot 60s linear infinite; }
-  .tt-orbit .r2 { animation: tt-rot 90s linear infinite reverse; }
-  @keyframes tt-rot { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-  .tt-stage { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
-  .tt-stage img { position: absolute; left: 50%; bottom: -6%; translate: -50% 0; height: min(86vh, 860px); width: auto; max-width: none; }
-  .tt-fade { position: absolute; left: 0; right: 0; bottom: 0; height: 30%; background: linear-gradient(transparent, rgba(42, 28, 85, .92) 72%); z-index: 3; }
-  .tt-logo { position: absolute; left: 50%; top: calc(var(--st) + 5vh); translate: -50% 0; width: min(56vw, 300px); z-index: 4; filter: drop-shadow(0 6px 22px rgba(58, 107, 255, .35)); }
-  .tt-name { position: absolute; left: 20px; bottom: calc(var(--sb) + 112px); z-index: 4; text-shadow: 0 2px 12px rgba(0, 0, 0, .55); }
-  .tt-name small { display: block; font: 700 10.5px/1 var(--font-en); letter-spacing: .32em; opacity: .9; }
-  .tt-name b { display: block; font-size: 30px; font-weight: 900; letter-spacing: .06em; line-height: 1.25; }
-  .tt-name span { display: inline-block; margin-top: 4px; font: 800 10.5px/1 var(--font-en); letter-spacing: .14em; padding: 4px 10px; border-radius: 99px; background: var(--c, #3a6bff); color: #fff; text-shadow: none; }
-  .tt-tap { position: absolute; left: 0; right: 0; bottom: calc(var(--sb) + 58px); z-index: 5; text-align: center; font: 700 13px/1 var(--font-en); letter-spacing: .5em; color: #fff; text-shadow: 0 0 14px rgba(127, 240, 255, .6); animation: tt-pulse 2.2s ease-in-out infinite; }
-  .tt-tap::before, .tt-tap::after { content: ""; display: inline-block; width: 26px; height: 1px; background: currentColor; vertical-align: 4px; margin: 0 12px; opacity: .6; }
-  @keyframes tt-pulse { 50% { opacity: .45; } }
-  .tt-wait { position: absolute; left: 50%; bottom: calc(var(--sb) + 50px); translate: -50% 0; z-index: 5; display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--on-night-2); }
-  .tt-cred { position: absolute; left: 0; right: 0; bottom: calc(var(--sb) + 18px); z-index: 5; text-align: center; font: 600 9.5px/1.6 var(--font-en); letter-spacing: .22em; color: #c9b8e8; }
+  /* ===== タイトル（2026-11-24 第6回 T1：ひかりの中から・いただいた絵をそのまま） =====
+     絵の大きさと置き場所は title.js の layout()（縦長＝横いっぱい・横長＝高さいっぱいでまん中）。.go で演出が始まる */
+  .tt { background: #2c8df5; color: #fff; cursor: pointer; user-select: none; -webkit-user-select: none; }
+  .tt-bg { position: absolute; inset: -30px; background: url("../assets/title/miduki-blur.webp") center / cover no-repeat; }
+  .tt.wide .tt-bg::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 60% 75% at 50% 45%, rgba(255, 255, 255, .35), rgba(255, 255, 255, 0) 60%), linear-gradient(90deg, rgba(24, 110, 255, .5), rgba(60, 150, 255, .12) 32%, rgba(255, 255, 255, 0) 50%, rgba(150, 110, 255, .12) 68%, rgba(150, 90, 255, .46)); }
+  .tt-card { position: absolute; overflow: hidden; }
+  .tt.wide .tt-card { border-radius: 6px; box-shadow: 0 24px 70px rgba(0, 50, 140, .35), 0 0 0 1px rgba(255, 255, 255, .5); }
+  .tt-pic { display: block; width: 100%; height: 100%; }
+  /* ロゴに走る光：絵の中のロゴのあたり（絵の 横 9.6〜92.6%・縦 0.6〜20%）を、絵の箱の中で数える＝どの大きさでもずれない */
+  .tt-shine { position: absolute; left: 9.6%; top: .6%; width: 83%; height: 19.4%; overflow: hidden; pointer-events: none; }
+  .tt-shine::before { content: ""; position: absolute; top: -30%; bottom: -30%; left: -50%; width: 34%; background: linear-gradient(100deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .85), rgba(255, 255, 255, 0)); transform: skewX(-18deg); }
+  .tt-pts i { position: absolute; top: -20px; width: 12px; height: 8px; border-radius: 8px 1px 8px 1px; background: linear-gradient(135deg, #ffc2e4, #c7b5ff); opacity: 0; z-index: 3; pointer-events: none; }
+  .tt.go .tt-pts i { animation: tt-fall 7s linear infinite; }
+  @keyframes tt-fall { 0% { opacity: 0; transform: translate(0, 0) rotate(0); } 10% { opacity: .9; } 100% { opacity: 0; transform: translate(-90px, 100vh) rotate(540deg); } }
+  .tt-foot { position: absolute; left: 0; right: 0; bottom: calc(var(--sb) + 10px); z-index: 5; display: flex; flex-direction: column; align-items: center; gap: 10px; pointer-events: none; }
+  .tt.wide .tt-foot { left: auto; right: 6vw; bottom: calc(var(--sb) + 40px); align-items: flex-end; }
+  .tt-tap { padding: 12px 22px 12px 28px; border-radius: 99px; background: linear-gradient(90deg, #22b8ff, #3a6bff 45%, #9a3dff); color: #fff; font: 700 14px/1 var(--font-en); letter-spacing: .34em; white-space: nowrap; box-shadow: 0 6px 20px rgba(40, 80, 220, .35); }
+  .tt-wait { display: flex; align-items: center; gap: 10px; padding: 6px 14px; border-radius: 99px; background: rgba(255, 255, 255, .85); color: #26305c; font-size: 12px; font-weight: 800; }
+  .tt-wait .x-spin { width: 26px; height: 26px; }
+  .tt-cred { font: 700 9.5px/1.5 var(--font-en); letter-spacing: .2em; color: #24418f; text-align: center; }
+  .tt-cred span { margin-left: 10px; }
+  .tt.wide .tt-cred { color: #fff; text-shadow: 0 1px 6px rgba(0, 40, 120, .5); text-align: right; }
+  .tt-white { position: absolute; inset: 0; z-index: 20; background: #fff; pointer-events: none; }
+  /* 演出 */
+  .tt.go .tt-white { animation: tt-white 1s ease-out both; }
+  .tt.go .tt-bg { animation: tt-fade .8s ease-out both; }
+  .tt.go .tt-pic { animation: tt-zoom 2.6s cubic-bezier(.2, .7, .2, 1) both; }
+  .tt.go .tt-shine::before { animation: tt-shine 1s ease-in-out 1.3s both; }
+  .tt.go .tt-tap:not([hidden]) { animation: tt-in .5s ease-out var(--td, 1.9s) both, tt-pulse 1.8s ease-in-out calc(var(--td, 1.9s) + .6s) infinite; }
+  .tt.go .tt-cred, .tt.go .tt-wait { animation: tt-fade .5s ease-out 1.6s both; }
+  .tt.go-short .tt-white { animation: tt-white .25s ease-out both; }
+  .tt.go-short .tt-tap:not([hidden]) { animation: tt-pulse 2.2s ease-in-out infinite; }
+  @keyframes tt-white { from { opacity: 1; } to { opacity: 0; } }
+  @keyframes tt-fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes tt-zoom { from { transform: scale(1.1); } to { transform: none; } }
+  @keyframes tt-shine { from { left: -50%; } to { left: 125%; } }
+  @keyframes tt-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes tt-pulse { 50% { opacity: .55; } }
 
-  /* ===== ロード（C：全身＋ヒント） ===== */
-  .fx-load { position: fixed; inset: 0; z-index: 940; background: var(--twilight); color: #fff; opacity: 0; transition: opacity .25s; overflow: hidden; }
+  /* ===== ロード（C：全身＋ヒント）★ 第6回の刷新：明るい地（空のグラデーション・ななめの帯）に全身をうすく ===== */
+  .fx-load { position: fixed; inset: 0; z-index: 940; background: var(--page); color: var(--text); opacity: 0; transition: opacity .25s; overflow: hidden; }
   .fx-load.show { opacity: 1; }
-  .fx-load .p-stars { position: absolute; inset: 0; background: var(--stars); }
-  .fx-load .ch { position: absolute; left: 50%; bottom: -5%; translate: -50% 0; height: min(86vh, 860px); width: auto; max-width: none; opacity: .5; }
-  .fx-load .tip { position: absolute; left: 20px; right: 20px; bottom: calc(var(--sb) + 78px); max-width: 520px; margin: 0 auto; background: rgba(11, 14, 31, .84); border: 1px solid rgba(255, 255, 255, .14); border-radius: 16px; padding: 12px 14px; font-size: 13.5px; line-height: 1.7; }
-  .fx-load .tip b { display: block; font: 800 11px/1 var(--font-en); letter-spacing: .26em; color: #9fe9ff; margin-bottom: 6px; }
-  .fx-load .bar { position: absolute; left: 20px; right: 20px; bottom: calc(var(--sb) + 46px); max-width: 520px; margin: 0 auto; height: 4px; border-radius: 99px; background: rgba(255, 255, 255, .14); overflow: hidden; }
-  .fx-load .bar i { display: block; height: 100%; width: 0; background: var(--grad); border-radius: 99px; transition: width .2s; }
+  .fx-load::before { content: ""; position: absolute; left: -40%; right: -40%; top: calc(var(--st) + 150px); height: 210px; background: var(--band); opacity: .5; transform: rotate(-12deg); }
+  .fx-load .ch { position: absolute; left: 50%; bottom: -5%; translate: -50% 0; height: min(86vh, 860px); width: auto; max-width: none; opacity: .38; }
+  .fx-load .tip { position: absolute; left: 20px; right: 20px; bottom: calc(var(--sb) + 78px); max-width: 520px; margin: 0 auto; background: var(--glass); border: 1px solid var(--glass-line); border-radius: 18px; padding: 12px 16px; box-shadow: var(--shadow); font-size: 13.5px; font-weight: 700; line-height: 1.7; }
+  .fx-load .tip b { display: block; margin-bottom: 4px; font: 800 15px/1 var(--font-disp); font-stretch: condensed; letter-spacing: .2em; color: var(--accent); }
+  .fx-load .bar { position: absolute; left: 20px; right: 20px; bottom: calc(var(--sb) + 46px); max-width: 520px; margin: 0 auto; height: 5px; border-radius: 99px; background: rgba(255, 255, 255, .7); overflow: hidden; }
+  .fx-load .bar i { display: block; height: 100%; width: 0; background: var(--grad-btn); border-radius: 99px; transition: width .2s; }
   .fx-load .bar.ind i { width: 34%; animation: fx-ind 1.2s ease-in-out infinite; }
   @keyframes fx-ind { from { transform: translateX(-100%); } to { transform: translateX(300%); } }
 
@@ -98,12 +112,12 @@
 
   /* ===== 入手（A：お財布へ飛ぶ／C：GET! のカード） ===== */
   .fx-coin { position: fixed; left: 0; top: 0; width: 24px; height: 24px; z-index: 990; pointer-events: none; background: center / contain no-repeat; }
-  .fx-get { position: fixed; inset: 0; z-index: 970; display: grid; place-items: center; padding: 20px; background: rgba(5, 6, 26, .6); }
-  .fx-get-card { width: min(100%, 360px); background: var(--surface); color: var(--text); border-radius: 24px; padding: 20px 18px 18px; text-align: center; box-shadow: 0 20px 50px rgba(0, 0, 0, .35); }
-  .fx-get-card h3 { margin: 0; font: 900 32px/1 var(--font-en); letter-spacing: .08em; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .fx-get { position: fixed; inset: 0; z-index: 970; display: grid; place-items: center; padding: 20px; background: rgba(30, 26, 80, .45); }
+  .fx-get-card { width: min(100%, 360px); background: var(--bg); color: var(--text); border-radius: 26px; padding: 20px 18px 18px; text-align: center; box-shadow: 0 20px 50px rgba(60, 40, 150, .35); border: 1px solid var(--glass-line); }
+  .fx-get-card h3 { margin: 0; font: 800 44px/1 var(--font-disp); font-stretch: condensed; letter-spacing: .06em; background: var(--grad-btn); -webkit-background-clip: text; background-clip: text; color: transparent; }
   .fx-get-card p { margin: 6px 0 12px; font-size: 12.5px; color: var(--text-3); }
   .fx-get-rows { display: flex; flex-direction: column; gap: 8px; text-align: left; }
-  .fx-get-row { display: flex; align-items: center; gap: 10px; background: var(--surface-2); border-radius: 12px; padding: 9px 12px; font-weight: 800; }
+  .fx-get-row { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 9px 12px; font-weight: 800; }
   .fx-get-row span { flex: 1; }
   .fx-get-row b { font-variant-numeric: tabular-nums; }
   .fx-get-card .x-btn { margin-top: 16px; }

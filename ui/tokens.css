@@ -1,11 +1,15 @@
-/* XEVARION II — 色・文字・大きさの決まり（デザイン C「ツートーン」）
-   枠と演出＝夜空（--night-*）／中身＝昼（--bg・--surface…）。中身は夜に自動で暗くなる。
+/* XEVARION II — 色・文字・大きさの決まり
+   ★ 2026-11-24 第6回の相談で全面刷新：E2「BLOOM POSTER」（B の大きな絵と太い見出し × C の水色→ラベンダー→ピンク・白い飾り枠）
+   ・地は明るい（空の青 → うすいラベンダー → ピンク）。板は白くすけた形・影はやわらかい紫
+   ・夜空の色（--night-*）は演出（起動ロゴ・ガチャ・ロビー）だけに残す
+   ・英字の見出しは端末の細長の太字（--font-disp：iPhone・iPad＝Avenir Next Condensed・Windows＝Bahnschrift・Android＝Roboto Condensed）。字体のファイルは持たない
+   ・端末のダークモードには、いまは合わせない（明るい見た目に決まったため。暗い見た目は見本で相談してから）。設定で「暗い」を選んだときだけ暗くする
    @layer の順：tokens → base → components → portal → apps（あとの層ほど強い） */
 @layer tokens, base, components, portal, apps;
 
 @layer tokens {
   :root {
-    /* 夜空（枠・演出） */
+    /* 夜空（演出：起動ロゴ・ガチャ・ロビー） */
     --night-0: #05061a;
     --night-1: #0b0e1f;
     --night-2: #141a33;
@@ -22,13 +26,24 @@
              radial-gradient(1px 1px at 9% 41%, #fff 60%, transparent),
              radial-gradient(1.1px 1.1px at 62% 47%, #e7dcff 60%, transparent);
 
-    /* ロゴのグラデーション */
+    /* ロゴのグラデーション（ブランドの印） */
     --g1: #22e4ff;
     --g2: #3a6bff;
     --g3: #9a3dff;
     --g4: #e35bff;
     --grad: linear-gradient(90deg, var(--g1), var(--g2) 36%, var(--g3) 70%, var(--g4));
-    --grad-btn: linear-gradient(90deg, #3a6bff, #9a3dff 62%, #e35bff);
+
+    /* E2 の色：水色 → ラベンダー → ピンク */
+    --sky: #4f9dff;
+    --lav: #8f7bff;
+    --pink: #ff86c4;
+    --grad-btn: linear-gradient(90deg, #4f9dff, #8f7bff 55%, #ff86c4);   /* 押すボタン */
+    --grad-soft: linear-gradient(90deg, #7fb6ff, #b49cff 50%, #ff9ccf);  /* 進みぐあいの線・見出しの線 */
+    --grad-tag: linear-gradient(90deg, #ff86c4, #a68dff);                /* 「開催中」などの札 */
+    --grad-tab: linear-gradient(90deg, #6fa9ff, #a68dff);                /* 選んでいるタブ */
+    /* 画面の地：上は空の青（iPhone の時計・電池の白い字が読めるように）→ うすいラベンダー → ピンク */
+    --page: linear-gradient(180deg, #6aa6ff 0, #a8ceff calc(var(--st) + 96px), #dbe2ff 44%, #f1e7ff 72%, #ffe7f3 100%);
+    --band: linear-gradient(90deg, #7fb6ff, #b49cff 50%, #ff9ccf);       /* 絵のうしろのななめの帯 */
 
     /* 5属性 */
     --flare: #ff5b4a;
@@ -44,56 +59,58 @@
 
     /* 形 */
     --r-xs: 8px;
-    --r-s: 11px;
-    --r-m: 14px;
+    --r-s: 12px;
+    --r-m: 16px;
     --r-l: 20px;
     --r-xl: 26px;
     --font: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Meiryo", system-ui, sans-serif;
     --font-en: "Avenir Next", "Segoe UI", "Helvetica Neue", var(--font);
+    --font-disp: "Avenir Next Condensed", "Bahnschrift", "Roboto Condensed", "Arial Narrow", var(--font-en);
     --ease: cubic-bezier(.2, .8, .2, 1);
     --dur: .22s;
 
     /* 画面の端（--sb は core/viewport.js が実測で上書きする） */
     --st: env(safe-area-inset-top, 0px);
     --sb: env(safe-area-inset-bottom, 0px);
-    --tab-h: 58px;
+    --tab-h: 60px;
+    --side-w: 232px;   /* PC・iPad 横の左のメニュー（D1） */
 
-    /* 中身（昼） */
-    --bg: #f6f7fb;
+    /* 中身 */
+    --bg: #f4f3ff;                         /* 板・下から出る板の地（1色） */
     --surface: #ffffff;
-    --surface-2: #eef0f6;
-    --line: #e3e6ef;
-    --text: #151a33;
-    --text-2: #5d6684;
-    --text-3: #8a92b2;
-    --shadow: 0 2px 8px rgba(20, 26, 51, .07);
-    --accent: #3a6bff;
+    --surface-2: #f0eefc;
+    --glass: rgba(255, 255, 255, .88);      /* 白くすけた板（ぼかしは使わない） */
+    --glass-line: rgba(255, 255, 255, .95);
+    --line: #e6e2f7;
+    --text: #26305c;
+    --text-2: #5f6896;
+    --text-3: #8e95bd;
+    --shadow: 0 8px 22px rgba(110, 100, 220, .14);
+    --shadow-s: 0 3px 10px rgba(110, 100, 220, .16);
+    --shadow-pan: 0 14px 28px rgba(100, 80, 210, .30);
+    --accent: #7b68ee;
+    --tab-bg: rgba(255, 255, 255, .94);
+    --chrome: #fbfaff;                     /* iPhone の下の帯（下のタブの色と同じ） */
   }
 
-  /* 中身の夜（端末のダークモード・または設定で「暗い」） */
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --bg: #0f1226;
-      --surface: #171b33;
-      --surface-2: #20254a;
-      --line: rgba(255, 255, 255, .09);
-      --text: #eef1ff;
-      --text-2: #aab2d6;
-      --text-3: #7d86ad;
-      --shadow: none;
-      --accent: #8aa4ff;
-    }
-  }
+  /* 暗い（設定で「暗い」を選んだときだけ）。E2 の暗い見た目は見本で相談してから作り直す */
   :root[data-theme="dark"] {
-    --bg: #0f1226;
-    --surface: #171b33;
-    --surface-2: #20254a;
-    --line: rgba(255, 255, 255, .09);
+    --page: linear-gradient(180deg, #1b2a66 0, #1d2350 calc(var(--st) + 96px), #1b1c44 44%, #241a45 72%, #2c1a3e 100%);
+    --band: linear-gradient(90deg, #2f4f9a, #4a3d8e 50%, #6a3570);
+    --bg: #14173a;
+    --surface: #1b1f45;
+    --surface-2: #252a58;
+    --glass: rgba(27, 31, 69, .9);
+    --glass-line: rgba(255, 255, 255, .08);
+    --line: rgba(255, 255, 255, .1);
     --text: #eef1ff;
-    --text-2: #aab2d6;
-    --text-3: #7d86ad;
-    --shadow: none;
-    --accent: #8aa4ff;
+    --text-2: #b4bce0;
+    --text-3: #8a92bb;
+    --shadow: 0 8px 22px rgba(0, 0, 0, .3);
+    --shadow-s: 0 3px 10px rgba(0, 0, 0, .3);
+    --accent: #a99cff;
+    --tab-bg: rgba(20, 23, 58, .96);
+    --chrome: #14173a;
   }
 
   /* 省電力・動きを減らす：うつりかわりを短く（core/power.js が data-power を付ける） */

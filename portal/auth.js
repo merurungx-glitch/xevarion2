@@ -6,6 +6,7 @@ import * as router from '../core/router.js';
 import { firstTenDone } from '../core/gacha.js';
 import { ico } from '../ui/icons.js';
 import { esc } from '../ui/dom.js';
+import { decoHTML } from './shell.js';
 
 export async function mount(el, { go }) {
   el.classList.add('au');
@@ -15,11 +16,10 @@ export async function mount(el, { go }) {
     <label class="x-field" data-f="${name}"><span>${label}</span><input name="${name}" ${attrs}><small>${hint}</small></label>`;
 
   function render() {
-    el.innerHTML = `
-      <div class="p-stars"></div>
+    el.innerHTML = `${decoHTML()}
       <button type="button" class="au-back" data-back aria-label="${t('btn.back')}">${ico('back')}</button>
       <div class="au-scroll x-scroll">
-        <img class="au-logo" src="assets/brand/logo-640.webp" alt="XEVARION II">
+        <div class="au-logo"><img class="mk" src="assets/brand/mark-256.webp" alt=""><img class="wm" src="assets/brand/wordmark-navy-560.webp" alt="XEVARION II"></div>
         <form class="au-card" novalidate>
           <div class="x-seg" role="tablist">
             <button type="button" data-mode="in" class="${up ? '' : 'on'}">${t('auth.signin')}</button>

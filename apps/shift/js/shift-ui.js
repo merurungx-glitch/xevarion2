@@ -859,7 +859,7 @@
     const prizeOf = (p) => {
       if (S.draw) return '<em class="pz no">引き分け・賞金なし</em>';
       const a = PZ[p.rank - 1];
-      if (!a) return '<em class="pz no">賞金なし（6位〜）</em>';
+      if (!a) return '<em class="pz no">賞金なし</em>';   /* ★ II（第6回）：8位まで賞金があるので、8人までなら出ない */
       if (isCpu(p)) return '<em class="pz no">CPU（' + a + ' XEVA の枠）</em>';
       if (!p.uid) return '<em class="pz no">連携なし（' + a + ' XEVA の枠）</em>';
       return '<em class="pz">+' + a + " XEVA</em>";
@@ -921,7 +921,7 @@
       "<li>点が同じなら最長 → 盤の上の<b>自分の駒の数</b>が多い順</li>" +
       "<li>それでも同じなら<b>同じ順位</b>（例：2位・2位・4位）。賞金も同じ額です</li></ol>" +
       '<h4>🎁 もらえる XEVA</h4><div class="pztab">' + PZ.map((a, i) => "<span><small>" + (i + 1) + "位</small><b>" + a + "</b></span>").join("") + "</div>" +
-      "<p><b>この端末の本人</b>と、XEVARION II のアカウントを<b>🔗 連携した人</b>が受け取れます（CPU・連携なしの席はもらえません）。6位からと、引き分けのときは賞金なし。</p></div>";
+      "<p><b>この端末の本人</b>と、XEVARION II のアカウントを<b>🔗 連携した人</b>が受け取れます（CPU・連携なしの席はもらえません）。引き分けのときは賞金なし。</p></div>";
   }
   function renderRules() {
     const rows = [2, 3, 4, 5, 6, 7, 8].map((n) => { const r = G.RULES[n]; return "<tr><td><b>" + n + "人</b></td><td>" + r.size + "×" + r.size + "</td><td>" + r.win + "つ</td><td>" + r.pieces + "個</td></tr>"; }).join("");
