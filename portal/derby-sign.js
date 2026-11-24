@@ -9,7 +9,7 @@
 //   発売の決まりは apps/derby/js/md-data.js（saleBack）・md-net.js（N.saleWins）と同じ。片方を変えたらもう一方も
 import * as store from '../core/store.js';
 import * as power from '../core/power.js';
-import { serverNow } from '../core/rooms.js';
+import { serverNow } from '../core/clock.js';
 
 const IDX_URL = 'https://raw.githubusercontent.com/merurungx-glitch/xevarion/magiscope-data/derby/index.json';
 const CACHE = 'x2a.derby.c:index.json';

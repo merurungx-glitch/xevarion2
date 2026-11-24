@@ -37,6 +37,7 @@ import * as chara from '../core/chara.js';
 import * as wallet from '../core/wallet.js';
 import * as appdata from '../core/appdata.js';
 import * as sync from '../core/sync.js';
+import * as daily from '../core/daily.js';
 
 /** アプリのごほうび（X2.earn）の1回の上限（まちがいで大きな数を入れないように）。アプリごとに広げるときは routes.js の APPS の earnCap */
 const EARN_CAP = { xeva: 20000, gem: 50, ticket: 20 };
@@ -162,7 +163,7 @@ export function makeBridge(app, { exit, ready }) {
       verify: (id, pass) => party.verify(id, pass),
       recent: () => party.recent().map((r) => ({ ...r, faceSrc: faceSrc(r.face) })),
       forget: (uid) => party.forget(uid),
-      award: (list) => party.award(list, { app: app.id }),
+      award: (list) => { daily.note('party'); return party.award(list, { app: app.id }); },   // 1回の賞金＝パーティーゲーム1回（ミッション「パーティーゲームで3回」）
     }),
     power: Object.freeze({
       mode: () => power.currentMode(),

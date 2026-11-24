@@ -164,6 +164,7 @@ function card(r) {
     const c = byId(r.id);
     return `<div class="gx-card char ${c.el}"><img src="${art(c.id, 'face-256')}" alt=""><span class="tag">${esc(tagOf(r))}</span><span class="lab">${esc(c.name)}</span></div>`;
   }
+  if (r.type === 'orbit') return `<div class="gx-card orbit"><img src="assets/brand/mark-512.webp" alt=""><b>${t('gacha.itemOrbit')}</b></div>`;   // キャラ以外（2026-11-24〜）
   return `<div class="gx-card xeva"><i class="x-cur xeva"></i><b>${fmt(r.n)}</b></div>`;
 }
 

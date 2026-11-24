@@ -10,6 +10,9 @@ import { toast } from '../ui/toast.js';
 import { topbarHTML, bindTopbar } from './shell.js';
 import { APPS, appById } from './routes.js';
 import { onSign, leftStr } from './derby-sign.js';
+import * as daily from '../core/daily.js';
+import { openLogbo } from './logbo.js';
+import { openMissions } from './missions.js';
 
 export async function mount(el, { go }) {
   el.classList.add('hm');
@@ -25,6 +28,7 @@ export async function mount(el, { go }) {
         ${APPS.map((a) => `<button type="button" class="hm-app" data-act="app" data-id="${a.id}" data-name="${esc(a.name)}"><img class="x-appic" src="assets/apps/${a.id}-192.webp" alt="" decoding="async"><small>${esc(a.short || a.name)}</small></button>`).join('')}
         <button type="button" class="hm-app" data-act="sites"><span class="hm-fold"><img src="assets/apps/ngx-96.webp" alt=""><img src="assets/apps/ishida-96.webp" alt=""></span><small>${t('home.sites')}</small></button>
       </div>
+      <button type="button" class="hm-news hm-ms" data-act="missions">${ico('mission', 'grad')}<span><b>${t('ms.title')}</b><small data-ms></small></span><em class="hm-badge" data-msn hidden></em>${ico('next')}</button>
       <button type="button" class="hm-news" data-act="news">${ico('bell', 'grad')}<span>${t('home.news')}</span>${ico('next')}</button>
     </div>`;
 
@@ -66,11 +70,27 @@ export async function mount(el, { go }) {
     if (s.res) derbyBtn.insertAdjacentHTML('beforeend', `<i class="ds-res">${esc(t('derby.res', { n: s.res }))}</i>`);
   };
 
+  // ミッション（今日・今週の達成と、受け取れる数）
+  const msText = el.querySelector('[data-ms]');
+  const msBadge = el.querySelector('[data-msn]');
+  const paintMs = () => {
+    const M = daily.missions();
+    const d = M.daily.filter((m) => m.done).length, w = M.weekly.filter((m) => m.done).length;
+    msText.textContent = t('ms.homeSub', { d, dn: M.daily.length, w, wn: M.weekly.length });
+    msBadge.hidden = !M.ready;
+    msBadge.textContent = M.ready;
+  };
+  paintMs();
+
+  // ログインボーナス：その日はじめてホームを開いたとき（画面が出てから少しして）
+  const lbT = setTimeout(() => openLogbo({ auto: true }), 700);
+
   let hideT = 0;
   const offs = [
     bindTopbar(el.querySelector('.hm-top')),
     chara.onChange(paint),
     onSign(paintDerby),
+    daily.onChange(paintMs),
     bindActs(el, {
       talk() {
         const p = chara.partner();
@@ -79,7 +99,9 @@ export async function mount(el, { go }) {
         bubble.classList.add('show');
         clearTimeout(hideT);
         hideT = setTimeout(() => bubble.classList.remove('show'), 3400);
+        daily.note('talk');   // ミッション「パートナーと話す」
       },
+      missions() { openMissions(); },
       app(b) {
         if (appById(b.dataset.id)?.path) go('app/' + b.dataset.id);
         else toast(t('soon', { name: b.dataset.name }));
@@ -90,5 +112,5 @@ export async function mount(el, { go }) {
       lobbyLock() { const p = chara.partner(); toast(t('chara.toMax', { n: chara.MAX_COPIES - chara.copies(p.id) })); },
     }),
   ];
-  return () => { clearTimeout(hideT); offs.forEach((f) => f()); };
+  return () => { clearTimeout(hideT); clearTimeout(lbT); offs.forEach((f) => f()); };
 }

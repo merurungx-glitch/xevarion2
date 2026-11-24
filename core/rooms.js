@@ -10,15 +10,12 @@
 import * as account from './account.js';
 import * as chara from './chara.js';
 import { backend } from './backend/index.js';
+import { serverNow } from './clock.js';
 
 const OLD = 24 * 60 * 60 * 1000;   // 1日より古い部屋の番号は使い直してよい
 
-// サーバーの時刻（端末の時計のずれをなくす・.info/serverTimeOffset）。見張りは1つだけ（どの部屋でも同じ）
-let skew = 0, skewP = null;
-export function serverNow() {
-  if (!skewP) skewP = backend().then((be) => { if (be.rt.offset) be.rt.offset((ms) => { skew = Number(ms) || 0; }); }).catch(() => {});
-  return Date.now() + skew;
-}
+// サーバーの時刻は core/clock.js（見張りは1つだけ・どの部屋でも同じ）。ここからも出す（これまでどおり rooms.serverNow で使える）
+export { serverNow };
 const gen4 = () => String(Math.floor(1000 + Math.random() * 9000));
 const errOf = (e) => (/permission/i.test(String((e && (e.message || e.code)) || '')) ? 'denied' : 'net');
 /** 部屋の設定に入れてよいもの（数・文字・はい/いいえ だけ。host・status・createdAt は入れさせない） */

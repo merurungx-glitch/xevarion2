@@ -1,5 +1,6 @@
 // XEVARION II — ガチャのしくみ（GRAND DEBUT GACHA）
-// ・3人まとめて（案1）：キャラ 6%（3人で等分）・10連の10回目は 20%・それ以外は XEVA
+// ・3人まとめて（案1）：キャラ 6%（3人で等分）・10連の10回目は 20%
+// ・それ以外は何も出ない（オービット＋1 だけ）。★ 2026-11-24 第5回の相談で決定（前は XEVA 200〜5,000＝平均 約610 が戻っていた）
 // ・天井：1回ごとにオービット1つ → 100 で好きな子1人
 // ・凸：5人目で完凸。完凸のあとに出たらジェム25 に変わる
 // ・最初の10連は、キャラが1人かならず出る
@@ -24,7 +25,6 @@ export const GRAND_DEBUT = {
   overGem: 25,
   welcomeTickets: 10,
   chars: ['yuzuha', 'minase', 'miduki'],
-  items: [{ n: 200, w: 50 }, { n: 500, w: 30 }, { n: 1000, w: 15 }, { n: 5000, w: 5 }],
 };
 const G = GRAND_DEBUT;
 
@@ -59,24 +59,24 @@ export function pull(n) {
     const tenth = n === 10 && i === 9;
     let hit = rnd() < (tenth ? G.tenthRate : G.charRate);
     if (guarantee && tenth && !out.some((r) => r.type === 'char')) hit = true;
-    out.push(hit ? { type: 'char', id: G.chars[Math.floor(rnd() * G.chars.length)] } : { type: 'xeva', n: pickItem() });
+    out.push(hit ? { type: 'char', id: G.chars[Math.floor(rnd() * G.chars.length)] } : { type: 'orbit' });
   }
   store.add('orbit', 'pt', n);
   if (guarantee) store.flag('gflags', 'firstTen');
   out.forEach(apply);
-  addLog(out);
+  addLog(out.filter((r) => r.type === 'char'));   // 記録はキャラだけ（キャラ以外は何も出ないので）
+  pulled(n);
   return out;
 }
 
-function pickItem() {
-  const total = G.items.reduce((s, x) => s + x.w, 0);
-  let r = rnd() * total;
-  for (const it of G.items) if ((r -= it.w) < 0) return it.n;
-  return G.items[0].n;
-}
+/* ガチャをひいた回数を知らせる（ミッション「ガチャを10回ひく」など・core/mission.js が聞く） */
+const pullSubs = new Set();
+export function onPull(fn) { pullSubs.add(fn); return () => pullSubs.delete(fn); }
+function pulled(n) { for (const fn of pullSubs) { try { fn(n); } catch (e) { console.error(e); } } }
 
 function apply(r) {
-  if (r.type === 'xeva') { wallet.add('xeva', r.n); return; }
+  if (r.type === 'orbit') return;                                 // キャラ以外：オービット（上でまとめて足した）だけ
+  if (r.type === 'xeva') { wallet.add('xeva', r.n); return; }     // （2026-11-24 より前の記録の形）
   const before = copies(r.id);
   if (before >= MAX_COPIES) { r.over = G.overGem; wallet.add('gem', G.overGem); return; }
   store.add('copies', r.id, 1);
@@ -97,6 +97,7 @@ export function exchangePity(id) {
 }
 
 function addLog(rs) {
+  if (!rs.length) return;
   const at = Date.now();
   const items = rs.map((r) => ({ ...r, at })).reverse();
   store.set('glog', [...items, ...log()].slice(0, 50));
@@ -104,11 +105,11 @@ function addLog(rs) {
 
 /** 提供割合（表と見出しは必ずここから作る） */
 export function rates() {
-  const itemW = G.items.reduce((s, x) => s + x.w, 0);
   return {
     each: G.charRate / G.chars.length,
     eachTenth: G.tenthRate / G.chars.length,
-    items: G.items.map((it) => ({ n: it.n, p: ((1 - G.charRate) * it.w) / itemW, pTenth: ((1 - G.tenthRate) * it.w) / itemW })),
+    miss: 1 - G.charRate,          // キャラ以外（何も出ない・オービット＋1 だけ）
+    missTenth: 1 - G.tenthRate,
   };
 }
 

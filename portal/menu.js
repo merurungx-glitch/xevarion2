@@ -51,6 +51,12 @@ export async function mount(el, { go }) {
       <div class="mn-h">${t('menu.wallet')}</div>
       <div class="x-card">${balancesHTML()}<button type="button" class="x-btn secondary block small" data-act="exchange">${ico('swap')}${t('menu.exchange')}</button></div>
 
+      <div class="mn-h">${t('menu.daily')}</div>
+      <div class="x-card">
+        <div class="x-row">${ico('mission')}<div><b>${t('ms.title')}</b><small>${t('menu.msNote')}</small></div><button type="button" class="x-btn secondary small" data-act="missions">${t('menu.open')}</button></div>
+        <div class="x-row">${ico('star')}<div><b>${t('logbo.title')}</b><small>${t('menu.lbNote')}</small></div><button type="button" class="x-btn secondary small" data-act="logbo">${t('menu.open')}</button></div>
+      </div>
+
       <div class="mn-h">${t('menu.settings')}</div>
       <div class="x-card">
         <span class="mn-seg-l">${t('menu.power')}</span>
@@ -101,6 +107,8 @@ export async function mount(el, { go }) {
       if (await ask({ title: t('menu.signout'), text: t('menu.signoutAsk'), ok: t('menu.signout') })) await account.signOut();
     },
     exchange() { openWallet(); },
+    missions() { import('./missions.js').then((m) => m.openMissions()); },
+    logbo() { import('./logbo.js').then((m) => m.openLogbo()); },
     shortFx() { power.setShortFx(!store.get('shortFx')); paint(); },
     analytics() {
       const on = !store.get('analytics');

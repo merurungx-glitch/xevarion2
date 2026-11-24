@@ -82,7 +82,7 @@ export async function mount(el) {
     rates() {
       const R = gacha.rates();
       const rows = chara.CHARS.map((c) => `<tr><td><span class="who"><img src="${chara.art(c.id, 'face-96')}" alt="">${esc(c.name)}</span></td><td class="r">${pct(R.each)}</td><td class="r">${pct(R.eachTenth)}</td></tr>`).join('')
-        + R.items.map((it) => `<tr><td>${t('gacha.itemXeva', { n: fmt(it.n) })}</td><td class="r">${pct(it.p)}</td><td class="r">${pct(it.pTenth)}</td></tr>`).join('');
+        + `<tr><td>${t('gacha.missRow')}</td><td class="r">${pct(R.miss)}</td><td class="r">${pct(R.missTenth)}</td></tr>`;
       openSheet({
         title: t('gacha.rates'),
         body: `<p style="margin:0 0 8px;font-size:13px;color:var(--text-2)">${t('gacha.ratesLead')}</p>

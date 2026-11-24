@@ -1,5 +1,5 @@
 /* XEVARION II — ポータルの画面（クラスは画面ごとの2文字＋「-」で始める：au アカウント・fs 最初の10連・
-   hm ホーム・ap アプリ・ah アプリの窓・gc ガチャ・ch キャラ・lb ロビー・mn メニュー・wl お財布・p 共通） */
+   hm ホーム・ap アプリ・ah アプリの窓・gc ガチャ・ch キャラ・lb ロビー・mn メニュー・wl お財布・lg ログボ・ms ミッション・p 共通） */
 @layer portal {
   .x-page { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); color: var(--text); animation: p-in var(--dur) var(--ease); }
   @keyframes p-in { from { opacity: 0; transform: translateY(6px); } }
@@ -203,6 +203,63 @@
   .wl-ex button { height: 54px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); font-weight: 800; font-size: 13px; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.3; }
   .wl-ex button small { font-size: 11px; color: var(--text-3); font-weight: 700; }
   .wl-ex button:disabled { opacity: .4; }
+  /* ショップの今日のチケット（2026-11-24・お財布の中） */
+  .wl-dt { display: flex; align-items: center; gap: 12px; margin-top: 10px; padding: 12px; border-radius: 16px; background: linear-gradient(90deg, #fff4e3, #ffeefe); border: 1px solid #f6dcc0; }
+  .wl-dt img { width: 46px; flex: none; }
+  .wl-dt div { flex: 1; min-width: 0; }
+  .wl-dt b { display: block; font-size: 14px; }
+  .wl-dt small { display: block; font-size: 11.5px; color: var(--text-3); font-weight: 700; }
+  .wl-dt .x-btn { flex: none; white-space: nowrap; }
+  :root[data-theme="dark"] .wl-dt { background: linear-gradient(90deg, #3a2a14, #3a1f3d); border-color: #5a4630; }
+
+  /* ===== 毎日：ログインボーナス・ミッション（2026-11-24 第5回） ===== */
+  .hm-ms { margin-top: 12px; }
+  .hm-ms span { display: flex; flex-direction: column; line-height: 1.3; }
+  .hm-ms span b { font-size: 13px; }
+  .hm-ms span small { font-size: 11px; font-weight: 700; color: var(--text-3); }
+  .hm-badge { flex: none; min-width: 22px; height: 22px; padding: 0 7px; border-radius: 99px; background: var(--flare); color: #fff; font: 900 12px/22px var(--font-en); font-style: normal; text-align: center; }
+  .hm-badge[hidden] { display: none; }
+  .hm-ms + .hm-news { margin-top: 8px; }
+
+  .lg-p { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .lg-p img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2px var(--g3); }
+  .lg-p p { margin: 0; font-size: 13.5px; font-weight: 800; }
+  .lg-wk { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .lg-d { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 7px 2px 8px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); font-weight: 800; text-align: center; }
+  .lg-d small { font-size: 10px; color: var(--text-3); }
+  .lg-d img { width: 26px; height: 26px; object-fit: contain; margin: 2px 0; }
+  .lg-d img.ticket { width: 34px; }
+  .lg-d b { font-size: 11px; font-variant-numeric: tabular-nums; }
+  .lg-d.got { opacity: .45; }
+  .lg-d.got::after { content: "✓"; position: absolute; right: 4px; top: 2px; font-size: 11px; color: var(--terra); }
+  .lg-d.now { border: 2px solid transparent; background: linear-gradient(var(--surface), var(--surface)) padding-box, var(--grad) border-box; box-shadow: 0 4px 14px rgba(90, 60, 220, .25); }
+  .lg-d.d7:not(.got) { border: 2px solid transparent; background: linear-gradient(#fff8e6, #fff8e6) padding-box, linear-gradient(90deg, #ffd57a, #ff9a3d) border-box; color: #1d1d1f; }
+  .lg-note { margin: 12px 0 0; font-size: 12px; color: var(--text-3); line-height: 1.6; }
+  @media (max-width: 380px) { .lg-wk { gap: 4px; } .lg-d img { width: 22px; height: 22px; } .lg-d b { font-size: 10px; } }
+
+  .ms > .x-btn { margin-bottom: 12px; }
+  .ms-h { display: flex; justify-content: space-between; align-items: baseline; margin: 14px 2px 8px; }
+  .ms-h:first-child, .ms > .x-btn + .ms-h { margin-top: 2px; }
+  .ms-h b { font-size: 14px; }
+  .ms-h small { font-size: 11px; color: var(--text-3); font-weight: 700; }
+  .ms-r { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 4px 10px; padding: 10px 12px; margin-bottom: 8px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); }
+  .ms-r.done:not(.claimed) { border-color: color-mix(in srgb, var(--terra) 55%, var(--line)); background: color-mix(in srgb, var(--terra) 7%, var(--surface)); }
+  .ms-r.claimed { opacity: .6; }
+  .ms-t b { display: block; font-size: 13.5px; }
+  .ms-t small { font-size: 11px; color: var(--text-3); font-weight: 700; font-variant-numeric: tabular-nums; }
+  .ms-bar { grid-column: 1 / -1; height: 6px; border-radius: 99px; background: var(--surface-2); overflow: hidden; }
+  .ms-bar i { display: block; height: 100%; border-radius: 99px; background: var(--grad-btn); }
+  .ms-rw { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .ms-rw img { width: 18px; height: 18px; object-fit: contain; }
+  .ms-rw img.ticket { width: 26px; }
+  .ms-st.got { font-size: 11.5px; font-weight: 800; color: var(--terra); white-space: nowrap; }
+  .ms-all { display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin-bottom: 4px; border-radius: 14px; background: linear-gradient(90deg, #efeaff, #ffeefe); font-size: 12.5px; font-weight: 900; color: #1d1d1f; }
+  .ms-all > span:first-child { flex: 1; }
+  :root[data-theme="dark"] .ms-all { background: linear-gradient(90deg, #2a2350, #3a1f3d); color: var(--text); }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .ms-all { background: linear-gradient(90deg, #2a2350, #3a1f3d); color: var(--text); }
+    :root:not([data-theme="light"]) .wl-dt { background: linear-gradient(90deg, #3a2a14, #3a1f3d); border-color: #5a4630; }
+  }
 
   /* アプリの窓（#/app/<id>）：iframe を全面に。地の色はアプリの色（html[data-app] の --app-bg） */
   .x-page.ah { background: var(--app-bg, var(--night-1)); animation: none; }

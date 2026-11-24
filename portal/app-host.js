@@ -7,6 +7,7 @@ import { APPS, ROUTES } from './routes.js';
 import * as router from '../core/router.js';
 import { showLoading } from '../ui/loading.js';
 import { makeBridge } from './bridge.js';
+import * as daily from '../core/daily.js';
 
 export async function mount(el, { params, go }) {
   const a = APPS.find((x) => x.id === params[0]);
@@ -32,6 +33,7 @@ export async function mount(el, { params, go }) {
   };
   const bridge = makeBridge(a, { exit, ready });
   window.X2 = bridge.api;
+  daily.note('app');   // ミッション「アプリで1回あそぶ」
 
   fr.className = 'ah-frame';
   fr.title = a.name;

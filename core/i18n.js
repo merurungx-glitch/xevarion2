@@ -71,7 +71,7 @@ const ja = {
   'gacha.maxed': '完凸ずみ',
   'gacha.logEmpty': 'まだひいていません',
   'gacha.ratesLead': '3人とも同じ確率です。10連の10回目はキャラの確率が上がります。',
-  'gacha.itemXeva': '{n} XEVA',
+  'gacha.itemXeva': '{n} XEVA', 'gacha.itemOrbit': 'オービット +1', 'gacha.missRow': 'キャラ以外（オービット＋1 だけ）',
   'gacha.skip': 'スキップ ›',
   'gacha.tapNext': 'タップで次へ',
 
@@ -96,7 +96,16 @@ const ja = {
 
   'menu.title': 'MENU',
   'menu.account': 'アカウント', 'menu.signout': 'サインアウト', 'menu.signoutAsk': 'サインアウトしますか？ この端末に残ったデータは、次にサインインしたときに使われます。',
-  'menu.wallet': 'お財布', 'menu.exchange': '両替（200 XEVA → ジェム 1）',
+  'menu.wallet': 'お財布', 'menu.exchange': '両替・今日のチケット',
+  'menu.daily': '毎日', 'menu.open': 'ひらく', 'menu.msNote': '今日の3つ・今週の3つ', 'menu.lbNote': '7日で1周（休んでもつづきから）',
+  // ログインボーナス（portal/logbo.js）・ミッション（portal/missions.js）・ショップの今日のチケット（portal/wallet-sheet.js）＝2026-11-24 第5回
+  'logbo.title': 'ログインボーナス', 'logbo.day': '{n}日目', 'logbo.gem': '×{n}', 'logbo.ticket': '×{n}', 'logbo.recv': '受け取る',
+  'logbo.from': '{name}からのログインボーナス', 'logbo.note': '1日1回・7日で1周します。休んでも、次の日はつづきから。', 'logbo.done': '今日のぶんは受け取りました。また明日！',
+  'logbo.sub': 'ログインボーナス {n}日目',
+  'ms.title': 'ミッション', 'ms.today': '今日のミッション', 'ms.todayNote': '0:00 に入れかわる', 'ms.week': '今週のミッション', 'ms.weekNote': '月曜 0:00 に入れかわる',
+  'ms.dailyAll': '今日の3つとも達成', 'ms.weeklyAll': '今週の3つとも達成', 'ms.recv': '受け取る', 'ms.got': '受け取りずみ', 'ms.recvAll': 'まとめて受け取る（{n}）',
+  'ms.homeSub': '今日 {d}/{dn}・今週 {w}/{wn}',
+  'shop.dt': '今日のガチャチケット', 'shop.dtNote': '1日1枚まで・0:00 に入れかわる', 'shop.dtBuy': '{n} XEVA', 'shop.dtDone': '今日は買いました', 'shop.dtOk': 'ガチャチケットを1枚買いました',
   'menu.settings': '設定',
   'menu.power': '動作モード', 'menu.power.auto': '自動', 'menu.power.high': '高画質', 'menu.power.balanced': 'バランス', 'menu.power.saver': '省電力',
   'menu.power.autoNote': 'いまは「{mode}」で動いています（{why}）',

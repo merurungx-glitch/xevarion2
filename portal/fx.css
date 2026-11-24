@@ -89,6 +89,10 @@
   .gx-card .tag { position: absolute; top: 4px; left: 4px; font: 800 8.5px/1 var(--font-en); letter-spacing: .06em; padding: 3px 6px; border-radius: 99px; background: var(--grad); }
   .gx-card.xeva .x-cur.xeva { width: 30px; height: 30px; }
   .gx-card.xeva b { font-size: 12px; font-variant-numeric: tabular-nums; }
+  /* キャラ以外（2026-11-24〜 何も出ない＝オービット＋1 だけ） */
+  .gx-card.orbit { gap: 4px; opacity: .78; }
+  .gx-card.orbit img { width: 62%; height: auto; opacity: .8; }
+  .gx-card.orbit b { font-size: 9.5px; font-weight: 800; color: var(--on-night-2); letter-spacing: .02em; }
   .gx-foot { display: flex; gap: 10px; width: 100%; max-width: 420px; padding-top: 14px; }
   .gx-foot .x-btn { flex: 1; }
 
