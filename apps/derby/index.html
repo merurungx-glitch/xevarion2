@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<!-- ★ XEVARION II のアプリ：II の中（#/app/derby の iframe）でだけ動く。II の機能は親の window.X2（src/portal/bridge.js）だけを使う。
+     直接開かれたら II の入口へ送る。初代の共通部品（maintenance-gate・xeva.js・xeva-cloud・xevarion-fb・SW・起動ロゴ・safebottom・xeva-loading・xeva-presence・xeva-back）は読まない -->
+<script>
+(function () {
+  var P = null;
+  try { P = window.parent !== window ? window.parent.X2 : null; } catch (e) { P = null; }
+  if (!P) {
+    if (window.parent === window) location.replace('../../index.html#/app/derby');
+    throw new Error('MagiDerby は XEVARION II の中で開いてください');
+  }
+  window.X2 = P;
+  P.attach(window); /* 余白・動作モード・省電力のコマ数 */
+})();
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>MagiDerby — 競馬 GⅠ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Shippori+Mincho+B1:wght@700;800&family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/md.css?v=1" />
+<!-- ══════════════════════════════════════════════════════════════
+     MagiDerby（XEVARION II）＝初代 MagiDerby の中身（2026-10-20 新作 → 2026-11-23 XEVARION II へ移しかえ）
+     ・実際の JRA 平地 GⅠ に XEVA で賭ける。出馬表・オッズ・結果・払戻金は PC の自動取得（初代の MagiDerby/collector/derby.py）が
+       初代のリポジトリの magiscope-data ブランチの derby/ に置いたものを<b>そのまま読む</b>（第4回の決定：PC タスクは直さない）。
+     ・お金は初代のまま（2026-11-23 ご回答）：1 XEVA ＝ 1円・払い戻しは実際の払戻金どおり・1レース 100,000 XEVA まで。
+       買う＝X2.spend・払い戻し＝X2.earn（APPS の earnCap で上限を広げてある）。
+     ・締切は発走の2分前。判定は端末の時計ではなくサーバーの時刻（clock.txt の Date ヘッダー。★ clock.txt は SW の一覧に入れない＝tools/release.py）。
+       オフラインでも買える（いちばん遅い見積もりの時刻で締切を確かめる・精算のときに測り直す＝md-bet.js）。
+     ・馬券の記録は II のアカウントで同期（X2.appData・合わせ方は core/merge.js の mergeDerby＝初代と同じ）。
+     ・ホームとアプリの一覧の「発売中・締切間近・結果」の札は II の portal/derby-sign.js（発売の決まりを変えたら、あちらも）。
+     ══════════════════════════════════════════════════════════════ -->
+</head>
+<body>
+<header class="hd">
+  <button class="hd-back" data-a="home" aria-label="XEVARION II へもどる"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg><span>XEVARION II</span></button>
+  <div class="hd-logo">
+    <img class="hd-ic" src="../../assets/apps/derby-96.webp" alt="" width="30" height="30">
+    <b>MagiDerby</b><small>競馬 GⅠ</small>
+  </div>
+  <span class="hd-pill" title="XEVA"><img src="../../assets/ui/xeva-64.webp" alt="XEVA"><span id="hdXeva">0</span></span>
+  <span class="hd-pill hd-clk" title="サーバーの時刻（締切はこの時刻で判定）"><i id="hdSync"></i><span id="hdClock">--:--:--</span></span>
+  <!-- ライブ配信へのショートカット（JRA 公式の無料ライブ）・使い方（アニメ）と馬券の種類 -->
+  <a class="hd-ic2 lv" href="https://www.jra.go.jp/tvradio/racelive/" target="_blank" rel="noopener" title="ライブ配信（JRA 公式・無料）" aria-label="ライブ配信（JRA 公式・無料）"><i></i>LIVE</a>
+  <button class="hd-ic2" data-a="help" title="使い方・馬券の種類" aria-label="使い方・馬券の種類"><b>？</b><span>使い方</span></button>
+  <!-- 成績は上の「マイページ」から -->
+  <button class="hd-my" data-a="mypage" aria-label="マイページ" title="マイページ（成績）"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.2" r="3.8"/><path d="M4.5 20.2c.8-4 3.9-6.2 7.5-6.2s6.7 2.2 7.5 6.2"/></svg><span>マイページ</span></button>
+</header>
+<div class="offbar" id="offBar" hidden>📴 オフライン：手元に控えた情報を表示しています（馬券は買えます・つながったら同期します）</div>
+<nav class="tabs" aria-label="画面">
+  <button data-tab="home" class="on">G1 レース</button>
+  <button data-tab="tickets">馬券</button>
+  <button data-tab="data">データ</button>
+</nav>
+<main id="main"></main>
+<div id="race" class="race" hidden></div>
+<div class="sheet" id="sheet"></div>
+<div id="toasts"></div>
+
+<script src="js/md-data.js?v=1"></script>
+<script src="js/md-net.js?v=1"></script>
+<script src="js/md-bet.js?v=1"></script>
+<script src="js/md-race.js?v=1"></script>
+<script src="js/md-ui.js?v=1"></script>
+<script src="js/md-help.js?v=1"></script><!-- 使い方（アニメ）・馬券の種類 -->
+<script src="js/md-intro.js?v=1"></script><!-- GⅠ を押したときのレース名の演出 -->
+<script>
+  /* 字（Web フォント）がそろったら II のロード画面を消す（1.5 秒まで待つ） */
+  (function () {
+    var fonts = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+    Promise.race([fonts, new Promise(function (r) { setTimeout(r, 1500); })]).then(function () {
+      requestAnimationFrame(function () { X2.ready(); });
+    });
+  })();
+</script>
+</body>
+</html>

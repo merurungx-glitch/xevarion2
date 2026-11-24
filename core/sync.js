@@ -59,15 +59,23 @@ async function pullAll() {
   try {
     setStatus('busy');
     const data = (await be.pull(me)) || {};
-    if (!running || uid !== me || store.userId() !== me) return;
+    if (!running || uid !== me || store.userId() !== me) return false;
     lastPull = Date.now();
     for (const n of store.syncNames()) if (data[n]) store.merge(n, data[n]);
     setStatus('idle');
     if (store.dirty().length) later(400);
+    return true;
   } catch (e) {
     console.warn('sync: 読めませんでした', e);
     setStatus('offline');
+    return false;
   }
+}
+
+/** クラウドの最新を今すぐ読んで合わせる（MagiDerby が払い戻しの前に使う＝ほかの端末で払い戻しずみの券を二度払わない）。読めたら true */
+export async function pullNow() {
+  if (!running) return false;
+  return pullAll();
 }
 
 /** 未送信のキーを今すぐ送る */

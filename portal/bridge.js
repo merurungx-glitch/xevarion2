@@ -15,8 +15,10 @@
 //   X2.owned(id)          この端末の本人がそのキャラを持っているか（MagiQuiz の司会）
 //   X2.asset(path)        src/assets/ の絵の URL（例 'ui/xeva-64.webp'）
 //   X2.wallet() / onWallet(fn)   お財布の中身 { xeva, gem, ticket }
-//   X2.earn({ xeva, gem, ticket }, why)  アプリのごほうびを本人のお財布へ（1回の上限 EARN_CAP）
-//   X2.appData            アプリの同期する記録（MagiLex）：load()→JSON・save(json)・on(fn)。無いアプリは null（core/appdata.js）
+//   X2.earn({ xeva, gem, ticket }, why)  アプリのごほうびを本人のお財布へ（1回の上限 EARN_CAP。APPS の earnCap で広げられる＝MagiDerby の払い戻し）
+//   X2.spend({ xeva, gem, ticket }, why) アプリでの支払い（MagiDerby の馬券）。足りなければ何も減らさず false
+//   X2.appData            アプリの同期する記録（MagiLex・MagiDerby）：load()→JSON・save(json)・on(fn)・pull()（クラウドの最新を今すぐ）・flush()（今すぐ送る）。無いアプリは null（core/appdata.js）
+//   X2.now()              サーバーの時刻（ms・Firebase の serverTimeOffset。手元の試験では端末の時計）
 //   X2.online()           通信できそうか
 //   X2.party.PRIZES       共通の賞金（順位ごと）
 //   X2.party.verify(id, pass) → { acc } | { error }   連携（合言葉は保存しない）
@@ -34,9 +36,11 @@ import * as viewport from '../core/viewport.js';
 import * as chara from '../core/chara.js';
 import * as wallet from '../core/wallet.js';
 import * as appdata from '../core/appdata.js';
+import * as sync from '../core/sync.js';
 
-/** アプリのごほうび（X2.earn）の1回の上限（まちがいで大きな数を入れないように） */
+/** アプリのごほうび（X2.earn）の1回の上限（まちがいで大きな数を入れないように）。アプリごとに広げるときは routes.js の APPS の earnCap */
 const EARN_CAP = { xeva: 20000, gem: 50, ticket: 20 };
+const FIELDS = ['xeva', 'gem', 'ticket'];
 
 const abs = (p) => new URL(p, document.baseURI).href;
 const faceSrc = (id) => (chara.byId(id) ? abs(chara.art(id, 'face-256')) : '');
@@ -84,6 +88,7 @@ export function makeBridge(app, { exit, ready }) {
   const leaves = new Set();
   let room = null;   // 部屋（使うアプリだけ・はじめて X2.rooms にさわったときに作る）
   const roomApi = () => (room ||= rooms.open(app.id, { max: app.roomMax || 6 }));   // 部屋の人数の上限（routes.js の APPS の roomMax）
+  const cap = { ...EARN_CAP, ...(app.earnCap || {}) };   // ごほうびの1回の上限（MagiDerby は払い戻しが実際の払戻金どおりなので広い）
   const api = Object.freeze({
     v: 1,
     app: app.id,
@@ -122,17 +127,34 @@ export function makeBridge(app, { exit, ready }) {
     /** アプリのごほうび（MagiLex の学習・ビンゴなど）：この端末の本人のお財布へ。items＝{ xeva, gem, ticket }。入れた数を返す */
     earn(items, why) {
       const out = {};
-      for (const f of Object.keys(EARN_CAP)) {
-        const n = Math.min(EARN_CAP[f], Math.floor(Number((items || {})[f]) || 0));
+      for (const f of FIELDS) {
+        const n = Math.min(cap[f], Math.floor(Number((items || {})[f]) || 0));
         if (n > 0) { wallet.add(f, n); out[f] = n; }
       }
       return out;
     },
-    /** アプリが持つ、アカウントごとの同期する記録（MagiLex の学習の記録）。JSON の文字で load()／save(json)・on(fn)。持たないアプリは null */
+    /** アプリでの支払い（MagiDerby の馬券）：全部払えるときだけ減らして true。足りなければ何も減らさず false */
+    spend(items, why) {
+      const want = [];
+      for (const f of FIELDS) {
+        const n = Math.floor(Number((items || {})[f]) || 0);
+        if (n > 0) want.push([f, n]);
+      }
+      const have = wallet.get();
+      if (!want.length || want.some(([f, n]) => have[f] < n)) return false;
+      for (const [f, n] of want) wallet.spend(f, n);
+      return true;
+    },
+    /** サーバーの時刻（ms）。手元の試験（裏方 local）では端末の時計 */
+    now: () => rooms.serverNow(),
+    /** アプリが持つ、アカウントごとの同期する記録（MagiLex の学習・MagiDerby の馬券）。JSON の文字で load()／save(json)・on(fn)。持たないアプリは null
+     *  pull()：クラウドの最新を今すぐ読んで合わせる（読めたら true）・flush()：書いたものを今すぐ送る */
     appData: appdata.keyOf(app.id) ? Object.freeze({
       load: () => appdata.load(app.id),
       save: (json) => appdata.save(app.id, json),
       on(fn) { const off = appdata.on(app.id, fn); offs.push(off); return off; },
+      pull: () => sync.pullNow().catch(() => false),
+      flush: () => sync.pushNow().then(() => true, () => false),
     }) : null,
     party: Object.freeze({
       PRIZES: Object.freeze([...party.PRIZES]),

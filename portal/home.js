@@ -9,6 +9,7 @@ import { esc, bindActs } from '../ui/dom.js';
 import { toast } from '../ui/toast.js';
 import { topbarHTML, bindTopbar } from './shell.js';
 import { APPS, appById } from './routes.js';
+import { onSign, leftStr } from './derby-sign.js';
 
 export async function mount(el, { go }) {
   el.classList.add('hm');
@@ -52,10 +53,24 @@ export async function mount(el, { go }) {
   }
   paint();
 
+  // MagiDerby の札：発売中（金の札と輪）・締切間近（赤い札に残り時間）・結果（まだ確かめていない馬券の数）
+  const derbyBtn = el.querySelector('.hm-app[data-id="derby"]');
+  let derbySig = '';
+  const paintDerby = (s) => {
+    if (!derbyBtn || s.sig === derbySig) return;
+    derbySig = s.sig;
+    derbyBtn.classList.toggle('ds-sale', !!s.sale && !s.sale.soon);
+    derbyBtn.classList.toggle('ds-soon', !!(s.sale && s.sale.soon));
+    derbyBtn.querySelectorAll('.ds-tag, .ds-res').forEach((x) => x.remove());
+    if (s.sale) derbyBtn.insertAdjacentHTML('beforeend', `<i class="ds-tag">${esc(s.sale.soon ? t('derby.left', { t: leftStr(s.sale.left) }) : t('derby.sale'))}</i>`);
+    if (s.res) derbyBtn.insertAdjacentHTML('beforeend', `<i class="ds-res">${esc(t('derby.res', { n: s.res }))}</i>`);
+  };
+
   let hideT = 0;
   const offs = [
     bindTopbar(el.querySelector('.hm-top')),
     chara.onChange(paint),
+    onSign(paintDerby),
     bindActs(el, {
       talk() {
         const p = chara.partner();

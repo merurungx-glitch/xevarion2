@@ -53,6 +53,9 @@ const ja = {
   'app.lex': '化学の問題集', 'app.quiz': '見えない爆弾・早押しバトルほか', 'app.derby': '実際の GⅠ を XEVA で予想',
   'app.shift': 'コマを押し出す対戦ボードゲーム', 'app.chain': '2〜5人の連鎖の陣取り', 'app.gura': '1台を囲むパーティーゲーム',
   'app.yacht': 'サイコロで役をそろえる', 'app.ngx': 'NGX の公式サイト', 'app.ishida': 'ISHIDA Production の公式サイト',
+  // MagiDerby の札（portal/derby-sign.js）
+  'derby.sale': '発売中', 'derby.left': 'あと{t}', 'derby.res': '結果 {n}',
+  'derby.rowSale': '{name} 発売中', 'derby.rowSoon': '{name} 締切間近・あと{t}', 'derby.rowRes': '結果 {n}枚・押して確認',
 
   'gacha.title': 'GACHA',
   'gacha.always': 'いつでも',

@@ -71,6 +71,13 @@
   .hm-news { margin-top: 16px; display: flex; align-items: center; gap: 10px; width: 100%; max-width: 520px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; font-size: 13px; font-weight: 800; text-align: left; }
   .hm-news span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .hm-news svg.x-i { width: 18px; height: 18px; }
+  /* MagiDerby の札（portal/derby-sign.js）：発売中＝金・締切間近＝赤（残り時間）・結果＝緑（まだ確かめていない馬券の数） */
+  .hm-app { position: relative; }
+  .hm-app.ds-sale .x-appic { box-shadow: 0 0 0 2px var(--xeva), 0 0 14px rgba(245, 181, 46, .65); }
+  .hm-app.ds-soon .x-appic { box-shadow: 0 0 0 2px var(--flare), 0 0 14px rgba(255, 91, 74, .6); }
+  .hm-app .ds-tag { position: absolute; top: 45px; left: 50%; transform: translateX(-50%); z-index: 1; font: 900 9.5px/1 var(--font); font-style: normal; letter-spacing: .02em; white-space: nowrap; padding: 3px 6px; border-radius: 99px; color: #3a2600; background: linear-gradient(180deg, #ffe7a1, var(--xeva)); box-shadow: 0 1px 4px rgba(20, 26, 51, .25); pointer-events: none; }
+  .hm-app.ds-soon .ds-tag { color: #fff; background: var(--flare); }
+  .hm-app .ds-res { position: absolute; top: -6px; left: calc(50% + 14px); z-index: 1; font: 900 9.5px/1 var(--font); font-style: normal; white-space: nowrap; padding: 3px 6px; border-radius: 99px; color: #fff; background: var(--terra); box-shadow: 0 1px 4px rgba(20, 26, 51, .25); pointer-events: none; }
 
   /* ===== アプリ ===== */
   .ap-list { padding: 14px 16px calc(24px); display: flex; flex-direction: column; gap: 10px; }
@@ -80,6 +87,14 @@
   .ap-row div { flex: 1; min-width: 0; }
   .ap-row b { display: block; font-size: 15px; }
   .ap-row small { display: block; font-size: 12px; color: var(--text-3); }
+  .ap-row .ds-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .ap-row .ds-chips:not(:empty) { margin-top: 5px; }
+  .ap-row .ds-c { height: 20px; font-size: 10.5px; padding: 0 8px; }
+  .ap-row .ds-c.sale { color: #3a2600; background: linear-gradient(180deg, #ffe7a1, var(--xeva)); }
+  .ap-row .ds-c.soon { color: #fff; background: var(--flare); }
+  .ap-row .ds-c.res { color: #fff; background: var(--terra); }
+  .ap-row .x-appic.ds-ring { box-shadow: 0 0 0 2px var(--xeva), 0 0 12px rgba(245, 181, 46, .6); }
+  .ap-row .x-appic.ds-ring-soon { box-shadow: 0 0 0 2px var(--flare), 0 0 12px rgba(255, 91, 74, .55); }
 
   /* ===== ガチャ ===== */
   .gc { background: var(--twilight); color: var(--on-night); }

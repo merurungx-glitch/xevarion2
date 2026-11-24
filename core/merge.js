@@ -6,12 +6,25 @@
 //             値は Σ(p − n)。★ 2台で同時に増やしても減らしても、どちらも消えない（XEVA・ジェム・凸など）
 //   flags   … 一度 true になったら戻らない印の集まり（最初の10連をひいた・特典を受け取った など）
 //   lex     … MagiLex（初代 MagiChemLex）の学習の記録。新しく書いたほうを土台に、問題ごと・印ごとに合わせる（下の mergeLex）
+//   derby   … MagiDerby の馬券の記録。★ 値は JSON の文字のまま（Firebase が買い目の配列や空の配列を崩さない）。
+//             新しく書いたほうを土台に、馬券ごとに合わせる（下の mergeDerby）
 
 const isObj = (o) => o && typeof o === 'object' && !Array.isArray(o);
+/** derby の値（JSON の文字）を読む。読めなければ null */
+const readJ = (v) => {
+  if (typeof v !== 'string') return isObj(v) ? JSON.parse(JSON.stringify(v)) : null;
+  try { const o = JSON.parse(v); return isObj(o) ? o : null; } catch { return null; }
+};
 
 export function mergeRec(kind, a, b) {
   if (!a) return b || null;
   if (!b) return a;
+  if (kind === 'derby') {
+    const newer = (b.t || 0) > (a.t || 0) ? b : a;
+    const older = newer === a ? b : a;
+    const v = mergeDerby(readJ(newer.v), readJ(older.v));
+    return { v: v ? JSON.stringify(v) : newer.v ?? older.v ?? null, t: Math.max(a.t || 0, b.t || 0) };
+  }
   if (kind === 'lex') {
     const newer = (b.t || 0) > (a.t || 0) ? b : a;
     const older = newer === a ? b : a;
@@ -101,6 +114,45 @@ export function mergeLex(W, Lo) {
   if (obj(Lo.best)) { W.best = obj(W.best) ? W.best : {}; Object.keys(Lo.best).forEach((k) => { W.best[k] = Math.max(num(W.best[k]), num(Lo.best[k])); }); }
   return W;
 }
+/**
+ * MagiDerby の馬券の記録を合わせる（初代 xeva-cloud.js の mergeDerby を写したもの）。W＝新しいほう・Lo＝古いほう（どちらも写し）。W を返す
+ * 記録の形：{ tk:{ 馬券id:{ st:'open'|'ready'|'hit'|'miss'|'refund'|'void', cost, pay, done, … } }, st:{ bet, ret, n, hit, best }, mk:{ race_id:{ 馬id:印 } }, fav:{}, opt:{}, at }
+ * ・馬券 … id で和。同じ馬券なら open（結果待ち）＜ ready（結果を計算ずみ・まだ確かめていない）＜ 確かめずみ（払い戻しずみ）の強いほう
+ *          ＝ほかの端末で払い戻した券を、こちらでもう一度払い戻さない。どちらも確かめずみなら done（確かめた時刻）の早いほう
+ * ・集計 st … 数は大きいほう・最高払戻は大きいほう（rf＝返還の合計は II で足した。返還で bet を減らすと、ここで元に戻っていた）
+ *   予想の印 mk … レースごとに新しいほう（無いレースは古いほうから足す）／設定 … 新しいほう
+ * ★ 両方が同じなら、W をそのまま返す（キーの並びも変えない＝同期で書き直しをくり返さない）
+ */
+export function mergeDerby(W, Lo) {
+  const obj = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
+  if (!obj(W)) return obj(Lo) ? Lo : null;
+  if (!obj(Lo)) return W;
+  const num = (v) => Number(v) || 0;
+  W.tk = obj(W.tk) ? W.tk : {};
+  if (obj(Lo.tk)) Object.keys(Lo.tk).forEach((id) => {
+    const l = Lo.tk[id], w = W.tk[id];
+    if (!obj(l)) return;
+    if (!obj(w)) { W.tk[id] = l; return; }
+    const rk = (t) => (t.st === 'open' ? 0 : t.st === 'ready' ? 1 : 2);
+    const lr = rk(l), wr = rk(w);
+    if (lr > wr) W.tk[id] = l;
+    else if (lr === 2 && wr === 2 && num(l.done) && num(l.done) < num(w.done)) W.tk[id] = l;
+  });
+  const S = obj(W.st) ? W.st : {}, L = obj(Lo.st) ? Lo.st : {};
+  ['bet', 'ret', 'n', 'hit', 'rf'].forEach((k) => {
+    if (!(k in S) && !(k in L)) return;   // rf の無い記録に rf:0 を足さない（同じ記録は形も変えない）
+    const m = Math.max(num(S[k]), num(L[k]));
+    if (S[k] !== m) S[k] = m;
+  });
+  if (obj(L.best) && (!obj(S.best) || num(L.best.pay) > num(S.best.pay))) S.best = L.best;
+  W.st = S;
+  W.mk = obj(W.mk) ? W.mk : {};
+  if (obj(Lo.mk)) Object.keys(Lo.mk).forEach((rid) => { if (!obj(W.mk[rid])) W.mk[rid] = Lo.mk[rid]; });
+  W.fav = obj(W.fav) ? W.fav : {};
+  if (obj(Lo.fav)) Object.keys(Lo.fav).forEach((k) => { if (!(k in W.fav)) W.fav[k] = Lo.fav[k]; });
+  return W;
+}
+
 /* { id: 印 } を和で混ぜる（片方にしか無い印も残す。両方にあれば早いほうの時刻） */
 function unionMarks(a, b) {
   const out = {};

@@ -15,11 +15,12 @@ export const ROUTES = {
 /**
  * アプリの台帳。path があるものは移しかえずみ（#/app/<id> で開く）。無いものは「準備中」
  * bg＝アプリの地の色（開いているあいだの html の色・iPhone の下の帯）・roomMax＝部屋（X2.rooms）の人数の上限（無ければ 6）
+ * earnCap＝X2.earn の1回の上限を広げる（MagiDerby の払い戻しは実際の払戻金どおり＝1 XEVA＝1円・1レース 100,000 XEVA まで買える）
  */
 export const APPS = [
   { id: 'lex', name: 'MagiLex', path: 'apps/lex/index.html', bg: '#ffffff' },
   { id: 'quiz', name: 'MagiQuiz', path: 'apps/quiz/index.html', bg: '#6704dc', roomMax: 4 },
-  { id: 'derby', name: 'MagiDerby' },
+  { id: 'derby', name: 'MagiDerby', path: 'apps/derby/index.html', bg: '#eef3ee', earnCap: { xeva: 1e12 } },
   { id: 'shift', name: 'MagiShift', path: 'apps/shift/index.html', bg: '#f5f7fc' },
   { id: 'chain', name: 'MagiChainParty', short: 'ChainParty', path: 'apps/chainparty/index.html', bg: '#f6f7fd' },
   { id: 'gura', name: 'MagiGuraPlate', short: 'GuraPlate', path: 'apps/guraplate/index.html', bg: '#090b1c' },
