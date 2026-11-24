@@ -121,4 +121,7 @@
   .fx-get-row span { flex: 1; }
   .fx-get-row b { font-variant-numeric: tabular-nums; }
   .fx-get-card .x-btn { margin-top: 16px; }
+
+  /* iPhone・iPad のアプリ表示で箱が短いとき：全面の板も本当の画面の高さに（base.css の html.x2-full・body が --fullh） */
+  html.x2-full .fx-intro, html.x2-full .fx-load, html.x2-full .gx, html.x2-full .fx-get { position: absolute; }
 }

@@ -30,6 +30,13 @@
     overflow: hidden;
     background: var(--page);
   }
+  /* ★ iPhone・iPad のホーム画面アプリで、fixed の箱が画面より短いとき（core/viewport.js が html.x2-full と --fullh を入れる）：
+     fixed の板は箱の下端で切られ、下に隙間（html の地の色だけの帯）が残る → #app を absolute で本当の画面の高さに敷く。
+     文書が箱より少し長くなるぶんは、viewport.js が文書のスクロールを 0 に留める。全面の板（シート・ロード・ガチャなど）も同じ（components.css・fx.css） */
+  html.x2-full, html.x2-full body { height: var(--fullh); }
+  html.x2-full body { position: relative; }
+  html.x2-full #app { position: absolute; top: 0; left: 0; right: 0; bottom: auto; height: var(--fullh); }
+
   #screen { position: relative; flex: 1; min-height: 0; overflow: hidden; }
 
   /* スクロールする箱（スクロールバーもデザインする） */

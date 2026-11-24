@@ -103,6 +103,8 @@ export function makeBridge(app, { exit, ready }) {
       };
       put(viewport.insets());
       offs.push(viewport.onChange(put));
+      // アプリの中で文字を入れ終えたら、II の文書のスクロールを 0 に戻す（iPhone のアプリ表示・core/viewport.js の pin）
+      win.document.addEventListener('focusout', viewport.pinLater);
       const mode = () => { de.dataset.power = power.currentMode(); };
       mode();
       offs.push(power.onChange(mode));
