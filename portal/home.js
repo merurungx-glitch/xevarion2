@@ -29,7 +29,7 @@ export async function mount(el, { go }) {
         <button type="button" class="hm-app" data-act="sites"><span class="hm-fold"><img src="assets/apps/ngx-96.webp" alt=""><img src="assets/apps/ishida-96.webp" alt=""></span><small>${t('home.sites')}</small></button>
       </div>
       <button type="button" class="hm-news hm-ms" data-act="missions">${ico('mission', 'grad')}<span><b>${t('ms.title')}</b><small data-ms></small></span><em class="hm-badge" data-msn hidden></em>${ico('next')}</button>
-      <button type="button" class="hm-news" data-act="news">${ico('bell', 'grad')}<span>${t('home.news')}</span>${ico('next')}</button>
+      <button type="button" class="hm-news hm-nw" data-act="news">${ico('bell', 'grad')}<span><b>${t('news.title')}</b><small data-nw></small></span><em class="hm-badge" data-nwn hidden>${t('news.new')}</em>${ico('next')}</button>
     </div>`;
 
   const artEl = el.querySelector('.hm-art');
@@ -82,6 +82,23 @@ export async function mount(el, { go }) {
   };
   paintMs();
 
+  // お知らせ（いちばん新しいお知らせの題と NEW の印）。中身は portal/news.js（ホームが出てから読む）
+  const nwText = el.querySelector('[data-nw]');
+  const nwNew = el.querySelector('[data-nwn]');
+  let offNews = null;
+  let gone = false;
+  import('./news.js').then((N) => {
+    if (gone) return;
+    const paintNews = () => {
+      const list = N.items();
+      nwText.textContent = N.latest('news', list)?.title || '';
+      nwNew.hidden = !N.unread(list).length;
+    };
+    paintNews();
+    offNews = N.onChange(paintNews);
+    N.refresh();
+  }).catch((e) => console.warn('news', e));
+
   // ログインボーナス：その日はじめてホームを開いたとき（画面が出てから少しして）
   const lbT = setTimeout(() => openLogbo({ auto: true }), 700);
 
@@ -107,10 +124,10 @@ export async function mount(el, { go }) {
         else toast(t('soon', { name: b.dataset.name }));
       },
       sites() { go('apps'); },
-      news() { go('gacha'); },
+      news() { import('./news.js').then((N) => N.openNews()); },
       lobby() { go('lobby'); },
       lobbyLock() { const p = chara.partner(); toast(t('chara.toMax', { n: chara.MAX_COPIES - chara.copies(p.id) })); },
     }),
   ];
-  return () => { clearTimeout(hideT); clearTimeout(lbT); offs.forEach((f) => f()); };
+  return () => { gone = true; offNews?.(); clearTimeout(hideT); clearTimeout(lbT); offs.forEach((f) => f()); };
 }

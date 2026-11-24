@@ -43,8 +43,25 @@ const ja = {
   'home.apps': 'APPS', 'home.sites': '公式サイト',
   'home.lobby': 'ロビーへ', 'home.lobbyLock': '完凸でロビー',
   'home.partner': 'PARTNER', 'home.maxBanner': 'MAX BANNER',
-  'home.news': 'GRAND DEBUT GACHA 開催中！',
   'home.noPartner': 'ガチャでパートナーを迎えよう',
+
+  // お知らせ（portal/news.js）・はじまり特典（portal/veteran.js・core/veteran.js）＝2026-11-24
+  'news.title': 'お知らせ', 'news.tab.news': 'お知らせ', 'news.tab.update': '更新内容', 'news.tab.dev': 'デベロッパーノート',
+  'news.empty': 'まだありません', 'news.new': 'NEW',
+  'news.act.gacha': 'ガチャへ', 'news.act.missions': 'ミッションを見る', 'news.act.logbo': 'ログインボーナス', 'news.act.veteran': '受け取る', 'news.act.vetDone': '受け取りずみ',
+  'vet.title': 'はじまり特典', 'vet.badge': '初代',
+  'vet.lead': '初代 XEVARION のアカウントをお持ちの方へ。初代の表示名と4桁の PIN を確かめると、次のものをお渡しします。',
+  'vet.markShort': '「初代」の印', 'vet.markNote': 'プロフィールに付く',
+  'vet.once': '初代のアカウント1つにつき1回・XEVARION II のアカウント1つにつき1回です。',
+  'vet.name': '初代の表示名', 'vet.pin': '4桁の PIN', 'vet.go': '確かめて受け取る', 'vet.busy': '確かめています…',
+  'vet.note': '初代のアカウントは読むだけで、書きかえません。PIN は送らず、この端末の中で照らし合わせます。',
+  'vet.done': '初代のアカウント「{name}」で受け取りました', 'vet.gotMark': 'プロフィールに「初代」の印が付きました',
+  'vet.errName': '初代の表示名を入れてください', 'vet.errPin': 'PIN は4桁の数字です',
+  'vet.already': 'このアカウントは、もう受け取っています',
+  'vet.notfound': 'その表示名の初代のアカウントが見つかりません',
+  'vet.nopin': 'その初代のアカウントには、4桁の PIN が決まっていません（初代で PIN を決めてから、もう一度ためしてください）',
+  'vet.badpin': 'PIN がちがいます',
+  'vet.taken': 'この初代のアカウントは、ほかの XEVARION II のアカウントで受け取りずみです',
 
   'apps.title': 'APPS', 'apps.games': 'アプリ', 'apps.sitesTitle': '公式サイト', 'apps.soon': '準備中', 'apps.play': 'あそぶ', 'apps.site': 'ひらく ↗',
   'party.got': '賞金 +{n} XEVA が届きました（{apps}）',
@@ -78,6 +95,7 @@ const ja = {
   'first.receive': '受け取る',
   'first.received': '受け取りました',
   'earn.release': 'リリース記念',
+  'earn.veteran': 'はじまり特典',
   'earn.dev': '試験用',
 
   'tip.1': '完凸（5人目）すると、ロビーでその子に会えます',
@@ -98,6 +116,8 @@ const ja = {
   'menu.account': 'アカウント', 'menu.signout': 'サインアウト', 'menu.signoutAsk': 'サインアウトしますか？ この端末に残ったデータは、次にサインインしたときに使われます。',
   'menu.wallet': 'お財布', 'menu.exchange': '両替・今日のチケット',
   'menu.daily': '毎日', 'menu.open': 'ひらく', 'menu.msNote': '今日の3つ・今週の3つ', 'menu.lbNote': '7日で1周（休んでもつづきから）',
+  'menu.newsNote': 'お知らせ・更新内容・デベロッパーノート',
+  'menu.vetNote': '初代 XEVARION のアカウントをお持ちの方へ', 'menu.vetDone': '初代のアカウント「{name}」', 'menu.vetGo': '受け取る', 'menu.vetSee': '見る',
   // ログインボーナス（portal/logbo.js）・ミッション（portal/missions.js）・ショップの今日のチケット（portal/wallet-sheet.js）＝2026-11-24 第5回
   'logbo.title': 'ログインボーナス', 'logbo.day': '{n}日目', 'logbo.gem': '×{n}', 'logbo.ticket': '×{n}', 'logbo.recv': '受け取る',
   'logbo.from': '{name}からのログインボーナス', 'logbo.note': '1日1回・7日で1周します。休んでも、次の日はつづきから。', 'logbo.done': '今日のぶんは受け取りました。また明日！',

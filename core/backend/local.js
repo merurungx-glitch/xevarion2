@@ -120,6 +120,22 @@ export async function takeInbox(uid) {
   return out;
 }
 
+// ---- 初代のアカウント（はじまり特典の確認・core/veteran.js）：手元は試験用の表だけ（本物の初代は読まない）----
+// ★ 試験用の初代アカウントの表示名と PIN は docs/testing.md に書いてある。PIN の形は初代と同じ（SHA-256「xevarion-pin:」＋PIN）
+// 'OldNetFail' は「通信できない」を試すためのもの
+const OLD_TEST = [['-x2devOld01', 'OldTester', '1234'], ['-x2devOld02', 'OldNoPin', ''], ['-x2devOld03', 'OldTester2', '5678']];
+async function oldPin(pin) {
+  const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('xevarion-pin:' + pin));
+  return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, '0')).join('');
+}
+export async function oldAccounts(lower) {
+  await wait(300);
+  if (lower === 'oldnetfail') throw new BackendError('network');
+  const out = [];
+  for (const [uid, name, pin] of OLD_TEST) if (name.toLowerCase() === lower) out.push({ uid, name, h: pin ? await oldPin(pin) : '' });
+  return out;
+}
+
 /** 試験用：このアカウントを消す */
 export async function deleteAccount(uid) {
   const d = load();
@@ -128,6 +144,10 @@ export async function deleteAccount(uid) {
   if (id) delete d.ids[id];
   if (d.inbox) delete d.inbox[uid];
   save(d);
+  // はじまり特典の「受け取った初代アカウント」の記録も消す（試験をくり返せるように）
+  const tree = rtLoad();
+  for (const [old, r] of Object.entries(tree.veteran || {})) if (r && r.uid === uid) delete tree.veteran[old];
+  rtSave(tree);
   setUser(null);
 }
 

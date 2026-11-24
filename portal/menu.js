@@ -6,6 +6,7 @@ import * as power from '../core/power.js';
 import * as account from '../core/account.js';
 import * as sync from '../core/sync.js';
 import * as wallet from '../core/wallet.js';
+import * as vet from '../core/veteran.js';
 import { ico } from '../ui/icons.js';
 import { esc, fmt, bindActs } from '../ui/dom.js';
 import { openSheet, ask } from '../ui/sheet.js';
@@ -36,16 +37,25 @@ export async function mount(el, { go }) {
   el.innerHTML = `<header class="x-head"><h1>${t('menu.title')}</h1></header><div class="p-body x-scroll"><div class="mn-body"></div></div>`;
   const body = el.querySelector('.mn-body');
   let fpsText = '—';
+  let news = null; // portal/news.js（あとから読む：NEW の印に使う）
 
   function paint() {
     const u = account.current();
+    const vm = vet.mark();
+    const newsN = news ? news.unread().length : 0;
     const modeNames = { high: t('menu.power.high'), balanced: t('menu.power.balanced'), saver: t('menu.power.saver') };
     const syncText = account.backendName() === 'local' ? t('menu.sync.local') : t('menu.sync.' + sync.getStatus());
     body.innerHTML = `
       <div class="mn-h">${t('menu.account')}</div>
       <div class="x-card">
-        <div class="x-row">${ico('user')}<div><b>${esc(account.profile().name)}</b><small>ID ${esc(u ? u.id : '')}</small></div><button type="button" class="x-btn secondary small" data-act="rename">変える</button></div>
+        <div class="x-row">${ico('user')}<div><b>${esc(account.profile().name)}${vm ? `<i class="p-vet">${t('vet.badge')}</i>` : ''}</b><small>ID ${esc(u ? u.id : '')}</small></div><button type="button" class="x-btn secondary small" data-act="rename">変える</button></div>
+        <div class="x-row">${ico('gift')}<div><b>${t('vet.title')}</b><small>${vm ? esc(t('menu.vetDone', { name: vm.name })) : t('menu.vetNote')}</small></div><button type="button" class="x-btn ${vm ? 'secondary' : 'primary'} small" data-act="veteran">${vm ? t('menu.vetSee') : t('menu.vetGo')}</button></div>
         <div class="x-row">${ico('out')}<div><b>${t('menu.signout')}</b></div><button type="button" class="x-btn secondary small" data-act="signout">${t('menu.signout')}</button></div>
+      </div>
+
+      <div class="mn-h">${t('news.title')}</div>
+      <div class="x-card">
+        <div class="x-row">${ico('bell')}<div><b>${t('news.title')}</b><small>${t('menu.newsNote')}</small></div>${newsN ? `<em class="p-new">${t('news.new')}</em>` : ''}<button type="button" class="x-btn secondary small" data-act="news">${t('menu.open')}</button></div>
       </div>
 
       <div class="mn-h">${t('menu.wallet')}</div>
@@ -109,6 +119,8 @@ export async function mount(el, { go }) {
     exchange() { openWallet(); },
     missions() { import('./missions.js').then((m) => m.openMissions()); },
     logbo() { import('./logbo.js').then((m) => m.openLogbo()); },
+    news() { import('./news.js').then((N) => N.openNews()); },
+    veteran() { import('./veteran.js').then((m) => m.openVeteran()); },
     shortFx() { power.setShortFx(!store.get('shortFx')); paint(); },
     analytics() {
       const on = !store.get('analytics');
@@ -150,6 +162,14 @@ export async function mount(el, { go }) {
     paint();
   };
   el.addEventListener('click', onSeg);
-  const offs = [bindActs(el, acts), wallet.on(paint), power.onChange(paint), sync.onStatus(paint), store.on('profile', paint)];
-  return () => { stopFps?.(); offs.forEach((f) => f()); el.removeEventListener('click', onSeg); };
+  const offs = [bindActs(el, acts), wallet.on(paint), power.onChange(paint), sync.onStatus(paint), store.on('profile', paint), vet.onMark(paint)];
+  let gone = false;
+  import('./news.js').then((N) => {
+    if (gone) return;
+    news = N;
+    paint();
+    offs.push(N.onChange(paint));
+    N.refresh();
+  }).catch((e) => console.warn('news', e));
+  return () => { gone = true; stopFps?.(); offs.forEach((f) => f()); el.removeEventListener('click', onSeg); };
 }

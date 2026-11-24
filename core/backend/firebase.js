@@ -2,7 +2,7 @@
 // ・SDK は gstatic の ES モジュールを、使うときにだけ読む（版は config.js の1か所）
 // ・ID＋合言葉は「ID@id.xevarion2.example」というメールの形にして、メール／パスワードの方式で使う（メールは送らない）
 // ・データは users/<uid>/data/<キー> = { v, t }。書くときはトランザクションで、クラウド側でも merge.js と同じ合わせ方をする
-import { FIREBASE, ID_MAIL_DOMAIN } from '../config.js';
+import { FIREBASE, ID_MAIL_DOMAIN, OLD_ACCOUNTS } from '../config.js';
 import { mergeRec } from '../merge.js';
 
 export const name = 'firebase';
@@ -130,6 +130,24 @@ export async function takeInbox(uid) {
     if (r.committed && got) out.push({ mid, ...got });
   }
   return out;
+}
+
+// ---- 初代のアカウント（はじまり特典の確認・core/veteran.js だけが使う）----
+// 初代の Firebase（xevarion-account）の accounts を表示名（nameLower の索引）で引く。読むだけ・SDK なしの1回の読みこみ（サインイン不要の場所）
+// ★ 返すのは uid・表示名・PIN の形だけ（ほかの中身は捨てる）
+export async function oldAccounts(lower) {
+  const q = `orderBy=%22nameLower%22&equalTo=${encodeURIComponent(JSON.stringify(String(lower)))}&limitToFirst=3`;
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), 30000);
+  let r;
+  try {
+    r = await fetch(`${OLD_ACCOUNTS}/accounts.json?${q}`, { cache: 'no-store', signal: ctl.signal });
+  } catch (e) {
+    throw new BackendError('network', e?.message);
+  } finally { clearTimeout(timer); }
+  if (!r.ok) throw new BackendError(r.status === 401 || r.status === 403 ? 'denied' : 'network', r.status);
+  const v = await r.json().catch(() => null);
+  return Object.entries(v && typeof v === 'object' ? v : {}).map(([uid, a]) => ({ uid, name: String(a?.name ?? ''), h: String(a?.gamePwHash ?? '') }));
 }
 
 // ---- 部屋（core/rooms.js だけが使う）：リアルタイムのデータの口 ----

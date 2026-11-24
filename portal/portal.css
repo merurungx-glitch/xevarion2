@@ -1,5 +1,6 @@
 /* XEVARION II — ポータルの画面（クラスは画面ごとの2文字＋「-」で始める：au アカウント・fs 最初の10連・
-   hm ホーム・ap アプリ・ah アプリの窓・gc ガチャ・ch キャラ・lb ロビー・mn メニュー・wl お財布・lg ログボ・ms ミッション・p 共通） */
+   hm ホーム・ap アプリ・ah アプリの窓・gc ガチャ・ch キャラ・lb ロビー・mn メニュー・wl お財布・lg ログボ・ms ミッション・
+   nw お知らせ・vr はじまり特典・p 共通） */
 @layer portal {
   .x-page { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); color: var(--text); animation: p-in var(--dur) var(--ease); }
   @keyframes p-in { from { opacity: 0; transform: translateY(6px); } }
@@ -214,9 +215,10 @@
 
   /* ===== 毎日：ログインボーナス・ミッション（2026-11-24 第5回） ===== */
   .hm-ms { margin-top: 12px; }
-  .hm-ms span { display: flex; flex-direction: column; line-height: 1.3; }
-  .hm-ms span b { font-size: 13px; }
-  .hm-ms span small { font-size: 11px; font-weight: 700; color: var(--text-3); }
+  :is(.hm-ms, .hm-nw) span { display: flex; flex-direction: column; line-height: 1.3; }
+  :is(.hm-ms, .hm-nw) span b { font-size: 13px; }
+  :is(.hm-ms, .hm-nw) span small { font-size: 11px; font-weight: 700; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; }
+  .hm-nw span small:empty { display: none; }
   .hm-badge { flex: none; min-width: 22px; height: 22px; padding: 0 7px; border-radius: 99px; background: var(--flare); color: #fff; font: 900 12px/22px var(--font-en); font-style: normal; text-align: center; }
   .hm-badge[hidden] { display: none; }
   .hm-ms + .hm-news { margin-top: 8px; }
@@ -259,6 +261,48 @@
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) .ms-all { background: linear-gradient(90deg, #2a2350, #3a1f3d); color: var(--text); }
     :root:not([data-theme="light"]) .wl-dt { background: linear-gradient(90deg, #3a2a14, #3a1f3d); border-color: #5a4630; }
+  }
+
+  /* ===== 共通の印：はじまり特典の「初代」（上のバー・メニュー・特典の板）と NEW（2026-11-24） ===== */
+  .p-vet { display: inline-block; margin-right: 5px; padding: 2px 6px 1px; border-radius: 6px; font: 900 9.5px/1.25 var(--font); letter-spacing: .12em; font-style: normal; color: #3b2600; background: linear-gradient(135deg, #fff1b8, #f5c451 55%, #dc9a22); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .55); vertical-align: 1px; text-shadow: none; }
+  .p-vet[hidden] { display: none; }
+  .p-vet.big { margin: 0; padding: 6px 11px 5px; border-radius: 9px; font-size: 15px; letter-spacing: .16em; }
+  .x-row b .p-vet { margin: 0 0 0 7px; vertical-align: 2px; }
+  .p-new { flex: none; height: 20px; padding: 0 7px; border-radius: 99px; background: var(--flare); color: #fff; font: 900 10.5px/20px var(--font-en); font-style: normal; letter-spacing: .04em; }
+
+  /* ===== お知らせ（2026-11-24・portal/news.js） ===== */
+  .nw-tabs { margin-bottom: 12px; }
+  .nw-tabs button { font-size: 12.5px; padding: 0 4px; }
+  .nw-dot { display: inline-block; width: 6px; height: 6px; margin-left: 4px; border-radius: 50%; background: var(--flare); vertical-align: 2px; }
+  .nw-i { padding: 12px 14px 14px; margin-bottom: 10px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); }
+  .nw-i.new { border-color: color-mix(in srgb, var(--g2) 45%, var(--line)); box-shadow: 0 2px 10px rgba(58, 107, 255, .10); }
+  .nw-d { display: flex; align-items: center; gap: 6px; font: 800 11px/1 var(--font-en); letter-spacing: .06em; color: var(--text-3); }
+  .nw-d em { padding: 3px 6px 2px; border-radius: 99px; background: var(--flare); color: #fff; font-size: 9.5px; font-style: normal; letter-spacing: .08em; }
+  .nw-i h3 { margin: 8px 0 0; font-size: 15px; line-height: 1.45; }
+  .nw-i p { margin: 6px 0 0; font-size: 13px; line-height: 1.75; color: var(--text-2); overflow-wrap: anywhere; }
+  .nw-i .x-btn { margin-top: 10px; }
+  .nw-st { display: inline-block; margin-top: 10px; font-size: 12px; font-weight: 800; color: var(--terra); }
+  .nw-empty { padding: 26px 0; text-align: center; font-size: 13px; color: var(--text-3); }
+
+  /* ===== はじまり特典（2026-11-24・portal/veteran.js） ===== */
+  .vr-lead { margin: 0 2px 12px; font-size: 13.5px; font-weight: 700; line-height: 1.7; }
+  .vr-gifts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
+  .vr-gifts > div { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-width: 0; padding: 12px 4px 10px; border-radius: 14px; background: linear-gradient(180deg, #fff8e6, #fff1f9); border: 1px solid #f3dfc2; color: #1d1d1f; text-align: center; }
+  .vr-gifts img { height: 30px; width: auto; max-width: 100%; object-fit: contain; }
+  .vr-gifts .p-vet.big { margin: 2px 0 3px; }
+  .vr-gifts b { font-size: 15px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .vr-gifts small { font-size: 10.5px; font-weight: 700; color: #6b6b75; }
+  .vr-once { margin: 0 2px 14px; font-size: 11.5px; font-weight: 700; color: var(--text-3); line-height: 1.5; }
+  .vr input[data-vr="pin"] { max-width: 180px; letter-spacing: .4em; font-variant-numeric: tabular-nums; }
+  .vr-err { min-height: 20px; margin: -4px 2px 6px; font-size: 13px; font-weight: 800; line-height: 1.5; color: #ff4f7b; }
+  .vr-note { margin: 0 2px; font-size: 11.5px; color: var(--text-3); line-height: 1.6; }
+  .vr-done { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding: 12px 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); }
+  .vr-done p { margin: 0; font-size: 14px; font-weight: 800; line-height: 1.5; }
+  :root[data-theme="dark"] .vr-gifts > div { background: linear-gradient(180deg, #3a2a14, #3a1f3d); border-color: #5a4630; color: var(--text); }
+  :root[data-theme="dark"] .vr-gifts small { color: var(--text-3); }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .vr-gifts > div { background: linear-gradient(180deg, #3a2a14, #3a1f3d); border-color: #5a4630; color: var(--text); }
+    :root:not([data-theme="light"]) .vr-gifts small { color: var(--text-3); }
   }
 
   /* アプリの窓（#/app/<id>）：iframe を全面に。地の色はアプリの色（html[data-app] の --app-bg） */

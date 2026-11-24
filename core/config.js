@@ -2,7 +2,7 @@
 
 export const VERSION = '0.1.0';
 /** 配った版（tools/release.py が release/ に書き出すときに入れる）。src のままは 'dev'＝Service Worker を使わない（直したものがいつもそのまま出る） */
-export const BUILD = '2026-11-24-3';
+export const BUILD = '2026-11-24-4';
 
 const host = location.hostname;
 /** 手元（localhost）で動いているか。★ 手元では本物のデータに書かない（試験用の置き場を使う） */
@@ -27,6 +27,9 @@ export const FIREBASE = {
     measurementId: 'G-998TCK4TEP',
   },
 };
+
+/** 初代 XEVARION のアカウントの置き場（はじまり特典の確認のときだけ・読むだけ＝docs/decisions.md「基本」の例外）。手元（localhost）では読まない */
+export const OLD_ACCOUNTS = 'https://xevarion-account-default-rtdb.asia-southeast1.firebasedatabase.app';
 
 /** ID＋合言葉を Firebase の「メール／パスワード」で使うための、中だけのメールの形（メールは送らない） */
 export const ID_MAIL_DOMAIN = 'id.xevarion2.example';
