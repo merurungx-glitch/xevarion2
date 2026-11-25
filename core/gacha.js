@@ -1,5 +1,6 @@
 // XEVARION II — ガチャのしくみ（GRAND DEBUT GACHA）
-// ・3人まとめて（案1）：キャラ 6%（3人で等分）・10連の10回目は 20%
+// ・みんなまとめて（案1）：キャラ 6%（3人で等分）・10連の10回目は 20%
+//   ★ 2026-11-25 第7回：翠・愛菜を足して5人（G1）。1人あたりはいまと同じ 2%（10回目 6.7%）になるよう、キャラ 10%・10回目 1/3 に上げた
 // ・それ以外は何も出ない（オービット＋1 だけ）。★ 2026-11-24 第5回の相談で決定（前は XEVA 200〜5,000＝平均 約610 が戻っていた）
 // ・天井：1回ごとにオービット1つ → 100 で好きな子1人
 // ・凸：5人目で完凸。完凸のあとに出たらジェム25 に変わる
@@ -19,12 +20,14 @@ export const GRAND_DEBUT = {
   banner: 'assets/gacha/grand-debut-1200.webp',
   bannerSmall: 'assets/gacha/grand-debut-600.webp',
   price: 5, // ジェム／1回（ガチャチケットは1枚で1回）
-  charRate: 0.06,
-  tenthRate: 0.2,
+  charRate: 0.1,
+  tenthRate: 1 / 3,
   pity: 100,
   overGem: 25,
   welcomeTickets: 10,
-  chars: ['yuzuha', 'minase', 'miduki'],
+  chars: ['yuzuha', 'minase', 'miduki', 'sui', 'mana'],
+  newChars: ['sui', 'mana'],   // 新しく参戦した子（ガチャとホームのイベントの札に NEW）
+  newUntil: '2026-12-25',      // この日まで NEW を出す（日本の日付）
 };
 const G = GRAND_DEBUT;
 
@@ -102,6 +105,11 @@ function addLog(rs) {
   const items = rs.map((r) => ({ ...r, at })).reverse();
   store.set('glog', [...items, ...log()].slice(0, 50));
 }
+
+/** 新しく参戦した子か（ガチャとホームのイベントの札の NEW）。日付は日本の日付で newUntil まで */
+const jstDay = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+export const isNew = (id) => G.newChars.includes(id) && jstDay() <= G.newUntil;
+export const newChars = () => G.newChars.filter(isNew);
 
 /** 提供割合（表と見出しは必ずここから作る） */
 export function rates() {

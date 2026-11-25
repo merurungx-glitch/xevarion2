@@ -189,12 +189,14 @@
   /* ── スクロールで現れる ── */
   .rv{opacity:0;transform:translateY(28px);transition:opacity .9s var(--ease),transform .9s var(--ease)}
   .rv.in{opacity:1;transform:none}
-  .rv.d1{transition-delay:.08s}.rv.d2{transition-delay:.16s}.rv.d3{transition-delay:.24s}
+  .rv.d1{transition-delay:.08s}.rv.d2{transition-delay:.16s}.rv.d3{transition-delay:.24s}.rv.d4{transition-delay:.32s}
   @media (prefers-reduced-motion:reduce){ .rv{opacity:1;transform:none;transition:none} html{scroll-behavior:auto} }
 
   /* ── XEVARION II（2026-11-24・主役）── */
   .x2-logo{width:min(300px,68vw);margin:0 auto 22px}
-  .x2-chars{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:720px;margin:44px auto 0}
+  .x2-chars{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;max-width:980px;margin:44px auto 0}
+  .x2-chars .x2-ch{flex:0 1 calc((100% - 56px) / 5);min-width:96px}
+  @media (max-width:620px){ .x2-chars .x2-ch{flex-basis:calc((100% - 28px) / 3)} }
   .x2-ch{border-radius:var(--r);padding:22px 10px 18px;background:#161617;box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)}
   .x2-ch img{width:min(104px,22vw);aspect-ratio:1;border-radius:50%;object-fit:cover;margin:0 auto 12px;box-shadow:0 0 0 3px var(--c),0 10px 30px rgba(0,0,0,.5)}
   .x2-ch b{display:block;font-size:clamp(19px,2.6vw,24px);font-weight:800;color:#f5f5f7}
@@ -275,11 +277,13 @@
         <div class="x2-ch rv" style="--c:#ff5b4a"><img src="../../assets/chara/yuzuha/face-256.webp" alt="" loading="lazy"><b>柚葉</b><small>FLARE</small></div>
         <div class="x2-ch rv d1" style="--c:#2e9bff"><img src="../../assets/chara/minase/face-256.webp" alt="" loading="lazy"><b>水瀬</b><small>TIDE</small></div>
         <div class="x2-ch rv d2" style="--c:#25b871"><img src="../../assets/chara/miduki/face-256.webp" alt="" loading="lazy"><b>美月</b><small>TERRA</small></div>
+        <div class="x2-ch rv d3" style="--c:#8e5cff"><img src="../../assets/chara/sui/face-256.webp" alt="" loading="lazy"><b>翠</b><small>VOID</small></div>
+        <div class="x2-ch rv d4" style="--c:#f0a91c"><img src="../../assets/chara/mana/face-256.webp" alt="" loading="lazy"><b>愛菜</b><small>NOVA</small></div>
       </div>
-      <p class="x2-sub rv">はじめての10連で、3人のうち1人があなたのパートナーに。</p>
+      <p class="x2-sub rv">はじめての10連で、5人のうち1人があなたのパートナーに。</p>
       <div class="stats">
         <div class="stat rv"><b><span class="count" data-to="7">7</span></b><span>アプリ</span></div>
-        <div class="stat rv d1"><b><span class="count" data-to="3">3</span></b><span>キャラクター</span></div>
+        <div class="stat rv d1"><b><span class="count" data-to="5">5</span></b><span>キャラクター</span></div>
         <div class="stat rv d2"><b><span class="count" data-to="1569">1,569</span></b><span>化学の問題（MagiLex）</span></div>
         <div class="stat rv d3"><b><span class="count" data-to="2">2</span></b><span>社で運営・製作</span></div>
       </div>

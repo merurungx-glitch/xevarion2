@@ -6,7 +6,7 @@
 // ★ 絵は止まっている（動くのはロビーだけ）＝ホームにいるあいだ電池を使わない
 import { t } from '../core/i18n.js';
 import * as chara from '../core/chara.js';
-import { GRAND_DEBUT } from '../core/gacha.js';
+import { GRAND_DEBUT, newChars } from '../core/gacha.js';
 import { ico } from '../ui/icons.js';
 import { esc, bindActs } from '../ui/dom.js';
 import { toast } from '../ui/toast.js';
@@ -20,6 +20,7 @@ import * as mail from '../core/mail.js';
 
 export async function mount(el, { go }) {
   el.classList.add('hm');
+  const evNew = newChars().map(chara.byId).filter(Boolean);   // ★ 2026-11-25 新しく参戦した子（イベントの札に NEW）
   el.innerHTML = `
     ${decoHTML()}
     <div class="hm-scroll x-scroll"><div class="hm-wrap">
@@ -27,7 +28,7 @@ export async function mount(el, { go }) {
       <section class="hm-hero"><div class="hm-pans"></div><div class="hm-bubble" aria-live="polite"></div></section>
       <div class="hm-info"></div>
       <div class="hm-side">
-        <button type="button" class="hm-ev" data-act="gacha"><img src="${GRAND_DEBUT.bannerSmall}" alt="" decoding="async"><div><em>${t('home.evOn')}</em><b>${esc(GRAND_DEBUT.name)}</b><small>${t('home.evSub')}</small></div>${ico('next')}</button>
+        <button type="button" class="hm-ev" data-act="gacha"><img src="${GRAND_DEBUT.bannerSmall}" alt="" decoding="async"><div><em>${t('home.evOn')}</em>${evNew.length ? `<em class="nw">${t('home.evNew')}</em>` : ''}<b>${esc(GRAND_DEBUT.name)}</b><small>${evNew.length ? esc(t('home.evSubNew', { names: evNew.map((c) => c.name).join('・') })) : t('home.evSub')}</small></div>${ico('next')}</button>
         <div class="hm-rows">
           <button type="button" class="hm-row" data-act="missions">${ico('mission')}<span><b>${t('ms.title')}</b><small data-ms></small></span><em class="hm-badge" data-msn hidden></em>${ico('next')}</button>
           <button type="button" class="hm-row" data-act="mail">${ico('mail')}<span><b>${t('ml.title')}</b><small data-ml></small></span><em class="hm-badge" data-mln hidden></em>${ico('next')}</button>
@@ -58,10 +59,15 @@ export async function mount(el, { go }) {
   function paint() {
     const p = chara.partner();
     const max = p && chara.isMax(p.id);
-    const key = p ? p.id + (max ? ':max' : '') + ':' + chara.CHARS.map((c) => (chara.owned(c.id) ? 1 : 0)).join('') : 'none';
+    // パートナー以外の2人：新しく参戦した子（NEW のあいだ）を先に、あとは日替わり（★ 2026-11-25 5人になったので）
+    const all = chara.CHARS.filter((c) => !p || c.id !== p.id);
+    const fresh = newChars().map(chara.byId).filter((c) => c && all.includes(c));
+    const rot = all.filter((c) => !fresh.includes(c));
+    const k = rot.length ? Math.floor((Date.now() + 9 * 3600e3) / 864e5) % rot.length : 0;
+    const rest = [...fresh, ...rot.slice(k), ...rot.slice(0, k)].slice(0, 2);
+    const key = (p ? p.id + (max ? ':max' : '') : 'none') + ':' + chara.CHARS.map((c) => (chara.owned(c.id) ? 1 : 0)).join('') + ':' + rest.map((c) => c.id).join();
     if (key === shown) return;
     shown = key;
-    const rest = chara.CHARS.filter((c) => !p || c.id !== p.id);
     const main = !p
       ? `<div class="hm-pan m" data-act="gacha"><img class="ban" src="${GRAND_DEBUT.bannerSmall}" alt="" style="object-position:50% 50%"></div>`
       : `<div class="hm-pan m ${p.el}" data-act="talk" role="button" aria-label="${esc(t('home.talk', { name: p.name }))}">${max

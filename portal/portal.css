@@ -66,7 +66,7 @@
   .hm-pan { position: absolute; padding: 0; border: 5px solid #fff; overflow: hidden; --c: var(--accent);
     background: linear-gradient(165deg, color-mix(in srgb, var(--c) 26%, #fff), #e3e3ff 56%, #ffe4f1); box-shadow: var(--shadow-pan); }
   .hm-pan::after { content: ""; position: absolute; inset: 5px; z-index: 1; border: 1.5px solid rgba(255, 255, 255, .95); pointer-events: none; }
-  .hm-pan.flare { --c: var(--flare); } .hm-pan.tide { --c: var(--tide); } .hm-pan.terra { --c: var(--terra); }
+  .hm-pan.flare { --c: var(--flare); } .hm-pan.tide { --c: var(--tide); } .hm-pan.terra { --c: var(--terra); } .hm-pan.nova { --c: var(--nova); } .hm-pan.void { --c: var(--void); }
   .hm-pan img { position: absolute; max-width: none; }
   .hm-pan img.ban { inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 12%; }
   .hm-pan img.full { left: 50%; top: 3%; width: 132%; height: auto; translate: -50% 0; }
@@ -92,6 +92,7 @@
   .hm-ev img { width: 88px; height: 48px; flex: none; object-fit: cover; border-radius: 13px; }
   .hm-ev div { flex: 1; min-width: 0; line-height: 1.3; }
   .hm-ev em { font-style: normal; font-size: 11px; font-weight: 900; color: #fff; background: var(--grad-tag); border-radius: 99px; padding: 2px 9px; }
+  .hm-ev em.nw { margin-left: 4px; font-family: var(--font-disp); letter-spacing: .08em; background: var(--flare); }
   .hm-ev b { display: block; margin-top: 3px; font-size: 14px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .hm-ev small { display: none; }
   .hm-ev > svg.x-i { width: 18px; height: 18px; color: var(--text-3); }
@@ -198,6 +199,10 @@
   .gc-ban { position: relative; aspect-ratio: 1200 / 643; border: 5px solid #fff; background: #fff; box-shadow: var(--shadow-pan); }
   .gc-ban::after { content: ""; position: absolute; inset: 5px; border: 1.5px solid rgba(255, 255, 255, .95); pointer-events: none; }
   .gc-ban img { width: 100%; height: 100%; object-fit: cover; }
+  /* ★ 2026-11-25 新しく参戦した子の札（バナーの左下） */
+  .gc-ban .gc-new { position: absolute; left: 12px; bottom: 12px; z-index: 1; display: flex; align-items: center; gap: 6px; padding: 5px 12px 5px 5px; border-radius: 99px; background: rgba(255, 255, 255, .95); box-shadow: var(--shadow-s); font-size: 12.5px; font-weight: 900; color: var(--text); }
+  .gc-new b { font: 900 11px/1 var(--font-disp); letter-spacing: .08em; color: #fff; background: var(--grad-tag); border-radius: 99px; padding: 5px 8px; }
+  .gc-ban .gc-new img { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2px #fff; }
   .gc-name { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin: 14px 2px 8px; }
   .gc-name b { font-size: 16px; font-weight: 900; letter-spacing: .02em; }
   .gc-name small { font-size: 12px; font-weight: 700; color: var(--text-3); white-space: nowrap; }
@@ -233,7 +238,7 @@
   /* ===== キャラ（第6回：パステルの地に全身・白い板。iPad から並べて） ===== */
   .ch-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; max-width: 1080px; padding: 4px 16px 26px; }
   .ch-card { --c: var(--accent); display: flex; align-items: stretch; width: 100%; overflow: hidden; text-align: left; background: var(--glass); border: 1px solid var(--glass-line); border-radius: 22px; box-shadow: var(--shadow); }
-  .ch-card.flare { --c: var(--flare); } .ch-card.tide { --c: var(--tide); } .ch-card.terra { --c: var(--terra); }
+  .ch-card.flare { --c: var(--flare); } .ch-card.tide { --c: var(--tide); } .ch-card.terra { --c: var(--terra); } .ch-card.nova { --c: var(--nova); } .ch-card.void { --c: var(--void); }
   .ch-card .pic { position: relative; width: 34%; max-width: 150px; aspect-ratio: 3 / 4; flex: none; overflow: hidden; background: linear-gradient(165deg, color-mix(in srgb, var(--c) 26%, #fff), #e3e3ff 56%, #ffe4f1); }
   .ch-card .pic img { position: absolute; left: 50%; top: 4%; translate: -50% 0; height: 150%; width: auto; max-width: none; }
   .ch-card.no .pic img { filter: brightness(0) invert(1); opacity: .75; }
@@ -247,7 +252,7 @@
     .ch-list { grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); margin: 0 auto; padding: 4px 22px 30px; }
   }
   .ch-det-art { --c: var(--accent); position: relative; height: min(58vh, 640px); flex: none; overflow: hidden; background: linear-gradient(165deg, color-mix(in srgb, var(--c) 26%, #fff), #e3e3ff 56%, #ffe4f1); }
-  .ch-det-art.flare { --c: var(--flare); } .ch-det-art.tide { --c: var(--tide); } .ch-det-art.terra { --c: var(--terra); }
+  .ch-det-art.flare { --c: var(--flare); } .ch-det-art.tide { --c: var(--tide); } .ch-det-art.terra { --c: var(--terra); } .ch-det-art.nova { --c: var(--nova); } .ch-det-art.void { --c: var(--void); }
   .ch-det-art img { position: absolute; left: 50%; bottom: -16%; translate: -50% 0; height: 118%; width: auto; max-width: none; }
   .ch-det-art .no { filter: brightness(0) invert(1); opacity: .8; }
   .ch-back { position: absolute; top: calc(var(--st) + 10px); left: 10px; z-index: 3; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; color: var(--text); background: var(--glass); box-shadow: var(--shadow-s); }

@@ -11,7 +11,9 @@ import * as account from '../core/account.js';
 import * as chara from '../core/chara.js';
 import * as vet from '../core/veteran.js';
 
-const TABS = ['home', 'apps', 'gacha', 'chara', 'menu'];
+// ★ 2026-11-25 第7回：下のタブは「キャラ・アプリ・ホーム・ガチャ・メニュー」（同じ大きさ）。
+//   PC・iPad 横の左のメニューはホームが上（ホーム・キャラ・アプリ・ガチャ・メニュー）＝ components.css の order で並べかえる
+const TABS = ['chara', 'apps', 'home', 'gacha', 'menu'];
 const EN = { home: 'HOME', apps: 'APPS', gacha: 'GACHA', chara: 'CHARA', menu: 'MENU' };
 let bar = null;
 

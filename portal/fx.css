@@ -97,7 +97,7 @@
   .gx-grid.one { grid-template-columns: 1fr; max-width: 220px; }
   .gx-card { position: relative; aspect-ratio: 3 / 4; border-radius: 12px; overflow: hidden; background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .16); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
   .gx-card.char { --c: var(--g3); border: 2px solid var(--c); box-shadow: 0 0 18px color-mix(in srgb, var(--c) 60%, transparent); background: var(--night-2); }
-  .gx-card.char.flare { --c: var(--flare); } .gx-card.char.tide { --c: var(--tide); } .gx-card.char.terra { --c: var(--terra); }
+  .gx-card.char.flare { --c: var(--flare); } .gx-card.char.tide { --c: var(--tide); } .gx-card.char.terra { --c: var(--terra); } .gx-card.char.nova { --c: var(--nova); } .gx-card.char.void { --c: var(--void); }
   .gx-card.char img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .gx-card .lab { position: absolute; left: 0; right: 0; bottom: 0; padding: 14px 4px 5px; background: linear-gradient(transparent, rgba(5, 6, 26, .85)); font-size: 10px; font-weight: 900; text-align: center; letter-spacing: .04em; }
   .gx-card .tag { position: absolute; top: 4px; left: 4px; font: 800 8.5px/1 var(--font-en); letter-spacing: .06em; padding: 3px 6px; border-radius: 99px; background: var(--grad); }

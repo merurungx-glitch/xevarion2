@@ -143,6 +143,9 @@
       background: var(--glass); border: 1px solid var(--glass-line);
     }
     .x-tab { flex-direction: row; justify-content: flex-start; gap: 12px; height: auto; margin: 0; padding: 10px 14px; border-radius: 16px; font-size: 15.5px; }
+    /* ★ 2026-11-25 左のメニューはホームが上（下のタブはまん中＝shell.js の TABS の順） */
+    .x-side-logo { order: -2; }
+    .x-tab[data-tab="home"] { order: -1; }
     .x-tab span { align-items: flex-start; }
     .x-tab span small { display: block; font: 700 10px/1.2 var(--font-en); letter-spacing: .16em; opacity: .75; }
     .x-tab .x-dot { top: 8px; right: 12px; }

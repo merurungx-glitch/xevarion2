@@ -46,7 +46,7 @@ const ja = {
   'home.noPartner': 'ガチャでパートナーを迎えよう',
   // 第6回の刷新（2026-11-24）：日本語が先
   'home.play': 'あそぶ', 'home.partnerJa': 'パートナー', 'home.notYet': 'まだ', 'home.sitesSub': 'NGX・ISHIDA',
-  'home.evOn': '開催中', 'home.evSub': '柚葉・水瀬・美月が3人そろって登場', 'home.talk': '{name} と話す',
+  'home.evOn': '開催中', 'home.evSub': '5人そろって登場・10回目はキャラが出やすい', 'home.evSubNew': '{names}が新しく参戦！', 'home.evNew': 'NEW', 'home.talk': '{name} と話す',
 
   // お知らせ（portal/news.js）・はじまり特典（portal/veteran.js・core/veteran.js）＝2026-11-24
   'news.title': 'お知らせ', 'news.tab.news': 'お知らせ', 'news.tab.update': '更新内容', 'news.tab.dev': 'デベロッパーノート',
@@ -100,7 +100,7 @@ const ja = {
   'gacha.pickT': '天井で交換', 'gacha.pickLead': '好きなキャラを1人選んでください（オービット {n} を使います）',
   'gacha.maxed': '完凸ずみ',
   'gacha.logEmpty': 'まだひいていません',
-  'gacha.ratesLead': '3人とも同じ確率です。10連の10回目はキャラの確率が上がります。',
+  'gacha.ratesLead': '5人とも同じ確率です。10連の10回目はキャラの確率が上がります。', 'gacha.newJoin': '{names}が参戦！',
   'gacha.itemXeva': '{n} XEVA', 'gacha.itemOrbit': 'オービット +1', 'gacha.missRow': 'キャラ以外（オービット＋1 だけ）',
   'gacha.skip': 'スキップ ›',
   'gacha.tapNext': 'タップで次へ',

@@ -13,6 +13,12 @@ import { headHTML, decoHTML } from './shell.js';
 const G = gacha.GRAND_DEBUT;
 const pct = (p) => (Math.round(p * 10000) / 100).toFixed(2).replace(/\.?0+$/, '') + '%';
 const when = (at) => new Date(at).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+/** ★ 2026-11-25 第7回：新しく参戦した子（翠・愛菜）の札。バナーの絵は3人のままなので、顔と名前を重ねる */
+function newHTML() {
+  const cs = gacha.newChars().map(chara.byId).filter(Boolean);
+  if (!cs.length) return '';
+  return `<div class="gc-new"><b>NEW</b>${cs.map((c) => `<img src="${chara.art(c.id, 'face-96')}" alt="">`).join('')}<span>${esc(t('gacha.newJoin', { names: cs.map((c) => c.name).join('・') }))}</span></div>`;
+}
 
 export async function mount(el) {
   el.classList.add('gc');
@@ -21,9 +27,9 @@ export async function mount(el) {
       <button type="button" class="x-pill" data-act="wallet" data-earn="gem" aria-label="${t('cur.gem')}"><i class="x-cur gem"></i><span data-v="gem" data-num></span></button>
       <button type="button" class="x-pill" data-act="wallet" data-earn="ticket" aria-label="${t('cur.ticket')}"><i class="x-cur ticket"></i><span data-v="ticket" data-num></span></button>`)}
     <div class="p-body x-scroll"><div class="gc-body">
-      <div class="gc-ban"><img src="${G.banner}" alt="${G.name}"></div>
+      <div class="gc-ban"><img src="${G.banner}" alt="${G.name}">${newHTML()}</div>
       <div class="gc-name"><b>${G.name}</b><small>${t('gacha.always')}</small></div>
-      <div class="gc-chips"><span>${t('gacha.chipChar', { p: G.charRate * 100 })}</span><span>${t('gacha.chipTenth', { p: G.tenthRate * 100 })}</span><span>${t('gacha.chipPity', { n: G.pity })}</span></div>
+      <div class="gc-chips"><span>${t('gacha.chipChar', { p: Math.round(G.charRate * 100) })}</span><span>${t('gacha.chipTenth', { p: Math.round(G.tenthRate * 100) })}</span><span>${t('gacha.chipPity', { n: G.pity })}</span></div>
       <div class="gc-pity"><div class="gc-bar"><i></i></div><small><span data-v="orbit"></span><span data-v="toPity"></span></small><div data-v="pityBtn"></div></div>
       <div class="gc-btns">
         <button type="button" class="x-btn white" data-act="pull" data-n="1">${t('gacha.one')}<small data-v="c1"></small></button>
