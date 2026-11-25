@@ -40,12 +40,14 @@ export async function mount(el, { go }) {
   const body = el.querySelector('.mn-body');
   let fpsText = '—';
   let news = null; // portal/news.js（あとから読む：NEW の印に使う）
+  let notes = null; // portal/devnotes.js（同じく）
   let admin = false; // 運営のアカウントか（core/admin.js であとから聞く）
 
   function paint() {
     const u = account.current();
     const vm = vet.mark();
     const newsN = news ? news.unread().length : 0;
+    const dnN = notes ? notes.unread().length : 0; // まだ読んでいないデベロッパーノート
     const mlN = mail.ready();
     const modeNames = { high: t('menu.power.high'), balanced: t('menu.power.balanced'), saver: t('menu.power.saver') };
     const syncText = account.backendName() === 'local' ? t('menu.sync.local') : t('menu.sync.' + sync.getStatus());
@@ -60,6 +62,7 @@ export async function mount(el, { go }) {
       <div class="mn-h">${t('menu.newsCard')}</div>
       <div class="x-card">
         <div class="x-row">${ico('bell')}<div><b>${t('news.title')}</b><small>${t('menu.newsNote')}</small></div>${newsN ? `<em class="p-new">${t('news.new')}</em>` : ''}<button type="button" class="x-btn secondary small" data-act="news">${t('menu.open')}</button></div>
+        <div class="x-row">${ico('note')}<div><b>${t('dn.title')}</b><small>${t('dn.note')}</small></div>${dnN ? `<em class="p-new">${t('news.new')}</em>` : ''}<button type="button" class="x-btn secondary small" data-act="devnotes">${t('menu.open')}</button></div>
         <div class="x-row">${ico('mail')}<div><b>${t('ml.title')}</b><small>${mlN ? t('ml.homeN', { n: mlN }) : t('ml.homeNone')}</small></div>${mlN ? `<em class="p-new">${mlN}</em>` : ''}<button type="button" class="x-btn secondary small" data-act="mail">${t('menu.open')}</button></div>
         <div class="x-row">${ico('key')}<div><b>${t('menu.code')}</b><small>${t('menu.codeNote')}</small></div><button type="button" class="x-btn secondary small" data-act="code">${t('menu.codeGo')}</button></div>
       </div>
@@ -132,6 +135,7 @@ export async function mount(el, { go }) {
     missions() { import('./missions.js').then((m) => m.openMissions()); },
     logbo() { import('./logbo.js').then((m) => m.openLogbo()); },
     news() { import('./news.js').then((N) => N.openNews()); },
+    devnotes() { import('./devnotes.js').then((D) => D.openList()); },
     veteran() { import('./veteran.js').then((m) => m.openVeteran()); },
     mail() { import('./mail.js').then((m) => m.openMail()); },
     code() { import('./mail.js').then((m) => m.openCode()); },
@@ -195,5 +199,11 @@ export async function mount(el, { go }) {
     offs.push(N.onChange(paint));
     N.refresh();
   }).catch((e) => console.warn('news', e));
+  import('./devnotes.js').then((D) => {
+    if (gone) return;
+    notes = D;
+    paint();
+    offs.push(D.onChange(paint));
+  }).catch((e) => console.warn('devnotes', e));
   return () => { gone = true; stopFps?.(); offs.forEach((f) => f()); el.removeEventListener('click', onSeg); };
 }

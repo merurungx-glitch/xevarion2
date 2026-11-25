@@ -2,8 +2,8 @@
 // ★ 2026-11-24 第6回の刷新：E2 BLOOM POSTER（3人の絵を斜めに重ねたポスター＋大きな英字の名前）× D1（幅で組みかえる）
 //   iPhone：上のバー → ポスター → パートナーの板（ロビーへ）→ イベント → あそぶ → ミッション・メール・お知らせ
 //   iPad 縦：同じ並びを大きく／PC・iPad 横：左のメニュー（shell）・まん中に絵・右に今日のこと・アプリは横並び（CSS の grid）
-// ★ 絵の決まり：パートナーは完凸なら完凸バナー・その前は全身（完凸バナーはごほうびなので見せない）。ほかの2人も全身
-// ★ 絵は止まっている（動くのはロビーだけ）＝ホームにいるあいだ電池を使わない
+// ★ 絵の決まり：パートナーは全身（完凸バナーはごほうびなので、ロビーの「完凸バナー」で見る）。ほかの2人も全身
+// ★ 2026-11-25 第7回 M2：パートナーの板だけ動く（portal/live.js：見えていないとき・1分さわらないとき・アプリ中・省電力では止まる）。ほかの絵は止まっている
 import { t } from '../core/i18n.js';
 import * as chara from '../core/chara.js';
 import { GRAND_DEBUT, newChars } from '../core/gacha.js';
@@ -49,38 +49,55 @@ export async function mount(el, { go }) {
   const bubble = el.querySelector('.hm-bubble');
   let shown = '';
 
-  /** ほかの子の小さな絵（全身の上の方）。まだ会っていない子は「まだ」の札（押すとガチャへ） */
+  /** サブの小さな絵（★ 2026-11-25 ご指定：LD なしの絵＝banner の上の方＝顔が見えるところ）。まだ会っていない子は「まだ」の札（押すとガチャへ） */
   const side = (cls, c) => {
     const own = chara.owned(c.id);
-    return `<button type="button" class="hm-pan ${cls} ${c.el}" data-act="other" data-id="${c.id}" aria-label="${esc(c.name)}">
-      <img class="full" src="${chara.art(c.id, 'full-512')}" alt="" decoding="async"><span class="nm">${esc(c.name)}</span>${own ? '' : `<span class="nw">${t('home.notYet')}</span>`}</button>`;
+    return `<button type="button" class="hm-pan ${cls} ${c.el}${own ? '' : ' no'}" data-act="other" data-id="${c.id}" aria-label="${esc(c.name)}">
+      <img class="ban" src="${chara.art(c.id, 'banner-470')}" alt="" decoding="async"><span class="nm">${esc(c.name)}</span>${own ? '' : `<span class="nw">${t('home.notYet')}</span>`}</button>`;
   };
 
-  function paint() {
-    const p = chara.partner();
-    const max = p && chara.isMax(p.id);
-    // パートナー以外の2人：新しく参戦した子（NEW のあいだ）を先に、あとは日替わり（★ 2026-11-25 5人になったので）
-    const all = chara.CHARS.filter((c) => !p || c.id !== p.id);
+  /** サブ2人：ロビー設定で選んだ子 → 空いている枠はおまかせ（新しく参戦した子〔NEW のあいだ〕を先に、あとは日替わり） */
+  function subs(p) {
+    const chosen = chara.subsChosen().map((id) => (id ? chara.byId(id) : null));
+    const used = new Set([p?.id, ...chosen.map((c) => c?.id)].filter(Boolean));
+    const all = chara.CHARS.filter((c) => !used.has(c.id));
     const fresh = newChars().map(chara.byId).filter((c) => c && all.includes(c));
     const rot = all.filter((c) => !fresh.includes(c));
     const k = rot.length ? Math.floor((Date.now() + 9 * 3600e3) / 864e5) % rot.length : 0;
-    const rest = [...fresh, ...rot.slice(k), ...rot.slice(0, k)].slice(0, 2);
-    const key = (p ? p.id + (max ? ':max' : '') : 'none') + ':' + chara.CHARS.map((c) => (chara.owned(c.id) ? 1 : 0)).join('') + ':' + rest.map((c) => c.id).join();
+    const auto = [...fresh, ...rot.slice(k), ...rot.slice(0, k)];
+    return chosen.map((c) => c || auto.shift() || null);
+  }
+
+  function paint() {
+    const p = chara.partner();
+    const rest = subs(p);
+    const key = (p ? p.id : 'none') + ':' + chara.CHARS.map((c) => (chara.owned(c.id) ? 1 : 0)).join('') + ':' + rest.map((c) => c?.id).join();
     if (key === shown) return;
     shown = key;
+    // ★ 2026-11-25 第7回 M2：メイン（パートナー）はテラス（LD背景）の上で動く（portal/live.js・止めた絵は img.still＝LD の全身）
+    //   ★ 同日ご指定：凸で見た目は変えない（完凸の金のふち・札はやめた。完凸はアイコンが光る＝上のバーの顔）
     const main = !p
       ? `<div class="hm-pan m" data-act="gacha"><img class="ban" src="${GRAND_DEBUT.bannerSmall}" alt="" style="object-position:50% 50%"></div>`
-      : `<div class="hm-pan m ${p.el}" data-act="talk" role="button" aria-label="${esc(t('home.talk', { name: p.name }))}">${max
-        ? `<img class="ban" src="${chara.art(p.id, 'banner-940')}" alt="${esc(p.name)}">`
-        : `<img class="full" src="${chara.art(p.id, 'full-1024')}" alt="${esc(p.name)}">`}</div>`;
+      : `<div class="hm-pan m ${p.el}" data-act="talk" role="button" aria-label="${esc(t('home.talk', { name: p.name }))}"><div class="hm-live"><img class="still" src="${chara.art(p.id, 'full-1024')}" alt="${esc(p.name)}"></div></div>`;
+    live?.destroy(); live = null;
     pansEl.innerHTML = `${rest[0] ? side('s1', rest[0]) : ''}${rest[1] ? side('s2', rest[1]) : ''}${main}
       <div class="hm-head"><small>${p ? 'MY PARTNER' : 'WELCOME'}</small><b>${p ? p.en : 'XEVARION'}</b></div>`;
+    if (p) {
+      const stage = pansEl.querySelector('.hm-live');
+      import('./live.js').then((L) => {
+        if (gone || !stage.isConnected) return;
+        live = L.mountLive(stage, p.id, { view: 'panel', padT: 4, padB: 0, grid: 12, fps: 30 });
+      }).catch((e) => console.warn('live', e));
+    }
+    // ロビーは完凸を待たずに、持っている子ならだれでも（第7回 M2）
     infoEl.innerHTML = p
       ? `<div class="who"><small>${t('home.partnerJa')}</small><b>${esc(p.name)}</b><span class="x-chip x-el ${p.el}">${chara.ELEMENTS[p.el].en}</span></div>
-        ${max ? `<button type="button" class="x-btn primary" data-act="lobby">${t('home.lobby')}${ico('next')}</button>`
-          : `<button type="button" class="x-btn secondary" data-act="lobbyLock">${ico('lock')}${t('home.lobbyLock')}</button>`}`
+        <button type="button" class="hm-set" data-act="lobbySet" aria-label="${t('ls.title')}" title="${t('ls.title')}">${ico('swap')}</button>
+        <button type="button" class="x-btn primary" data-act="lobby">${t('home.lobby')}${ico('next')}</button>`
       : `<div class="who"><b style="font-size:16px">${t('home.noPartner')}</b></div><button type="button" class="x-btn primary" data-act="gacha">${t('tab.gacha')}${ico('next')}</button>`;
   }
+  let live = null;   // 動くパートナー（portal/live.js）
+  let gone = false;  // この画面を閉じた（あとから届く読みこみを捨てる）
   paint();
 
   // MagiDerby の札：発売中（金の札と輪）・締切間近（赤い札に残り時間）・結果（まだ確かめていない馬券の数）
@@ -124,7 +141,6 @@ export async function mount(el, { go }) {
   const nwText = el.querySelector('[data-nw]');
   const nwNew = el.querySelector('[data-nwn]');
   let offNews = null;
-  let gone = false;
   import('./news.js').then((N) => {
     if (gone) return;
     const paintNews = () => {
@@ -138,7 +154,15 @@ export async function mount(el, { go }) {
   }).catch((e) => console.warn('news', e));
 
   // ログインボーナス：その日はじめてホームを開いたとき（画面が出てから少しして）
-  const lbT = setTimeout(() => openLogbo({ auto: true }), 700);
+  // → そのあと（受け取った GET! のカードも終わってから）、まだ読んでいないデベロッパーノートがあれば手紙をひらく（★ 第7回 DN1：更新のあとに1回）
+  const lbT = setTimeout(() => {
+    const lb = openLogbo({ auto: true });
+    Promise.resolve(lb && lb.done)
+      .then(() => new Promise((r) => setTimeout(r, lb ? 420 : 0)))
+      .then(() => (gone ? null : import('./devnotes.js')))
+      .then((D) => { if (D && !gone) D.autoOpen(); })
+      .catch((e) => console.warn('devnotes', e));
+  }, 700);
 
   let hideT = 0;
   const offs = [
@@ -155,6 +179,7 @@ export async function mount(el, { go }) {
         bubble.classList.add('show');
         clearTimeout(hideT);
         hideT = setTimeout(() => bubble.classList.remove('show'), 3400);
+        live?.poke(2400);     // 押すと小さくはずむ（動いているときだけ）
         daily.note('talk');   // ミッション「パートナーと話す」
       },
       other(b) { go(chara.owned(b.dataset.id) ? 'chara/' + b.dataset.id : 'gacha'); },
@@ -168,8 +193,8 @@ export async function mount(el, { go }) {
       news() { import('./news.js').then((N) => N.openNews()); },
       mail() { import('./mail.js').then((m) => m.openMail()); },
       lobby() { go('lobby'); },
-      lobbyLock() { const p = chara.partner(); toast(t('chara.toMax', { n: chara.MAX_COPIES - chara.copies(p.id) })); },
+      lobbySet() { import('./lobbyset.js').then((m) => m.openLobbySet()); },
     }),
   ];
-  return () => { gone = true; offNews?.(); clearTimeout(hideT); clearTimeout(lbT); offs.forEach((f) => f()); };
+  return () => { gone = true; live?.destroy(); offNews?.(); clearTimeout(hideT); clearTimeout(lbT); offs.forEach((f) => f()); };
 }

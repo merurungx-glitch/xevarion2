@@ -14,11 +14,14 @@ const label = (k, n) => (k === 'xeva' ? fmt(n) : k === 'gem' ? t('logbo.gem', { 
 let autoDay = '';
 let open = null;
 
-/** 板を開く。auto＝ホームから自動で（受け取りずみ・この日にもう出した なら出さない） */
+/** 板を開く。auto＝ホームから自動で（受け取りずみ・この日にもう出した なら出さない）
+ *  返す板の done は、閉じたとき（受け取ったなら GET! のカードが終わったとき）に終わる＝このあとにデベロッパーノートを出す（portal/home.js） */
 export function openLogbo({ auto = false } = {}) {
   const s0 = daily.logbo();
   if (auto && (s0.claimed || autoDay === s0.today)) return null;
   if (open) return open;
+  let finish;
+  const done = new Promise((r) => (finish = r));
   autoDay = s0.today;
   const p = chara.partner();
   const tiles = daily.LOGBO.map((it, i) => {
@@ -37,11 +40,14 @@ export function openLogbo({ auto = false } = {}) {
     actions: s0.claimed ? [] : [{ label: t('logbo.recv'), kind: 'primary', value: 'recv' }],
     onAction: async (a, api) => {
       api.el.querySelectorAll('.x-sheet-f button').forEach((b) => { b.disabled = true; });
-      const got = await daily.claimLogbo();
-      api.close('recv');
-      if (got) await earnCard(got.items, { sub: t('logbo.sub', { n: got.idx + 1 }) });
+      try {
+        const got = await daily.claimLogbo();
+        api.close('recv');
+        if (got) await earnCard(got.items, { sub: t('logbo.sub', { n: got.idx + 1 }) });
+      } finally { api.close('recv'); finish(); }
     },
   });
-  open.closed.then(() => { open = null; });
+  open.done = done;
+  open.closed.then((v) => { open = null; if (v !== 'recv') finish(); });
   return open;
 }

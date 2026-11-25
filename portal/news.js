@@ -1,4 +1,6 @@
-// XEVARION II — お知らせ（お知らせ・更新内容・デベロッパーノートを1か所に・タブで分ける。docs/decisions.md「初代の機能の引きつぎ」）
+// XEVARION II — お知らせ（お知らせ・更新内容を1か所に・タブで分ける。docs/decisions.md「初代の機能の引きつぎ」）
+// ★ 2026-11-25 第7回 DN1：デベロッパーノートは開発チームからの手紙として別に作った（portal/devnotes.js・メニューから）。
+//   tab:'dev' のものは、この板には出さず、デベロッパーノートの一覧の下の「開発メモ」に出す（NEW の数にも入れない）
 // ・中身は2か所から：
 //     ① portal/news-data.js … 版といっしょに配る（★ 版を出すたびに「更新内容」を1つ足す＝docs/release.md）
 //     ② Firebase の news/<id> … 運営が書く（管理画面は段階2）。だれでも読める・運営だけ書ける（firebase/database.rules.json）
@@ -18,7 +20,8 @@ import { NEWS } from './news-data.js';
 
 store.define('newsRemote', { scope: 'device', sync: false }); // ②の写し（この端末だけ）
 
-export const TABS = ['news', 'update', 'dev'];
+export const TABS = ['news', 'update', 'dev'];   // 中身の種類（'dev'＝開発メモ）
+const BOARD = ['news', 'update'];               // この板のタブ
 const ACTS = ['gacha', 'missions', 'logbo', 'veteran'];
 const subs = new Set();
 let remote = null;
@@ -51,7 +54,7 @@ export const latest = (tab = 'news', list = items()) => list.find((x) => x.tab =
 /** まだ読んでいないもの */
 export function unread(list = items()) {
   const s = seenMark.seen();
-  return list.filter((x) => x.at > s);
+  return list.filter((x) => x.tab !== 'dev' && x.at > s);
 }
 /** 中身か読んだ印が変わったら知らせる。止める関数を返す */
 export function onChange(fn) {
@@ -104,16 +107,16 @@ function listHTML(tab, list, seenAt) {
 }
 
 let open = null;
-/** お知らせの板を開く（tab：'news'・'update'・'dev'） */
+/** お知らせの板を開く（tab：'news'・'update'） */
 export function openNews(tab = 'news') {
   if (open) return open;
   const seenAt = seenMark.seen(); // 開いたときの印（NEW の印は、この板を閉じるまで残す）
-  let cur = TABS.includes(tab) ? tab : 'news';
+  let cur = BOARD.includes(tab) ? tab : 'news';
   const html = () => {
     const list = items();
     const dot = (k) => list.some((x) => x.tab === k && x.at > seenAt);
     return `<div class="nw">
-        <div class="x-seg nw-tabs">${TABS.map((k) => `<button type="button" data-nw-tab="${k}" class="${k === cur ? 'on' : ''}">${t('news.tab.' + k)}${dot(k) ? '<i class="nw-dot"></i>' : ''}</button>`).join('')}</div>
+        <div class="x-seg nw-tabs">${BOARD.map((k) => `<button type="button" data-nw-tab="${k}" class="${k === cur ? 'on' : ''}">${t('news.tab.' + k)}${dot(k) ? '<i class="nw-dot"></i>' : ''}</button>`).join('')}</div>
         <div class="nw-list">${listHTML(cur, list, seenAt)}</div>
       </div>`;
   };
@@ -121,7 +124,7 @@ export function openNews(tab = 'news') {
   const sheet = open;
   const b = sheet.el.querySelector('.x-sheet-b');
   const paint = () => { b.innerHTML = html(); };
-  const readAll = () => { const l = items(); if (l.length) seenMark.markSeen(l[0].at); };
+  const readAll = () => { const l = unread(items()); if (l.length) seenMark.markSeen(l[0].at); }; // 板に出るぶん（開発メモはのぞく）
   readAll();
   sheet.el.addEventListener('click', (e) => {
     const tb = e.target.closest('[data-nw-tab]');

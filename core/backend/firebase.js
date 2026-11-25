@@ -99,13 +99,15 @@ export async function verifyLogin(id, pass) {
     const uid = cr.user.uid;
     let name = id;
     let partner = null;
+    let icon = null;
     try {
       D.goOnline(vDb);
-      const [p, q] = await Promise.all([D.get(D.ref(vDb, `users/${uid}/profile/name`)), D.get(D.ref(vDb, `users/${uid}/data/partner`))]);
+      const [p, q, ic] = await Promise.all([D.get(D.ref(vDb, `users/${uid}/profile/name`)), D.get(D.ref(vDb, `users/${uid}/data/partner`)), D.get(D.ref(vDb, `users/${uid}/data/icon`))]);
       name = p.val() || id;
       partner = q.val()?.v || null;
+      icon = ic.val()?.v || null;   // ★ 2026-11-26 図鑑の「アイコンにする」
     } catch (e) { console.warn('party: 名前を読めませんでした', e); }
-    return { uid, id, name, partner };
+    return { uid, id, name, partner, icon };
   } catch (e) {
     throw norm(e);
   } finally {

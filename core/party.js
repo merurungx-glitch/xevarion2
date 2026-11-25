@@ -28,11 +28,11 @@ export const MAX_AMT = 1000;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const faceOk = (id) => (chara.byId(id) ? id : '');
 
-/** この端末の本人（サインインしている人） */
+/** この端末の本人（サインインしている人）。顔＝図鑑で「アイコンにする」で選んだ子（選んでいなければメイン）★ 2026-11-26 */
 export function me() {
   const u = account.current();
   if (!u) return null;
-  const p = chara.partner();
+  const p = chara.iconChar();
   return { uid: u.uid, id: u.id, name: account.profile().name, face: p ? p.id : '' };
 }
 
@@ -50,7 +50,7 @@ export async function verify(id, pass) {
   try {
     const be = await backend();
     const r = await be.verifyLogin(id, String(pass));
-    const acc = { uid: r.uid, id: r.id, name: String(r.name || r.id).slice(0, 24), face: faceOk(r.partner) };
+    const acc = { uid: r.uid, id: r.id, name: String(r.name || r.id).slice(0, 24), face: faceOk(r.icon) || faceOk(r.partner) };   // アイコンの子 → なければメイン
     remember(acc);
     return { acc };
   } catch (e) {

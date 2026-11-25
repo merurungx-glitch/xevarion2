@@ -33,12 +33,10 @@ export function buildShell(app) {
   const q = (k) => bar.querySelector(`[data-sm="${k}"]`);
   const paintMe = () => {
     const u = account.current();
-    const p = chara.partner();
     q('name').textContent = u ? account.profile().name : '';
     q('id').textContent = u ? 'ID ' + u.id : '';
     q('vet').hidden = !vet.mark();
-    const ava = q('ava');
-    if (p) { ava.src = chara.art(p.id, 'face-96'); ava.hidden = false; } else ava.hidden = true;
+    paintAva(q('ava'));
   };
   paintMe();
   chara.onChange(paintMe);
@@ -74,20 +72,30 @@ export const topbarHTML = () => `
     <button type="button" class="x-pill" data-wallet data-earn="gem" aria-label="${t('cur.gem')}"><i class="x-cur gem"></i><span data-tb="gem" data-num>0</span></button>
   </div>`;
 
+/** プロフィールの顔（★ 2026-11-25 図鑑の「アイコンにする」で選んだ子・選んでいなければメイン）。完凸の子は光る（.p-mx） */
+function paintAva(ava) {
+  const c = chara.iconChar();
+  if (!c) { ava.hidden = true; return; }
+  const src = chara.art(c.id, 'face-96');
+  if (ava.getAttribute('src') !== src) ava.src = src;
+  ava.hidden = false;
+  const mx = chara.isMax(c.id);
+  ava.classList.toggle('p-mx', mx);
+  ava.classList.toggle('x-fx', mx);
+}
+
 /** 上のバーの数字を最新に保つ。片づけの関数を返す */
 export function bindTopbar(root) {
   const q = (k) => root.querySelector(`[data-tb="${k}"]`);
   const paint = () => {
     const w = wallet.get();
-    const p = chara.partner();
     const u = account.current();
     // 入手の演出で数え上げているあいだ（data-hold）は描きなおさない
     for (const k of ['xeva', 'gem']) if (!q(k).dataset.hold) q(k).textContent = fmt(w[k]);
     q('name').textContent = account.profile().name;
     q('id').textContent = u ? 'ID ' + u.id : '';
     q('vet').hidden = !vet.mark(); // はじまり特典の「初代」の印
-    const ava = q('ava');
-    if (p) { ava.src = chara.art(p.id, 'face-96'); ava.hidden = false; } else ava.hidden = true;
+    paintAva(q('ava'));
   };
   paint();
   const offs = [wallet.on(paint), chara.onChange(paint), store.on('profile', paint), account.onChange(paint), vet.onMark(paint)];

@@ -95,7 +95,7 @@ export async function verifyLogin(id, pass) {
   const uid = d.ids[id];
   if (!uid || d.users[uid].pass !== (await hash(id, pass))) throw new BackendError('bad-login');
   const u = d.users[uid];
-  return { uid, id, name: u.profile?.name || id, partner: u.data?.partner?.v || null };
+  return { uid, id, name: u.profile?.name || id, partner: u.data?.partner?.v || null, icon: u.data?.icon?.v || null };
 }
 
 /** 受け取り箱へ送る（パーティーの賞金など）。同じ印で送り直しても1つ（送った人だけが上書きできる） */

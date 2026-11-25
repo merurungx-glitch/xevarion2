@@ -1,0 +1,79 @@
+/* XEVARION II — デベロッパーノート（★ 2026-11-25 第7回 DN1・portal/devnotes.js が開いたときに読む＝起動では読まない）。クラスは dn-
+   手紙＝まん中に浮かぶ白いカード（表紙：2人の全身を左右にかたむけて重ね、DEVELOPER NOTE #01）／一覧＝下から出る板に表紙つきの札 */
+@layer portal {
+  /* ---- 手紙 ---- */
+  .dn-ov {
+    position: fixed; inset: 0; z-index: 950; display: flex; align-items: center; justify-content: center;
+    padding: calc(var(--st) + 14px) 14px calc(var(--sb) + 14px);
+    background: rgba(30, 26, 80, .5); opacity: 0; transition: opacity .26s var(--ease);
+  }
+  html.x2-full .dn-ov { position: absolute; }   /* iPhone の短い箱（core/viewport.js）でも下まで */
+  .dn-ov.show { opacity: 1; }
+  .dn-card {
+    position: relative; width: min(100%, 540px); max-height: 100%; display: flex; flex-direction: column;
+    background: var(--surface); color: var(--text); border-radius: 24px; overflow: hidden;
+    box-shadow: 0 22px 54px rgba(40, 30, 120, .36); transform: translateY(18px) scale(.98); transition: transform .32s var(--ease);
+  }
+  .dn-ov.show .dn-card { transform: none; }
+  .dn-sc { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+  .dn-x {
+    position: absolute; right: 10px; top: 10px; z-index: 3; width: 38px; height: 38px; border-radius: 50%;
+    display: grid; place-items: center; background: rgba(255, 255, 255, .9); color: #26305c; box-shadow: var(--shadow-s);
+  }
+  .dn-x .x-i { width: 20px; height: 20px; }
+
+  /* 表紙 */
+  .dn-cv { position: relative; height: 184px; overflow: hidden; background: linear-gradient(160deg, #6aa6ff 0%, #a99cff 50%, #ffaad6 100%); }
+  .dn-cv-band { position: absolute; left: -10%; right: -10%; top: 60%; height: 50px; background: rgba(255, 255, 255, .32); rotate: -8deg; }
+  .dn-cv img { position: absolute; top: 30px; width: 34%; max-width: 180px; aspect-ratio: 3 / 4; height: auto; object-fit: cover; object-position: 50% 10%;
+    border: 4px solid #fff; border-radius: 12px; box-shadow: 0 8px 20px rgba(60, 40, 150, .3); }
+  .dn-cv .a { left: 3%; rotate: -7deg; }
+  .dn-cv .b { right: 3%; rotate: 7deg; }
+  .dn-cv-t { position: absolute; left: 0; right: 0; top: 24px; z-index: 2; text-align: center; color: #fff; text-shadow: 0 2px 14px rgba(60, 40, 150, .5); }
+  .dn-cv-t small { display: block; font: 900 12px/1 var(--font-disp); letter-spacing: .32em; }
+  .dn-cv-t b { display: block; margin-top: 4px; font: 900 42px/1 var(--font-disp); letter-spacing: .04em; }
+
+  /* 本文 */
+  .dn-bd { padding: 18px 22px 4px; font-size: 14px; line-height: 1.85; }
+  .dn-meta { display: flex; flex-wrap: wrap; gap: 2px 12px; font: 800 12px/1.5 var(--font-en); letter-spacing: .04em; color: var(--text-3); }
+  .dn-t { margin: 6px 0 12px; font-size: 19px; line-height: 1.45; font-weight: 900; }
+  .dn-bd p { margin: 0 0 10px; }
+  .dn-bd h3 { margin: 22px 0 6px; display: flex; align-items: center; gap: 8px; font-size: 15px; line-height: 1.5; font-weight: 900; }
+  .dn-bd h3::before { content: ""; flex: none; width: 5px; height: 17px; border-radius: 3px; background: var(--grad-btn); }
+  .dn-bd .dn-why { padding: 10px 13px; border-radius: 12px; background: var(--surface-2); font-size: 13.2px; line-height: 1.8; color: var(--text-2); }
+  .dn-why i { display: inline-block; margin-right: 8px; padding: 1px 9px; border-radius: 99px; background: var(--grad-tag); color: #fff; font-style: normal; font-size: 11px; font-weight: 900; vertical-align: 1px; }
+  .dn-sign { margin: 24px 0 2px; padding-top: 14px; border-top: 1.5px dashed var(--line); text-align: right; font-weight: 700; }
+  .dn-sign small { display: block; margin-top: 4px; font-size: 12px; font-weight: 800; color: var(--text-2); }
+  .dn-f { padding: 14px 22px 20px; }
+
+  /* ---- 一覧（下から出る板の中） ---- */
+  .dn-list { display: grid; gap: 12px; padding-bottom: 4px; }
+  .dn-it {
+    display: block; width: 100%; padding: 0; text-align: left; color: var(--text); background: var(--surface);
+    border: 1.5px solid var(--line); border-radius: 18px; overflow: hidden; box-shadow: var(--shadow-s);
+    transition: transform var(--dur) var(--ease);
+  }
+  .dn-it:active { transform: scale(.985); }
+  .dn-it.new { border-color: #b49cff; }
+  .dn-cv.sm { height: 108px; }
+  .dn-cv.sm img { top: 14px; width: 26%; max-width: 120px; border-width: 3px; border-radius: 9px; }
+  .dn-cv.sm .dn-cv-t { top: 28px; }
+  .dn-cv.sm .dn-cv-t small { font-size: 10.5px; }
+  .dn-cv.sm .dn-cv-t b { font-size: 32px; }
+  .dn-it-t { display: grid; gap: 2px; padding: 10px 14px 12px; }
+  .dn-it-t small { display: flex; align-items: center; gap: 6px; font: 800 11.5px/1.5 var(--font-en); color: var(--text-3); }
+  .dn-it-t em { padding: 0 7px; border-radius: 99px; background: var(--grad-tag); color: #fff; font-style: normal; font-size: 10.5px; font-weight: 900; }
+  .dn-it-t b { font-size: 15px; line-height: 1.45; font-weight: 900; }
+  .dn-it-t span { font-size: 12.5px; line-height: 1.55; color: var(--text-2); }
+  .dn-mh { display: flex; align-items: baseline; gap: 8px; margin-top: 10px; font-size: 13px; font-weight: 900; color: var(--text-2); }
+  .dn-mh small { font-size: 11px; font-weight: 700; color: var(--text-3); }
+  .dn-memo { padding: 12px 14px; border-radius: 14px; background: var(--surface-2); }
+  .dn-memo-d { font: 800 11px/1.4 var(--font-en); color: var(--text-3); }
+  .dn-memo h3 { margin: 2px 0 4px; font-size: 14px; font-weight: 900; }
+  .dn-memo p { margin: 0; font-size: 13px; line-height: 1.7; color: var(--text-2); }
+  .dn-empty { margin: 18px 0; text-align: center; color: var(--text-3); font-size: 13px; }
+
+  /* 省電力・動きを減らす：うつりかわりを短く */
+  :root[data-power="saver"] .dn-ov, :root[data-motion="reduced"] .dn-ov,
+  :root[data-power="saver"] .dn-card, :root[data-motion="reduced"] .dn-card { transition-duration: .08s; }
+}

@@ -63,6 +63,7 @@
     --r-m: 16px;
     --r-l: 20px;
     --r-xl: 26px;
+    --r-face: 30%;     /* キャラの顔アイコン＝角の丸い正方形（★ 2026-11-26 ご指定：丸より顔が収まる） */
     --font: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Meiryo", system-ui, sans-serif;
     --font-en: "Avenir Next", "Segoe UI", "Helvetica Neue", var(--font);
     --font-disp: "Avenir Next Condensed", "Bahnschrift", "Roboto Condensed", "Arial Narrow", var(--font-en);

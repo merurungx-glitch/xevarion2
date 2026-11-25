@@ -41,7 +41,7 @@ const ja = {
   'first.toHome': 'ホームへ',
 
   'home.apps': 'APPS', 'home.sites': '公式サイト',
-  'home.lobby': 'ロビーへ', 'home.lobbyLock': '完凸でロビー',
+  'home.lobby': 'ロビーへ',
   'home.partner': 'PARTNER', 'home.maxBanner': 'MAX BANNER',
   'home.noPartner': 'ガチャでパートナーを迎えよう',
   // 第6回の刷新（2026-11-24）：日本語が先
@@ -49,8 +49,12 @@ const ja = {
   'home.evOn': '開催中', 'home.evSub': '5人そろって登場・10回目はキャラが出やすい', 'home.evSubNew': '{names}が新しく参戦！', 'home.evNew': 'NEW', 'home.talk': '{name} と話す',
 
   // お知らせ（portal/news.js）・はじまり特典（portal/veteran.js・core/veteran.js）＝2026-11-24
-  'news.title': 'お知らせ', 'news.tab.news': 'お知らせ', 'news.tab.update': '更新内容', 'news.tab.dev': 'デベロッパーノート',
+  'news.title': 'お知らせ', 'news.tab.news': 'お知らせ', 'news.tab.update': '更新内容', 'news.tab.dev': '開発メモ',
   'news.empty': 'まだありません', 'news.new': 'NEW',
+  // デベロッパーノート（portal/devnotes.js）＝2026-11-25 第7回 DN1
+  'dn.title': 'デベロッパーノート', 'dn.note': '開発チームからの手紙（版ごとに1通）', 'dn.ver': '版 {v}', 'dn.why': 'なぜ？',
+  'dn.sign': 'これからも XEVARION II をよろしくお願いします。', 'dn.from': 'XEVARION II 開発チーム（NGX × ISHIDA Production）',
+  'dn.memo': '開発メモ', 'dn.memoNote': 'しくみの小さな話',
   'news.act.gacha': 'ガチャへ', 'news.act.missions': 'ミッションを見る', 'news.act.logbo': 'ログインボーナス', 'news.act.veteran': '受け取る', 'news.act.vetDone': '受け取りずみ',
   'vet.title': 'はじまり特典', 'vet.badge': '初代',
   'vet.lead': '初代 XEVARION のアカウントをお持ちの方へ。初代の表示名と4桁の PIN を確かめると、次のものをお渡しします。',
@@ -111,7 +115,7 @@ const ja = {
   'earn.veteran': 'はじまり特典',
   'earn.dev': '試験用',
 
-  'tip.1': '完凸（5人目）すると、ロビーでその子に会えます',
+  'tip.1': '完凸（4人目）すると、図鑑やアイコンのキャラが金色に光ります',
   'tip.2': 'オービットが100たまると、好きなキャラと交換できます',
   'tip.3': '設定の「動作モード」で、電池のもちをよくできます',
   'tip.4': 'XEVA は 200 でジェム 1 に両替できます',
@@ -119,17 +123,29 @@ const ja = {
 
   'chara.title': 'CHARACTERS',
   'chara.notOwned': '未所持', 'chara.partner': 'パートナー',
-  'chara.setPartner': 'パートナーにする', 'chara.lobby': 'ロビーで会う', 'chara.bannerLock': '完凸で開放',
+  'chara.setPartner': 'メインにする', 'chara.lobby': 'ロビーで会う',
+  // ★ 2026-11-25 図鑑（番号・検索・絞り込み・並び替え・アイコン・ロビー設定）＝初代の図鑑の II 版
+  'chara.no': 'No.{n}', 'chara.search': 'キャラの名前で検索', 'chara.none': '見つかりませんでした',
+  'chara.f.all': 'すべて', 'chara.f.own': '持っている', 'chara.f.not': 'まだ', 'chara.f.max': '完凸',
+  'chara.s.no': '番号順', 'chara.s.name': '名前順', 'chara.s.awk': '凸の多い順', 'chara.s.label': '並び替え',
+  'chara.count': '{n}人 / {all}人',
+  'chara.icon': 'アイコンにする', 'chara.iconOn': 'アイコン', 'chara.iconNow': 'アイコンに設定中', 'chara.iconSet': '{name} をアイコンにしました',
+  'chara.main': 'メイン', 'chara.sub': 'サブ{n}', 'chara.lobbySet': 'ロビー設定', 'chara.toSub': 'サブ{n}にする',
+  'chara.mainSet': '{name} をホームのメインにしました', 'chara.subSet': '{name} をホームのサブ{n}にしました',
+  'chara.lsNote': 'ホームに出す子（メインは動く・サブは右の2枚）',
   'chara.awk': '{n}凸', 'chara.max': '完凸', 'chara.toMax': '完凸まで あと {n}人',
-  'chara.partnerSet': '{name} をパートナーにしました',
 
-  'lobby.tap': 'タップで話す', 'lobby.lock': '完凸で開放されます',
+  'lobby.tap': 'タップで話す', 'lobby.lock': 'まだ会っていない子です（ガチャで会えます）',
+  // ロビー設定（portal/lobbyset.js）＝2026-11-25 ご指定
+  'ls.title': 'ロビー設定', 'ls.lead': 'ホームに出すキャラを選べます。メインはいちばん大きな板で動き、サブは右の2枚に出ます。',
+  'ls.main': 'メイン', 'ls.mainNote': 'MY PARTNER・ログボもこの子から', 'ls.sub': 'サブ{n}', 'ls.subNote': 'おまかせ＝新しい子・日替わり',
+  'ls.auto': 'おまかせ', 'ls.cant': 'メインの子は、サブにほかの子を選んでから入れかえてください',
 
   'menu.title': 'MENU',
   'menu.account': 'アカウント', 'menu.signout': 'サインアウト', 'menu.signoutAsk': 'サインアウトしますか？ この端末に残ったデータは、次にサインインしたときに使われます。',
   'menu.wallet': 'お財布', 'menu.exchange': '両替・今日のチケット',
   'menu.daily': '毎日', 'menu.open': 'ひらく', 'menu.msNote': '今日の3つ・今週の3つ', 'menu.lbNote': '7日で1周（休んでもつづきから）',
-  'menu.newsNote': 'お知らせ・更新内容・デベロッパーノート', 'menu.newsCard': 'お知らせ・メール',
+  'menu.newsNote': 'お知らせ・更新内容', 'menu.newsCard': 'お知らせ・メール',
   'menu.code': 'コード入力', 'menu.codeNote': 'コードを入れてプレゼントを受け取る', 'menu.codeGo': '入れる',
   'menu.admin': '運営', 'menu.adminRow': '管理画面', 'menu.adminNote': 'お知らせ・メール・コード・合言葉の再設定',
   'menu.devAdmin': 'このアカウントを運営にする', 'menu.devAdminOff': '運営をやめる',
@@ -145,7 +161,7 @@ const ja = {
   'menu.settings': '設定',
   'menu.power': '動作モード', 'menu.power.auto': '自動', 'menu.power.high': '高画質', 'menu.power.balanced': 'バランス', 'menu.power.saver': '省電力',
   'menu.power.autoNote': 'いまは「{mode}」で動いています（{why}）',
-  'menu.power.note': '省電力：コマ数を30に・演出を短く・ロビーは止めた絵に',
+  'menu.power.note': '省電力：コマ数を30に・演出を短く・パートナーとロビーは止めた絵に',
   'menu.theme': '中身の色', 'menu.theme.auto': '自動', 'menu.theme.light': '明るい', 'menu.theme.dark': '暗い',
   'menu.shortFx': '演出を短くする', 'menu.shortFxNote': 'ガチャなどの演出を短い版にします',
   'menu.device': 'この端末の状態',

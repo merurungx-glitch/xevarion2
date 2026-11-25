@@ -15,7 +15,7 @@ import { toast } from '../ui/toast.js';
 
 const DAY = 86400000;
 const TABS = { news: 'お知らせ', mail: 'メール', code: 'コード', pass: '合言葉' };
-const NEWS_TABS = { news: 'お知らせ', update: '更新内容', dev: 'デベロッパーノート' };
+const NEWS_TABS = { news: 'お知らせ', update: '更新内容', dev: '開発メモ' };   // 開発メモ＝デベロッパーノートの一覧の下に出る（手紙は portal/devnotes-data.js）
 const ACTS = { '': 'なし', gacha: 'ガチャへ', missions: 'ミッションを見る', logbo: 'ログインボーナス', veteran: 'はじまり特典' };
 const ITEM_NAMES = { xeva: 'XEVA', gem: 'ジェム', ticket: 'ガチャチケット' };
 const LIMITS = [[0, 'なし'], [7, '7日'], [14, '14日'], [30, '30日'], [60, '60日']];

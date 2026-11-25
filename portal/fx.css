@@ -82,12 +82,14 @@
   .gx-flash { position: absolute; inset: 0; background: #fff; z-index: 40; pointer-events: none; }
   .gx-cut { position: absolute; inset: 0; z-index: 30; overflow: hidden; background: radial-gradient(circle at 62% 38%, var(--c2), var(--c) 46%, #0b0e1f 100%); }
   .gx-band { position: absolute; left: -30%; width: 160%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .55), transparent); }
-  .gx-cut img { position: absolute; right: -8%; bottom: -4%; height: min(90vh, 900px); width: auto; max-width: none; }
-  .gx-cname { position: absolute; left: 22px; bottom: calc(var(--sb) + 92px); text-shadow: 0 2px 12px rgba(0, 0, 0, .45); }
+  /* ★ 2026-11-25 キャラは LD なしの絵のカード（白いふち・少しかたむける）。名前と印はカードの左に重ねる */
+  .gx-cut img.gx-art { position: absolute; right: max(4%, calc(50% - 300px)); top: calc(var(--st) + 9vh); height: min(68vh, 720px); width: auto; max-width: 78vw; aspect-ratio: 941 / 1672; object-fit: cover; object-position: 50% 12%;
+    border: 6px solid #fff; border-radius: 22px; box-shadow: 0 0 0 2px color-mix(in srgb, var(--c2) 80%, #fff), 0 0 46px color-mix(in srgb, var(--c) 70%, transparent), 0 24px 50px rgba(0, 0, 0, .45); transform: rotate(3deg); }
+  .gx-cname { position: absolute; left: 22px; bottom: calc(var(--sb) + 92px); z-index: 2; text-shadow: 0 2px 12px rgba(0, 0, 0, .45); }
   .gx-cname small { font: 800 11px/1 var(--font-en); letter-spacing: .34em; }
   .gx-cname b { display: block; font-size: 44px; font-weight: 900; letter-spacing: .06em; line-height: 1.2; }
   .gx-cname span { display: inline-block; margin-top: 6px; font: 800 11px/1 var(--font-en); letter-spacing: .16em; padding: 5px 11px; border-radius: 99px; background: rgba(255, 255, 255, .92); color: var(--c); text-shadow: none; }
-  .gx-stamp { position: absolute; left: 24px; top: calc(var(--st) + 72px); font: 900 42px/1.1 var(--font-en); letter-spacing: .04em; background: linear-gradient(180deg, #fff7cf, #ffcf4a 55%, #ff9f2e); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 2px 6px rgba(0, 0, 0, .35)); }
+  .gx-stamp { position: absolute; z-index: 2; left: 24px; top: calc(var(--st) + 72px); font: 900 42px/1.1 var(--font-en); letter-spacing: .04em; background: linear-gradient(180deg, #fff7cf, #ffcf4a 55%, #ff9f2e); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 2px 6px rgba(0, 0, 0, .35)); }
   .gx-stamp.rb { background: linear-gradient(90deg, #ff6b9e, #ffd56a, #5df0ff, #9a7bff); -webkit-background-clip: text; background-clip: text; }
   .gx-stamp.jp { font-family: var(--font); font-size: 34px; }
   .gx-hint { position: absolute; left: 0; right: 0; bottom: calc(var(--sb) + 34px); text-align: center; font-size: 12px; font-weight: 800; opacity: .8; text-shadow: 0 1px 6px rgba(0, 0, 0, .5); }

@@ -1,7 +1,8 @@
 // XEVARION II — ガチャの演出（第3回で決定）
 // ・A オービット・サモン：軌道の輪がだんだん速く回る → 光の粒が中心へ → はじけて結果へ（約2.3秒）
 // ・レア度の色：最初はいつも青。キャラがいると途中で金、2人以上か完凸なら虹に変わる（昇格）
-// ・キャラの登場：出るたびに毎回（属性の色の光＋全身＋名前＋NEW／凸／完凸の印・タップで次へ）
+// ・キャラの登場：出るたびに毎回（属性の色の光＋キャラの絵のカード＋名前＋NEW／凸／完凸の印・タップで次へ）
+//   ★ 2026-11-25 ご指定：絵は LD なしの絵（banner-940）を白いふちのカードで（LD はホームで動かすときだけ）
 // ・「スキップ」で結果まで。省電力・「演出を短く」では演出も登場もとばして結果へ（粒は出さない）
 import { t } from '../core/i18n.js';
 import * as power from '../core/power.js';
@@ -36,7 +37,7 @@ function add(host, cls, html = '') {
 export async function showResult(results, { okLabel } = {}) {
   const host = add(document.body, 'gx', '<div class="p-stars"></div>');
   const chars = results.filter((r) => r.type === 'char');
-  await preloadAll(chars.flatMap((r) => [art(r.id, 'face-256'), art(r.id, 'full-1024')]), 1500);
+  await preloadAll(chars.flatMap((r) => [art(r.id, 'face-256'), art(r.id, 'banner-940')]), 1500);
   if (!short()) {
     const R = runner();
     const skip = document.createElement('button');
@@ -144,10 +145,11 @@ async function cutIn(host, R, r) {
     anim(b, [{ transform: 'skewY(-14deg) translateX(-60%)' }, { transform: 'skewY(-14deg) translateX(60%)' }], { d: 700, delay: 80 + i * 120, ease: 'ease-out' });
   }
   const im = new Image();
-  im.src = art(r.id, 'full-1024');
+  im.src = art(r.id, 'banner-940');
+  im.className = 'gx-art';
   im.alt = c.name;
   ov.appendChild(im);
-  anim(im, [{ opacity: 0, transform: 'translateX(70px) scale(1.06)' }, { opacity: 1, transform: 'none' }], { d: 520, delay: 120 });
+  anim(im, [{ opacity: 0, transform: 'translateX(70px) rotate(8deg) scale(1.06)' }, { opacity: 1, transform: 'rotate(3deg)' }], { d: 520, delay: 120 });
   const nm = add(ov, 'gx-cname', `<small>${c.en}</small><b>${esc(c.name)}</b><span>${ELEMENTS[c.el].en}</span>`);
   anim(nm, [{ opacity: 0, transform: 'translateX(-30px)' }, { opacity: 1, transform: 'none' }], { d: 450, delay: 260 });
   const tag = tagOf(r);

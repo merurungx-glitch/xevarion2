@@ -46,6 +46,8 @@ export async function mount(el, { go }) {
       pullBtn.disabled = false;
       return;
     }
+    // はじめての人には、それまでのデベロッパーノートを自動でひらかない（★ 第7回 DN1「更新のあとにひらく」。メニューからは読める）
+    import('./devnotes.js').then((D) => D.markAllSeen()).catch(() => {});
     await showResult(res);
     const p = partner();
     el.innerHTML = `
@@ -53,7 +55,7 @@ export async function mount(el, { go }) {
       <div class="fs-in">
         <div class="fs-kick">PARTNER</div>
         <h1>${esc(t('first.partner', { name: p ? p.name : '' }))}</h1>
-        <div class="fs-partner">${p ? `<img src="${art(p.id, 'full-1024')}" alt="">` : ''}</div>
+        <div class="fs-partner">${p ? `<img src="${art(p.id, 'banner-940')}" alt="">` : ''}</div>
         <button type="button" class="x-btn primary fs-go" data-home>${t('first.toHome')}</button>
       </div>`;
     el.querySelector('[data-home]').addEventListener('click', () => go('home'));

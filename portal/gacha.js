@@ -92,7 +92,7 @@ export async function mount(el) {
         title: t('gacha.rates'),
         body: `<p style="margin:0 0 8px;font-size:13px;color:var(--text-2)">${t('gacha.ratesLead')}</p>
           <table class="gc-tbl"><tr><th></th><th class="r">ふつう</th><th class="r">10連の10回目</th></tr>${rows}</table>
-          <p style="margin:12px 0 4px;font-size:12.5px;color:var(--text-3);line-height:1.7">・1回ひくごとにオービットが1つたまり、${G.pity} で好きなキャラ1人と交換できます（なくなりません）。<br>・最初の10連は、キャラが1人かならず出ます。<br>・完凸（5人目）のあとに出たキャラは、ジェム ${G.overGem} に変わります。</p>`,
+          <p style="margin:12px 0 4px;font-size:12.5px;color:var(--text-3);line-height:1.7">・1回ひくごとにオービットが1つたまり、${G.pity} で好きなキャラ1人と交換できます（なくなりません）。<br>・最初の10連は、キャラが1人かならず出ます。<br>・完凸（${chara.MAX_COPIES}人目）のあとに出たキャラは、ジェム ${G.overGem} に変わります。</p>`,
       });
     },
     pity() {
@@ -101,7 +101,7 @@ export async function mount(el) {
       const s = openSheet({
         title: t('gacha.pickT'),
         body: `<p style="margin:0 0 12px;font-size:13.5px">${t('gacha.pickLead', { n: G.pity })}</p>
-          <div class="gc-pick">${chara.CHARS.map((c) => `<button type="button" data-id="${c.id}" ${chara.isMax(c.id) ? 'disabled' : ''}><img src="${chara.art(c.id, 'face-256')}" alt="">${esc(c.name)}<small>${chara.isMax(c.id) ? t('gacha.maxed') : chara.owned(c.id) ? t('chara.awk', { n: chara.awk(c.id) }) : t('chara.notOwned')}</small></button>`).join('')}</div>`,
+          <div class="gc-pick">${chara.CHARS.map((c) => `<button type="button" data-id="${c.id}" ${chara.isMax(c.id) ? 'disabled' : ''}><img src="${chara.art(c.id, 'face-256')}" alt=""${chara.isMax(c.id) ? ' class="p-mx x-fx"' : ''}>${esc(c.name)}<small>${chara.isMax(c.id) ? t('gacha.maxed') : chara.owned(c.id) ? t('chara.awk', { n: chara.awk(c.id) }) : t('chara.notOwned')}</small></button>`).join('')}</div>`,
       });
       s.el.addEventListener('click', async (e) => {
         const b = e.target.closest('.gc-pick button');
