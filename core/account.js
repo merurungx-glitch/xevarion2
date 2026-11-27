@@ -78,6 +78,7 @@ export function checkName(n) {
 const errText = (e) => ({
   'id-taken': t('err.idTaken'),
   'bad-login': t('err.badLogin'),
+  'bad-old': t('err.passOld'),
   'weak-pass': t('err.passShort'),
   network: t('err.network'),
   'not-enabled': t('err.notEnabled'),
@@ -123,6 +124,15 @@ export async function rename(name) {
   store.set('profile', { name });
   try { await be.setProfile(user.uid, { name }); } catch (e) { console.warn(e); }
   emit();
+}
+
+/** 合言葉を変える（★ 2026-11-28 ご指定「既存のものを入力してから変更できるように」）。まちがいがあれば Error（画面に出す文）を投げる
+ *  ・今の合言葉 → 新しい合言葉（6文字以上）→ もう一度。今の合言葉を確かめてから変える（裏方の changePass） */
+export async function changePass({ old, pass, pass2 }) {
+  if (!user) throw new Error(t('err.badLogin'));
+  const bad = (!old ? t('err.passOldEmpty') : '') || checkPass(pass) || (pass !== pass2 ? t('err.passMismatch') : '') || (pass === old ? t('err.passSame') : '');
+  if (bad) throw new Error(bad);
+  try { await be.changePass(user.id, old, pass); } catch (e) { throw new Error(errText(e)); }
 }
 
 /** 手元の試験用だけ：このアカウントと手元のデータを消す */

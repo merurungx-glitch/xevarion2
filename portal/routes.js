@@ -28,9 +28,12 @@ export const APPS = [
   { id: 'yacht', name: 'MagiYacht', path: 'apps/yacht/index.html', bg: '#0c2c8c' },
 ];
 export const appById = (id) => APPS.find((a) => a.id === id) || null;
-/** 公式サイト（src/sites/<id>/・2026-11-24）。II からは新しいタブで開く（ご回答）。サイトはサインインなしでも見られるふつうのページ */
+/** 公式サイト（src/sites/<id>/・2026-11-24）。サイトはサインインなしでも見られるふつうのページ
+ *  ★ 2026-11-28 ご指定「NGX と ISHIDA Production のサイトは、ほかのアプリと同じくアプリ内で開くように」：
+ *    前は新しいタブ（ブラウザ）で開いていた → アプリと同じ窓（#/app/<id>・iframe）で開く。サイトの中の src/sites/embed.js が
+ *    窓の中のときだけ「もどる」を出し、II へのリンク（../../index.html#/…）を II の画面の切りかえにする。site: true はミッションに数えない */
 export const SITES = [
-  { id: 'ngx', name: 'NGX', url: 'sites/ngx/' },
-  { id: 'ishida', name: 'ISHIDA Production', url: 'sites/ishida/' },
+  { id: 'ngx', name: 'NGX', url: 'sites/ngx/', path: 'sites/ngx/index.html', bg: '#f5f5f7', site: true },
+  { id: 'ishida', name: 'ISHIDA Production', url: 'sites/ishida/', path: 'sites/ishida/index.html', bg: '#0f1730', site: true },
 ];
 export const siteById = (id) => SITES.find((s) => s.id === id) || null;

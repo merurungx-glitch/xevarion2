@@ -3,14 +3,15 @@
 // ・下のタブは出さない（全画面）。開いているあいだ、html の地の色をアプリの色にする（iPhone の描けない下の帯も同じ色に）
 // ・閉じたら iframe ごと捨てる → アプリの描画・音・タイマーが全部止まる（電池）
 // ・読みこみのあいだは II のロード画面（C）。アプリが X2.ready() を呼んだら消す
-import { APPS, ROUTES } from './routes.js';
+// ★ 2026-11-28 公式サイト（routes.js の SITES）もこの窓で開く。サイトはミッション「アプリで1回あそぶ」に数えない
+import { APPS, SITES, ROUTES } from './routes.js';
 import * as router from '../core/router.js';
 import { showLoading } from '../ui/loading.js';
 import { makeBridge } from './bridge.js';
 import * as daily from '../core/daily.js';
 
 export async function mount(el, { params, go }) {
-  const a = APPS.find((x) => x.id === params[0]);
+  const a = APPS.find((x) => x.id === params[0]) || SITES.find((x) => x.id === params[0]);
   if (!a || !a.path) { go('apps', { replace: true }); return null; }
 
   // もどる先：II の画面から開いたなら履歴をもどる（ブラウザの「戻る」と同じ）。直接開いたならホームへ
@@ -31,9 +32,15 @@ export async function mount(el, { params, go }) {
     L.done();
     fr.classList.add('on');
   };
-  const bridge = makeBridge(a, { exit, ready });
+  // II の画面へ切りかえる（公式サイトの「XEVARION II のアプリ」などのリンク）。ホームやタブの画面・ほかのアプリへ
+  const goTo = (route) => {
+    const r = String(route || '').replace(/^#?\/?/, '');
+    if (!r) { exit(); return; }
+    go(r, { replace: true });
+  };
+  const bridge = makeBridge(a, { exit, ready, go: goTo });
   window.X2 = bridge.api;
-  daily.note('app');   // ミッション「アプリで1回あそぶ」
+  if (!a.site) daily.note('app');   // ミッション「アプリで1回あそぶ」（公式サイトは数えない）
 
   fr.className = 'ah-frame';
   fr.title = a.name;

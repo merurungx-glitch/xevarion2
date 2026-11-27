@@ -59,6 +59,19 @@ export async function signIn(id, pass) {
   } catch (e) { throw norm(e); }
 }
 export async function signOut() { await A.signOut(auth); }
+/** 合言葉を変える（★ 2026-11-28）：今の合言葉で確かめ直してから（Firebase は「最近サインインした」ことを求める）新しい合言葉に。
+ *  今の合言葉がちがえば 'bad-old'。変えると、ほかの端末のサインインは次の更新で切れる（Firebase の決まり） */
+export async function changePass(id, oldPass, newPass) {
+  const u = auth.currentUser;
+  if (!u) throw new BackendError('no-auth');
+  try {
+    await A.reauthenticateWithCredential(u, A.EmailAuthProvider.credential(mail(id), oldPass));
+  } catch (e) {
+    const n = norm(e);
+    throw n.code === 'bad-login' ? new BackendError('bad-old', e?.code) : n;
+  }
+  try { await A.updatePassword(u, newPass); } catch (e) { throw norm(e); }
+}
 
 export async function getProfile(uid) {
   const s = await D.get(D.ref(db, `users/${uid}/profile`));

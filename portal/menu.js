@@ -8,6 +8,8 @@ import * as sync from '../core/sync.js';
 import * as wallet from '../core/wallet.js';
 import * as vet from '../core/veteran.js';
 import * as mail from '../core/mail.js';
+import * as install from '../core/install.js';
+import * as swc from '../core/swc.js';
 import { ico } from '../ui/icons.js';
 import { esc, fmt, bindActs } from '../ui/dom.js';
 import { openSheet, ask } from '../ui/sheet.js';
@@ -50,11 +52,14 @@ export async function mount(el, { go }) {
     const dnN = notes ? notes.unread().length : 0; // まだ読んでいないデベロッパーノート
     const mlN = mail.ready();
     const modeNames = { high: t('menu.power.high'), balanced: t('menu.power.balanced'), saver: t('menu.power.saver') };
+    const inst = install.standalone();          // ホーム画面から開いているか（★ 2026-11-28）
+    const updReady = swc.info().waiting;         // 新しい版が待っているか
     const syncText = account.backendName() === 'local' ? t('menu.sync.local') : t('menu.sync.' + sync.getStatus());
     body.innerHTML = `
       <div class="mn-h">${t('menu.account')}</div>
       <div class="x-card">
         <div class="x-row">${ico('user')}<div><b>${esc(account.profile().name)}${vm ? `<i class="p-vet">${t('vet.badge')}</i>` : ''}</b><small>ID ${esc(u ? u.id : '')}</small></div><button type="button" class="x-btn secondary small" data-act="rename">変える</button></div>
+        <div class="x-row">${ico('lock')}<div><b>${t('menu.pass')}</b><small>${t('menu.passNote')}</small></div><button type="button" class="x-btn secondary small" data-act="pass">${t('menu.passGo')}</button></div>
         <div class="x-row">${ico('gift')}<div><b>${t('vet.title')}</b><small>${vm ? esc(t('menu.vetDone', { name: vm.name })) : t('menu.vetNote')}</small></div><button type="button" class="x-btn ${vm ? 'secondary' : 'primary'} small" data-act="veteran">${vm ? t('menu.vetSee') : t('menu.vetGo')}</button></div>
         <div class="x-row">${ico('out')}<div><b>${t('menu.signout')}</b></div><button type="button" class="x-btn secondary small" data-act="signout">${t('menu.signout')}</button></div>
       </div>
@@ -94,6 +99,10 @@ export async function mount(el, { go }) {
 
       <div class="mn-h">${t('menu.device')}</div>
       <div class="x-card">
+        <div class="x-row">${ico(inst ? 'check' : 'install')}<div><b>${inst ? t('menu.instOn') : t('menu.inst')}</b><small>${inst ? t('menu.instOnNote') : t('menu.instNote')}</small></div><button type="button" class="x-btn ${inst ? 'secondary' : 'primary'} small" data-act="install">${inst ? t('menu.updGo') : t('menu.instGo')}</button></div>
+        <div class="x-row">${ico('sync')}<div><b>${t('menu.upd')}</b><small>${updReady ? `<em class="mn-upd">${t('menu.updReady')}</em>` : t('menu.updNote')}</small></div><button type="button" class="x-btn ${updReady ? 'primary' : 'secondary'} small" data-act="device">${t('menu.updGo')}</button></div>
+      </div>
+      <div class="x-card">
         <div class="mn-meter">
           <div><b data-m="fps">${fpsText}</b><small>${t('menu.fps')}</small></div>
           <div><b>${kb(startupBytes().code)}</b><small>${t('menu.load')}（絵をふくむと ${kb(startupBytes().all)}）</small></div>
@@ -131,6 +140,40 @@ export async function mount(el, { go }) {
     async signout() {
       if (await ask({ title: t('menu.signout'), text: t('menu.signoutAsk'), ok: t('menu.signout') })) await account.signOut();
     },
+    /** 合言葉を変える（★ 2026-11-28）：今の合言葉 → 新しい合言葉 ×2。まちがいは板の中に出す（板は閉じない） */
+    pass() {
+      const f = (k, ac) => `<label class="x-field" data-f="${k}"><span>${t('pw.' + k)}</span><input type="password" autocomplete="${ac}" maxlength="64"></label>`;
+      const s = openSheet({
+        title: t('pw.title'),
+        body: `<p class="mn-note" style="margin:0 2px 12px">${t('pw.lead')}</p>
+          <input type="text" name="username" autocomplete="username" value="${esc(account.current()?.id || '')}" hidden>
+          ${f('old', 'current-password')}${f('new', 'new-password')}${f('new2', 'new-password')}
+          <p class="mn-err" role="alert"></p>
+          <p class="mn-note">${t('pw.note')}</p>`,
+        actions: [{ label: t('btn.cancel'), value: false }, { label: t('pw.go'), kind: 'primary', value: true }],
+        onAction: async (a, api) => {
+          if (!a.value) { api.close(); return; }
+          const v = (k) => api.el.querySelector(`[data-f="${k}"] input`).value;
+          const err = api.el.querySelector('.mn-err');
+          const go = api.el.querySelector('.x-sheet-f .primary');
+          err.textContent = '';
+          go.disabled = true;
+          try {
+            await account.changePass({ old: v('old'), pass: v('new'), pass2: v('new2') });
+            api.close();
+            toast(t('pw.done'));
+          } catch (e) {
+            err.textContent = e.message;
+          } finally { go.disabled = false; }
+        },
+      });
+      s.el.addEventListener('keydown', (e) => {   // 入れ終えて Enter（キーボードの「開く」）で変える
+        if (e.key === 'Enter' && e.target.matches('input')) { e.preventDefault(); s.el.querySelector('.x-sheet-f .primary')?.click(); }
+      });
+      setTimeout(() => s.el.querySelector('[data-f="old"] input')?.focus(), 300);
+    },
+    install() { import('./install.js').then((m) => m.openInstall()); },
+    device() { import('./device.js').then((m) => m.openDevice()); },
     exchange() { openWallet(); },
     missions() { import('./missions.js').then((m) => m.openMissions()); },
     logbo() { import('./logbo.js').then((m) => m.openLogbo()); },
@@ -188,7 +231,7 @@ export async function mount(el, { go }) {
     paint();
   };
   el.addEventListener('click', onSeg);
-  const offs = [bindActs(el, acts), wallet.on(paint), power.onChange(paint), sync.onStatus(paint), store.on('profile', paint), vet.onMark(paint), mail.onChange(paint)];
+  const offs = [bindActs(el, acts), wallet.on(paint), power.onChange(paint), sync.onStatus(paint), store.on('profile', paint), vet.onMark(paint), mail.onChange(paint), install.onChange(paint), swc.onState(paint)];
   let gone = false;
   mail.refresh();
   import('../core/admin.js').then((A) => A.isAdmin()).then((v) => { if (!gone && v !== admin) { admin = v; paint(); } }).catch(() => {});

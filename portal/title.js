@@ -12,7 +12,9 @@ import * as account from '../core/account.js';
 import * as router from '../core/router.js';
 import * as viewport from '../core/viewport.js';
 import { firstTenDone } from '../core/gacha.js';
+import * as install from '../core/install.js';
 import { short } from '../ui/fx.js';
+import { ico } from '../ui/icons.js';
 import { showLoading } from '../ui/loading.js';
 import { playIntro, introPlayed } from './intro.js';
 
@@ -31,7 +33,13 @@ export async function mount(el, { go }) {
       <div class="tt-tap" hidden>${t('title.tap')}</div>
       <div class="tt-cred">${t('title.credit')}<span>VER ${VERSION}</span></div>
     </div>
+    ${install.standalone() ? '' : `<button type="button" class="tt-inst">${ico('install')}<span>${t('ia.pill')}</span></button>`}
     <div class="tt-white"></div>`;
+  // ★ 2026-11-28 ご指定「アプリダウンロードができることを表示」：ブラウザで開いているときだけ右上に札（押すと入れ方の板・タイトルの「はじめる」にはしない）
+  el.querySelector('.tt-inst')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    import('./install.js').then((m) => m.openInstall());
+  });
 
   const card = el.querySelector('.tt-card');
   const pic = el.querySelector('.tt-pic');
@@ -60,6 +68,8 @@ export async function mount(el, { go }) {
       top = st + pad;
     }
     el.classList.toggle('wide', wide);
+    // ★ 2026-11-28（11-24 に見つけた分）：横長でもせまい窓（幅 800px ほど）では、右の空きに TAP TO START が入りきらず絵にかかっていた → 下のまん中へ
+    el.classList.toggle('narrow', wide && (W - w) / 2 < 300);
     card.style.cssText = `width:${Math.round(w)}px;height:${Math.round(h)}px;top:${Math.round(top)}px;left:${Math.round((W - w) / 2)}px`;
   }
   layout();

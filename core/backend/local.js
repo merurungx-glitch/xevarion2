@@ -61,6 +61,17 @@ export async function signIn(id, pass) {
   return u;
 }
 export async function signOut() { setUser(null); }
+/** 合言葉を変える（本物と同じく、今の合言葉がちがえば 'bad-old'） */
+export async function changePass(id, oldPass, newPass) {
+  await wait();
+  if (!user) throw new BackendError('no-auth');
+  const d = load();
+  const u = d.users[user.uid];
+  if (!u || u.id !== id || u.pass !== (await hash(id, oldPass))) throw new BackendError('bad-old');
+  if (String(newPass).length < 6) throw new BackendError('weak-pass');
+  u.pass = await hash(id, newPass);
+  save(d);
+}
 
 export async function getProfile(uid) { await wait(40); return load().users[uid]?.profile || null; }
 export async function setProfile(uid, part) {

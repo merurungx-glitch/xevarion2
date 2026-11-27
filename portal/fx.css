@@ -42,6 +42,16 @@
   .tt-cred { font: 700 9.5px/1.5 var(--font-en); letter-spacing: .2em; color: #24418f; text-align: center; }
   .tt-cred span { margin-left: 10px; }
   .tt.wide .tt-cred { color: #fff; text-shadow: 0 1px 6px rgba(0, 40, 120, .5); text-align: right; }
+  /* 横長でせまい窓：TAP TO START は下のまん中（絵の下の白い枠の上）・運営の名前もまん中 */
+  .tt.wide.narrow .tt-foot { left: 0; right: 0; bottom: calc(var(--sb) + 26px); align-items: center; }
+  .tt.wide.narrow .tt-cred { text-align: center; }
+  /* ★ 2026-11-28 アプリとして入れる（右上の札・ブラウザで開いているときだけ） */
+  .tt-inst { position: absolute; z-index: 6; top: calc(var(--st) + 10px); right: calc(env(safe-area-inset-right, 0px) + 10px); display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px 0 10px; border-radius: 99px;
+    background: rgba(255, 255, 255, .9); color: #2a3a8f; font-size: 12.5px; font-weight: 900; box-shadow: 0 6px 18px rgba(20, 60, 160, .28), inset 0 0 0 1px rgba(255, 255, 255, .8); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); opacity: 0; }
+  .tt-inst svg.x-i { width: 18px; height: 18px; stroke-width: 2.3; color: #3a6bff; }
+  .tt-inst:active { transform: scale(.96); }
+  .tt.go .tt-inst { animation: tt-fade .5s ease-out 1.6s both; }
+  .tt.go-short .tt-inst { opacity: 1; }
   .tt-white { position: absolute; inset: 0; z-index: 20; background: #fff; pointer-events: none; }
   /* 演出 */
   .tt.go .tt-white { animation: tt-white 1s ease-out both; }

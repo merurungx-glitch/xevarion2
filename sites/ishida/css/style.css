@@ -262,6 +262,15 @@ img{display:block;max-width:100%}
 .rv.d1{transition-delay:.07s}.rv.d2{transition-delay:.14s}.rv.d3{transition-delay:.21s}
 @media (prefers-reduced-motion:reduce){ .rv{opacity:1;transform:none;transition:none} .kv-slide{transition:none} .kv-art .orb{animation:none} html{scroll-behavior:auto} }
 
+/* ===== ★ 2026-11-28 II のアプリの窓の中（html.in-x2・../embed.js）：上のバーの左に「もどる」・上下の余白は II の値 ===== */
+.x2-back{display:none}
+html.in-x2 .x2-back{display:inline-flex;align-items:center;gap:1px;flex:none;height:34px;padding:0 13px 0 7px;margin-right:-14px;border:0;border-radius:99px;background:var(--bg2);color:var(--ink);font:700 13px/1 var(--font);cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:inset 0 0 0 1px var(--line)}
+html.in-x2 .x2-back svg{width:17px;height:17px}
+html.in-x2 .x2-back:active{background:var(--line)}
+html.in-x2 .hd{padding-top:var(--x2-st,0px)}
+html.in-x2 .drawer{top:calc(65px + var(--x2-st,0px))}
+html.in-x2 .ft{padding-bottom:calc(30px + var(--x2-sb,0px))}
+
 /* ===== XEVARION II（2026-11-24・主役） ===== */
 .kv-slide.s0{background:radial-gradient(900px 520px at 78% 45%,#ebe4ff 0%,#f3efff 45%,#fbf9ff 80%)}
 .s0 .kv-eye{color:#7a3dff}

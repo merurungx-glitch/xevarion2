@@ -20,13 +20,16 @@
        ・ヒーローの1枚目と、すぐ下の節に XEVARION II（3人・7本のアプリ）。初代の開発アプリ一覧・6社・歩み・ニュースは「これまで」として残した
        ・II にあるアプリ（MagiChemLex は II の MagiLex）は ../../index.html#/app/<id> へ。初代だけのアプリ・初代のページへのリンクは外した
        ・絵：II のアプリは assets/apps/、初代だけのアプリのアイコンと6社のロゴは assets/sites/（tools/build_assets.py が art/sites/ から作る）。オフラインは II の SW -->
-<link rel="stylesheet" href="css/style.css?v=1">
+<!-- ★ 2026-11-28 II のアプリの窓の中で開いたときだけ「もどる」など（ふつうのブラウザでは何もしない） -->
+<script src="../embed.js"></script>
+<link rel="stylesheet" href="css/style.css?v=2">
 </head>
 <body>
 
 <!-- ===== 上のバー ===== -->
 <header class="hd" id="hd">
   <div class="wrap hd-in">
+    <button type="button" class="x2-back" aria-label="XEVARION II にもどる"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>もどる</button>
     <a class="brand" href="#top" aria-label="ISHIDA Production トップへ">
       <img src="../../assets/sites/brand/ishida-540.webp" alt="ISHIDA Production">
     </a>

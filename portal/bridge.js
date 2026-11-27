@@ -7,6 +7,7 @@
 //   X2.attach(win)        余白（--x2-st/sr/sb/sl）・動作モード（html[data-power]）・省電力のコマ数と解像度
 //   X2.ready()            アプリが描けた → II のロード画面を消す
 //   X2.exit()             II にもどる
+//   X2.go(route)          II の画面へ切りかえる（'home'・'apps'・'app/lex' など。★ 2026-11-28 公式サイトの中のリンク用）
 //   X2.onLeave(fn)        アプリを閉じる直前に呼ぶ（途中の保存など）
 //   X2.me()               この端末の本人 { uid, id, name, face, faceSrc }
 //   X2.faces()            メンバーのアイコンに選べるキャラ [{ id, name, src }]
@@ -84,7 +85,7 @@ function saverDpr(win) {
   } catch (e) { console.warn('bridge: devicePixelRatio', e); }
 }
 
-export function makeBridge(app, { exit, ready }) {
+export function makeBridge(app, { exit, ready, go }) {
   const offs = [];
   const leaves = new Set();
   let room = null;   // 部屋（使うアプリだけ・はじめて X2.rooms にさわったときに作る）
@@ -113,6 +114,7 @@ export function makeBridge(app, { exit, ready }) {
     },
     ready: () => ready(),
     exit: () => exit(),
+    go: (route) => (go ? go(route) : exit()),
     onLeave(fn) { if (typeof fn === 'function') leaves.add(fn); },
     me() {
       const m = party.me();

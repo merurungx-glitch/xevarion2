@@ -22,7 +22,7 @@ store.define('newsRemote', { scope: 'device', sync: false }); // ②の写し（
 
 export const TABS = ['news', 'update', 'dev'];   // 中身の種類（'dev'＝開発メモ）
 const BOARD = ['news', 'update'];               // この板のタブ
-const ACTS = ['gacha', 'missions', 'logbo', 'veteran'];
+const ACTS = ['gacha', 'missions', 'logbo', 'veteran', 'install'];   // install＝アプリとして入れる（2026-11-28）
 const subs = new Set();
 let remote = null;
 let lastFetch = 0;
@@ -136,6 +136,7 @@ export function openNews(tab = 'news') {
     else if (a === 'missions') import('./missions.js').then((m) => m.openMissions());
     else if (a === 'logbo') import('./logbo.js').then((m) => m.openLogbo());
     else if (a === 'veteran') import('./veteran.js').then((m) => m.openVeteran());
+    else if (a === 'install') import('./install.js').then((m) => m.openInstall());
   });
   // ②が届いたとき・特典を受け取ったときに描きなおす（読んだ印の変化では描きなおさない）
   const onItems = () => { paint(); readAll(); };

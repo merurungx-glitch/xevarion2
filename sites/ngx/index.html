@@ -8,6 +8,8 @@
 <meta name="theme-color" content="#000000">
 <link rel="icon" href="../../assets/apps/ngx-96.webp" type="image/webp">
 <link rel="apple-touch-icon" href="../../assets/apps/ngx-192.webp">
+<!-- ★ 2026-11-28 II のアプリの窓の中で開いたときだけ「もどる」など（ふつうのブラウザでは何もしない） -->
+<script src="../embed.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -192,8 +194,17 @@
   .rv.d1{transition-delay:.08s}.rv.d2{transition-delay:.16s}.rv.d3{transition-delay:.24s}.rv.d4{transition-delay:.32s}
   @media (prefers-reduced-motion:reduce){ .rv{opacity:1;transform:none;transition:none} html{scroll-behavior:auto} }
 
+  /* ── ★ 2026-11-28 II のアプリの窓の中（html.in-x2・../embed.js）：上のバーの左に「もどる」・上下の余白は II の値 ── */
+  .x2-back{display:none}
+  html.in-x2 .x2-back{display:inline-flex;align-items:center;gap:1px;flex:none;height:30px;padding:0 12px 0 6px;margin:0 10px 0 -6px;border:0;border-radius:99px;background:rgba(255,255,255,.14);color:#f5f5f7;font:600 13px/1 var(--font);cursor:pointer;-webkit-tap-highlight-color:transparent}
+  html.in-x2 .x2-back svg{width:16px;height:16px}
+  html.in-x2 .x2-back:active{background:rgba(255,255,255,.26)}
+  html.in-x2 .gn{padding-top:var(--x2-st,0px)}
+  html.in-x2 .menu{top:calc(48px + var(--x2-st,0px))}
+  html.in-x2 footer{padding-bottom:calc(28px + var(--x2-sb,0px))}
   /* ── XEVARION II（2026-11-24・主役）── */
-  .x2-logo{width:min(300px,68vw);margin:0 auto 22px}
+  /* ★ 2026-11-28 ロゴを新しい版（明るい地）に：地ごと角の丸いカードで置く */
+  .x2-logo{width:min(260px,62vw);aspect-ratio:1;object-fit:cover;margin:0 auto 26px;border-radius:30px;box-shadow:0 0 0 1px rgba(255,255,255,.14),0 24px 60px rgba(90,110,255,.35)}
   .x2-chars{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;max-width:980px;margin:44px auto 0}
   .x2-chars .x2-ch{flex:0 1 calc((100% - 56px) / 5);min-width:96px}
   @media (max-width:620px){ .x2-chars .x2-ch{flex-basis:calc((100% - 28px) / 3)} }
@@ -222,6 +233,7 @@
 
 <header class="gn" id="gn">
   <div class="in">
+    <button type="button" class="x2-back" aria-label="XEVARION II にもどる"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>もどる</button>
     <a class="logo" href="#top" aria-label="NGX トップへ"><b>NGX</b><i>Creating the Future</i></a>
     <nav aria-label="サイト内">
       <a href="#xevarion2">XEVARION II</a>
@@ -269,7 +281,7 @@
   <!-- XEVARION II（2026-11-24・主役） -->
   <section class="sec dk x2" id="xevarion2">
     <div class="wrap">
-      <img class="x2-logo rv" src="../../assets/brand/logo-640.webp" alt="XEVARION II">
+      <img class="x2-logo rv" src="../../assets/brand/logo-card-640.webp" alt="XEVARION II">
       <span class="eyebrow rv">NEW ・ 2026.11</span>
       <h2 class="h2 rv d1">XEVARION、<span class="gtext">つぎの章へ。</span></h2>
       <p class="lead rv d2">XEVARION を1からつくり直した、新しいポータル。NGX と ISHIDA Production の2社でお届けします。ひとつのアカウントで、ゲームと学びのアプリがつながります。</p>
@@ -296,7 +308,7 @@
         <a class="x2-app rv d2" href="../../index.html#/app/gura"><img src="../../assets/apps/gura-192.webp" alt="" loading="lazy"><span><b>MagiGuraPlate</b>1台を囲むパーティーゲーム</span></a>
         <a class="x2-app rv" href="../../index.html#/app/yacht"><img src="../../assets/apps/yacht-192.webp" alt="" loading="lazy"><span><b>MagiYacht</b>サイコロで役をそろえる</span></a>
       </div>
-      <div class="chips rv"><span>ID と合言葉だけではじめられる</span><span>記録は端末どうしで同期</span><span>多くのアプリはオフラインでも</span><span>インストールなし・ブラウザだけ</span></div>
+      <div class="chips rv"><span>ID と合言葉だけではじめられる</span><span>記録は端末どうしで同期</span><span>多くのアプリはオフラインでも</span><span>ホーム画面にアプリとして入れられる</span></div>
       <div class="ctas rv"><a class="btn" href="../../index.html">XEVARION II をはじめる</a></div>
     </div>
   </section>

@@ -20,6 +20,7 @@ import './mail.js';    // メール・コードの受け取った印（mailgot�
 import { toast } from '../ui/toast.js';
 import { fmt } from '../ui/dom.js';
 import * as swc from './swc.js';
+import './install.js'; // アプリとして入れる：Chrome の「インストール」の出し方は起動のときにしか来ないので、先に受け取っておく（2026-11-28）
 import { buildShell, onRoute } from '../portal/shell.js';
 import { ROUTES, appById } from '../portal/routes.js';
 
